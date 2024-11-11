@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, ArrowLeft, Trash2, Edit2, Save } from 'lucide-react';
+import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode } from 'lucide-react';
 import { sampleRestaurant } from '../data/sampleData';
 import type { MenuItem, MenuSection } from '../types';
+import { QRCodeModal } from '../components/QRCodeModal';
 
 function MenuEdit() {
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState(sampleRestaurant);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+
+  // Get the current URL for the QR code
+  const menuUrl = window.location.origin;
 
   const addSection = () => {
     const newSection: MenuSection = {
@@ -104,13 +109,22 @@ function MenuEdit() {
                 Edit Menu
               </h1>
             </div>
-            <button
-              onClick={addSection}
-              className="btn flex items-center space-x-2"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add Section</span>
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setIsQRModalOpen(true)}
+                className="btn flex items-center space-x-2"
+              >
+                <QrCode className="h-4 w-4" />
+                <span>View QR Code</span>
+              </button>
+              <button
+                onClick={addSection}
+                className="btn flex items-center space-x-2"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Section</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -278,6 +292,13 @@ function MenuEdit() {
           </div>
         ))}
       </main>
+
+      <QRCodeModal
+        isOpen={isQRModalOpen}
+        onClose={() => setIsQRModalOpen(false)}
+        menuUrl={menuUrl}
+        restaurantName={restaurant.name}
+      />
     </div>
   );
 }
