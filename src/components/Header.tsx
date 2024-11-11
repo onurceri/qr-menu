@@ -1,15 +1,15 @@
-import React from 'react';
 import { Menu, User, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   restaurantName: string;
   onMenuClick: () => void;
-  onUserClick: () => void;
 }
 
-export function Header({ restaurantName, onMenuClick, onUserClick }: HeaderProps) {
-  const { user, logout } = useAuth();
+export function Header({ restaurantName, onMenuClick }: HeaderProps) {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
@@ -28,13 +28,13 @@ export function Header({ restaurantName, onMenuClick, onUserClick }: HeaderProps
             {user ? (
               <>
                 <button
-                  onClick={onUserClick}
-                  className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                  onClick={() => navigate('/edit')}
+                  className="btn"
                 >
-                  <User className="h-6 w-6" />
+                  Edit Menu
                 </button>
                 <button
-                  onClick={logout}
+                  onClick={() => signOut()}
                   className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                 >
                   <LogOut className="h-6 w-6" />
@@ -42,7 +42,7 @@ export function Header({ restaurantName, onMenuClick, onUserClick }: HeaderProps
               </>
             ) : (
               <button
-                onClick={onUserClick}
+                onClick={() => navigate('/login')}
                 className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               >
                 <User className="h-6 w-6" />

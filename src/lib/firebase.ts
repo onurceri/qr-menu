@@ -2,13 +2,18 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCB0wQv_8ws4MfPa6Kkf78b5c9i6Jxlric",
-  authDomain: "restaurant-menu-dev.firebaseapp.com",
-  projectId: "qr-menu-ef3a7",
-  storageBucket: "restaurant-menu-dev.appspot.com",
-  messagingSenderId: "32232487373",
-  appId: "1:170427468908:web:b2d9c54b1e67cdc2f6c3e8"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
+
+// Debug log to check if environment variables are loaded
+console.log('Firebase Config:', {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+});
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
