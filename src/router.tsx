@@ -16,7 +16,7 @@ export function AppRouter() {
           <Route path="/" element={<MenuView />} />
           <Route path="/:restaurantId" element={<MenuView />} />
           <Route
-            path="/edit"
+            path="/edit/:restaurantId"
             element={
               <ProtectedRoute>
                 <MenuEdit />

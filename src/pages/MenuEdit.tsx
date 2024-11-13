@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode } from 'lucide-react';
 import type { MenuItem, MenuSection, Restaurant } from '../types';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { useAuth } from '../hooks/useAuth';
 import { restaurantService } from '../services/restaurantService';
 
-interface User {
-  uid: string;
-}
 
 function MenuEdit() {
-  const { user } = useAuth() as { user: User | null };
+  const { user } = useAuth();
+  const { restaurantId } = useParams<{ restaurantId: string }>();
   const navigate = useNavigate();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,14 +19,14 @@ function MenuEdit() {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (restaurantId) {
       loadRestaurantData();
     }
-  }, [user]);
+  }, [restaurantId]);
 
   const loadRestaurantData = async () => {
     try {
-      const data = await restaurantService.getRestaurant(user!.uid);
+      const data = await restaurantService.getRestaurant(restaurantId!);
       if (data) {
         setRestaurant(data);
       } else {
@@ -176,7 +174,7 @@ function MenuEdit() {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
               <button
-                onClick={() => navigate('/')}
+                onClick={() => navigate(`/${restaurantId}`)}
                 className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
               >
                 <ArrowLeft className="h-5 w-5" />

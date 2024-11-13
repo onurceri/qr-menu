@@ -66,7 +66,7 @@ function MenuView() {
           />
           {/* Sidebar */}
           <aside
-            className={`fixed md:static w-64 h-full bg-white shadow-lg transition-transform duration-300 ease-in-out z-30 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+            className={`fixed md:static w-64 h-full bg-white shadow-lg transition-transform duration-300 ease-in-out z-30 ${isSidebarOpen ? '' : 'hidden'
               }`}
           >
             <div className="p-4">
@@ -75,9 +75,9 @@ function MenuView() {
                 {restaurant?.sections?.map((section) => (
                   <a
                     key={section.id}
-                    href={`#section-${section.id}`}
+                    href={`#${section.title}`}
                     className="block py-2 hover:bg-gray-100 rounded px-2"
-                    onClick={() => setIsSidebarOpen(false)}
+                  // onClick={() => setIsSidebarOpen(false)}
                   >
                     {section.title}
                   </a>

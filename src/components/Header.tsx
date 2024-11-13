@@ -1,6 +1,6 @@
 import { Menu, User, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface HeaderProps {
   restaurantName: string;
@@ -10,6 +10,7 @@ interface HeaderProps {
 export function Header({ restaurantName, onMenuClick }: HeaderProps) {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const params = useParams<{ restaurantId: string }>();
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
@@ -29,7 +30,7 @@ export function Header({ restaurantName, onMenuClick }: HeaderProps) {
             {user ? (
               <>
                 <button
-                  onClick={() => navigate('/edit')}
+                  onClick={() => navigate(`/edit/${params.restaurantId}`)}
                   className="btn"
                 >
                   Edit Menu

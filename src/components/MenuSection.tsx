@@ -10,8 +10,8 @@ export function MenuSection({ section }: MenuSectionProps) {
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   return (
-    <section 
-      id={section.title} 
+    <section
+      id={section.title}
       className="mb-8 pt-16 -mt-16 scroll-mt-16 relative"
     >
       <h2 className="text-2xl font-bold mb-4">{section.title}</h2>
@@ -21,7 +21,7 @@ export function MenuSection({ section }: MenuSectionProps) {
             key={item.id}
             className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
           >
-            <div className="relative aspect-video" style={{ minHeight: '200px' }}>
+            <div className="relative aspect-video bg-gray-100">
               {item.imageUrl && !imageErrors[item.id] ? (
                 <img
                   src={item.imageUrl}
@@ -37,8 +37,8 @@ export function MenuSection({ section }: MenuSectionProps) {
                   }}
                 />
               ) : (
-                <div className="h-full bg-gray-100 flex items-center justify-center">
-                  <ImageOff className="h-12 w-12 text-gray-400" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <ImageOff className="w-12 h-12 text-gray-400" />
                 </div>
               )}
             </div>
