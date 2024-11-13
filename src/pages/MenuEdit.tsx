@@ -1,96 +1,172 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode } from 'lucide-react';
-import { sampleRestaurant } from '../data/sampleData';
-import type { MenuItem, MenuSection } from '../types';
+import type { MenuItem, MenuSection, Restaurant } from '../types';
 import { QRCodeModal } from '../components/QRCodeModal';
+import { useAuth } from '../hooks/useAuth';
+import { restaurantService } from '../services/restaurantService';
+
+interface User {
+  uid: string;
+}
 
 function MenuEdit() {
+  const { user } = useAuth() as { user: User | null };
   const navigate = useNavigate();
-  const [restaurant, setRestaurant] = useState(sampleRestaurant);
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (user) {
+      loadRestaurantData();
+    }
+  }, [user]);
+
+  const loadRestaurantData = async () => {
+    try {
+      const data = await restaurantService.getRestaurant(user!.uid);
+      if (data) {
+        setRestaurant(data);
+      } else {
+        setError('Restaurant not found');
+      }
+    } catch (err) {
+      console.error('Failed to load restaurant data:', err);
+      setError('Failed to load restaurant data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveRestaurantData = async (updatedData: Restaurant) => {
+    if (!user) return;
+
+    try {
+      setError(null);
+      await restaurantService.updateRestaurant(user.uid, updatedData);
+      setRestaurant(updatedData);
+    } catch (err) {
+      console.error('Failed to save changes:', err);
+      setError('Failed to save changes');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
+
+  if (error || !restaurant) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600">
+        {error || 'Restaurant not found'}
+      </div>
+    );
+  }
+
   // Get the current URL for the QR code
   const menuUrl = window.location.origin;
 
-  const addSection = () => {
-    const newSection: MenuSection = {
-      id: `section-${Date.now()}`,
-      title: 'New Section',
-      items: [],
-    };
-    setRestaurant({
-      ...restaurant,
-      sections: [...restaurant.sections, newSection],
-    });
-    setEditingSection(newSection.id);
+  const addSection = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const updatedRestaurant = {
+        ...restaurant,
+        sections: [...restaurant.sections, {
+          id: `section-${Date.now()}`,
+          title: 'New Section',
+          items: [],
+        }],
+      };
+      await saveRestaurantData(updatedRestaurant);
+    } catch (err) {
+      setError('Failed to add section');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateSectionTitle = (sectionId: string, title: string) => {
-    setRestaurant({
+  const updateSectionTitle = async (sectionId: string, title: string) => {
+    const updatedRestaurant = {
       ...restaurant,
       sections: restaurant.sections.map((section) =>
         section.id === sectionId ? { ...section, title } : section
       ),
-    });
+    };
+    setRestaurant(updatedRestaurant);
+    await saveRestaurantData(updatedRestaurant);
   };
 
-  const deleteSection = (sectionId: string) => {
-    setRestaurant({
+  const deleteSection = async (sectionId: string) => {
+    const updatedRestaurant = {
       ...restaurant,
       sections: restaurant.sections.filter((section) => section.id !== sectionId),
-    });
+    };
+    setRestaurant(updatedRestaurant);
+    await saveRestaurantData(updatedRestaurant);
   };
 
-  const addMenuItem = (sectionId: string) => {
+  const addMenuItem = async (sectionId: string) => {
     const newItem: MenuItem = {
       id: `item-${Date.now()}`,
       name: 'New Item',
       price: 0,
       description: '',
     };
-    setRestaurant({
+    const updatedRestaurant = {
       ...restaurant,
       sections: restaurant.sections.map((section) =>
         section.id === sectionId
           ? { ...section, items: [...section.items, newItem] }
           : section
       ),
-    });
+    };
+    setRestaurant(updatedRestaurant);
+    await saveRestaurantData(updatedRestaurant);
     setEditingItem(newItem);
   };
 
-  const updateMenuItem = (sectionId: string, updatedItem: MenuItem) => {
-    setRestaurant({
+  const updateMenuItem = async (sectionId: string, updatedItem: MenuItem) => {
+    const updatedRestaurant = {
       ...restaurant,
       sections: restaurant.sections.map((section) =>
         section.id === sectionId
           ? {
-              ...section,
-              items: section.items.map((item) =>
-                item.id === updatedItem.id ? updatedItem : item
-              ),
-            }
+            ...section,
+            items: section.items.map((item) =>
+              item.id === updatedItem.id ? updatedItem : item
+            ),
+          }
           : section
       ),
-    });
+    };
+    setRestaurant(updatedRestaurant);
+    await saveRestaurantData(updatedRestaurant);
     setEditingItem(null);
   };
 
-  const deleteMenuItem = (sectionId: string, itemId: string) => {
-    setRestaurant({
+  const deleteMenuItem = async (sectionId: string, itemId: string) => {
+    const updatedRestaurant = {
       ...restaurant,
       sections: restaurant.sections.map((section) =>
         section.id === sectionId
           ? {
-              ...section,
-              items: section.items.filter((item) => item.id !== itemId),
-            }
+            ...section,
+            items: section.items.filter((item) => item.id !== itemId),
+          }
           : section
       ),
-    });
+    };
+    setRestaurant(updatedRestaurant);
+    await saveRestaurantData(updatedRestaurant);
   };
 
   return (

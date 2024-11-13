@@ -1,11 +1,42 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { Menu as MenuIcon, ChevronUp } from 'lucide-react';
 import { MenuSection } from '../components/MenuSection';
-import { sampleRestaurant } from '../data/sampleData';
+import { Header } from '../components/Header';
+import { useAuth } from '../hooks/useAuth';
+import { restaurantService } from '../services/restaurantService';
+import type { Restaurant } from '../types';
 
 function MenuView() {
+  const { restaurantId } = useParams<{ restaurantId: string }>();
+  const { user } = useAuth();
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (restaurantId) {
+      loadRestaurantData();
+    }
+  }, [restaurantId]);
+
+  const loadRestaurantData = async () => {
+    try {
+      const data = await restaurantService.getRestaurant(restaurantId!);
+      if (data) {
+        setRestaurant(data);
+      } else {
+        setError('Restaurant not found');
+      }
+    } catch (err) {
+      console.error('Failed to load restaurant data:', err);
+      setError('Failed to load restaurant data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,27 +66,32 @@ function MenuView() {
     setIsSidebarOpen(false);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600">
+        {error}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-bold text-gray-900">{sampleRestaurant.name}</h1>
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 lg:hidden"
-              aria-label="Open menu"
-            >
-              <MenuIcon className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header
+        restaurantName={restaurant.name}
+        onMenuClick={() => setIsSidebarOpen(true)}
+      />
 
       {/* Desktop Navigation */}
       <nav className="hidden lg:block fixed left-8 top-24 w-48 space-y-1">
-        {sampleRestaurant.sections.map((section) => (
+        {restaurant.sections.map((section) => (
           <button
             key={section.id}
             onClick={() => scrollToSection(section.id)}
@@ -69,7 +105,7 @@ function MenuView() {
       {/* Main Content */}
       <main className="pt-20 pb-16 lg:pl-64">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {sampleRestaurant.sections.map((section) => (
+          {restaurant.sections.map((section) => (
             <div key={section.id} id={section.id}>
               <MenuSection section={section} />
             </div>
@@ -79,16 +115,14 @@ function MenuView() {
 
       {/* Mobile Navigation Sidebar */}
       <div
-        className={`fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity z-50 lg:hidden ${
-          isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+        className={`fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity z-50 lg:hidden ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
         onClick={() => setIsSidebarOpen(false)}
       />
-      
+
       <div
-        className={`fixed inset-y-0 left-0 max-w-xs w-full bg-white shadow-xl transform transition-transform z-50 lg:hidden ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 max-w-xs w-full bg-white shadow-xl transform transition-transform z-50 lg:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="h-full flex flex-col py-6">
           <div className="px-4 flex items-center justify-between">
@@ -102,7 +136,7 @@ function MenuView() {
             </button>
           </div>
           <nav className="mt-6 px-4 space-y-1">
-            {sampleRestaurant.sections.map((section) => (
+            {restaurant.sections.map((section) => (
               <button
                 key={section.id}
                 onClick={() => scrollToSection(section.id)}
@@ -118,9 +152,8 @@ function MenuView() {
       {/* Scroll to Top Button */}
       <button
         onClick={scrollToTop}
-        className={`fixed right-4 bottom-4 p-3 bg-emerald-600 text-white rounded-full shadow-lg transition-opacity hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 ${
-          showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+        className={`fixed right-4 bottom-4 p-3 bg-emerald-600 text-white rounded-full shadow-lg transition-opacity hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 ${showScrollTop ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
         aria-label="Scroll to top"
       >
         <ChevronUp className="h-6 w-6" />

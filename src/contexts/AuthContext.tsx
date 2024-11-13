@@ -1,22 +1,23 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  GoogleAuthProvider, 
-  User, 
-  signInWithPopup, 
-  signOut as firebaseSignOut,
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { User } from 'firebase/auth';
+import { authService } from '../services/authService';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
-  signOut: () => Promise<void>;
   error: string | null;
+  signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -24,52 +25,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = authService.onAuthStateChanged((user) => {
       setUser(user);
       setLoading(false);
     });
-
-    return unsubscribe;
+    return () => unsubscribe();
   }, []);
-
-  const signInWithGoogle = async () => {
-    try {
-      setError(null);
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-    } catch (err) {
-      if (err instanceof Error) {
-        if (err.message.includes('popup-blocked')) {
-          setError('Please allow popups for this website to sign in with Google');
-        } else {
-          setError('Failed to sign in with Google. Please try again.');
-        }
-      }
-      console.error('Error signing in with Google:', err);
-    }
-  };
 
   const signOut = async () => {
     try {
-      setError(null);
-      await firebaseSignOut(auth);
+      await authService.logout();
+      setUser(null);
     } catch (err) {
-      setError('Failed to sign out. Please try again.');
-      console.error('Error signing out:', err);
+      setError('Failed to logout');
+      console.error(err);
     }
   };
 
+  const value = {
+    user,
+    loading,
+    error,
+    signOut
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, error }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }

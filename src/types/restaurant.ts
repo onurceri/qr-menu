@@ -4,17 +4,20 @@ export interface MenuItem {
   description?: string;
   price: number;
   imageUrl?: string;
+  _id?: string;
 }
 
 export interface MenuSection {
   id: string;
   title: string;
   items: MenuItem[];
+  _id?: string;
 }
 
 export interface Restaurant {
-  id: string;
+  _id?: string;
+  userId: string;
   name: string;
   sections: MenuSection[];
-  userId: string;
+  __v?: number;
 }
