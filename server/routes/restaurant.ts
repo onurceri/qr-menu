@@ -1,6 +1,7 @@
 import express, { Request, Response, Router } from 'express';
 import { Restaurant } from '../models/Restaurant.js';
 import type { Error } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 const router: Router = express.Router();
 
@@ -10,7 +11,14 @@ interface RestaurantBody {
   userId: string;
 }
 
-// Fixed GET route typing
+// ID'leri normalize eden fonksiyon
+const normalizeId = (id: string | number, type: 'section' | 'item'): string => {
+  if (typeof id === 'number') return `${type}-${uuidv4()}`;
+  if (!/^section-|^item-/.test(id)) return `${type}-${id}`;
+  return id;
+};
+
+// GET Route
 router.get<{ userId: string }>(
   '/:userId',
   async (req: Request<{ userId: string }>, res: Response): Promise<void> => {
@@ -29,15 +37,29 @@ router.get<{ userId: string }>(
   }
 );
 
-// Fixed PUT route typing
+// PUT Route
 router.put<{ userId: string }>(
   '/:userId',
-  async (req: Request<{ userId: string }, any, RestaurantBody>, res: Response) => {
+  async (req: Request<{ userId: string }>, res: Response) => {
     try {
       const { userId } = req.params;
+      const updatedData = req.body;
+
+      // Normalize sections and items IDs
+      if (updatedData.sections) {
+        updatedData.sections = updatedData.sections.map((section: any) => ({
+          ...section,
+          id: normalizeId(section.id, 'section'),
+          items: section.items.map((item: any) => ({
+            ...item,
+            id: normalizeId(item.id, 'item')
+          }))
+        }));
+      }
+
       const restaurant = await Restaurant.findOneAndUpdate(
         { userId },
-        { ...req.body, userId },
+        { ...updatedData, userId },
         { new: true, upsert: true }
       );
       res.json(restaurant);
