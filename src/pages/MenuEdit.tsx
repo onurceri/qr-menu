@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode } from 'lucide-react';
+import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode, GripVertical } from 'lucide-react';
 import type { MenuItem, MenuSection, Restaurant } from '../types';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { useAuth } from '../hooks/useAuth';
@@ -69,9 +69,15 @@ function MenuEdit() {
           })
         };
         
-        // Set state with the normalized data
+        console.log('Loaded restaurant data:', {
+          sections: normalizedData.sections.map(s => ({
+            id: s.id,
+            itemCount: s.items.length,
+            items: s.items.map(i => i.id)
+          }))
+        });
+        
         setRestaurant(normalizedData);
-        console.log('Loaded and normalized data:', normalizedData);
       } else {
         setError('Restaurant not found');
       }
@@ -139,8 +145,8 @@ function MenuEdit() {
     console.log('Drag Event:', {
       type,
       draggableId,
-      source: source,
-      destination: destination
+      source,
+      destination
     });
 
     // Aynı yere bırakıldıysa işlem yapma
@@ -148,6 +154,7 @@ function MenuEdit() {
       destination.droppableId === source.droppableId &&
       destination.index === source.index
     ) {
+      console.log('Item dropped in the same position, no action taken.');
       return;
     }
 
@@ -164,18 +171,37 @@ function MenuEdit() {
       }
       // Öğe taşıma
       else if (type === 'item') {
-        const sourceSection = restaurant.sections.find(s => s.id === source.droppableId);
-        const destSection = restaurant.sections.find(s => s.id === destination.droppableId);
+        // Remove any potential 'items-' prefix from the droppableIds
+        const sourceId = source.droppableId.replace('items-', '');
+        const destId = destination.droppableId.replace('items-', '');
+        
+        const sourceSection = restaurant.sections.find(s => s.id === sourceId);
+        const destSection = restaurant.sections.find(s => s.id === destId);
+
+        console.log('Looking for sections:', {
+          sourceId,
+          destId,
+          foundSource: !!sourceSection,
+          foundDest: !!destSection,
+          availableSections: restaurant.sections.map(s => s.id)
+        });
 
         if (!sourceSection || !destSection) {
-          console.error('Section not found:', { source: source.droppableId, destination: destination.droppableId });
+          console.error('Section not found:', { 
+            source: sourceId, 
+            destination: destId,
+            availableSections: restaurant.sections.map(s => s.id)
+          });
           return;
         }
 
         // Taşınan öğeyi bul
         const movedItem = sourceSection.items.find(item => item.id === draggableId);
         if (!movedItem) {
-          console.error('Item not found:', draggableId);
+          console.error('Item not found:', {
+            itemId: draggableId,
+            sectionItems: sourceSection.items.map(i => i.id)
+          });
           return;
         }
 
@@ -243,10 +269,14 @@ function MenuEdit() {
         return section;
       });
 
-      const updatedRestaurant = { ...restaurant, sections: updatedSections };
+      const updatedRestaurant = {
+        ...restaurant,
+        sections: updatedSections
+      };
+
       await saveRestaurantData(updatedRestaurant);
       setRestaurant(updatedRestaurant);
-      setEditingItem(null);
+      setEditingItem(null); // Clear editing state
     } catch (error) {
       console.error('Failed to update menu item:', error);
       setError('Failed to update menu item');
@@ -267,7 +297,11 @@ function MenuEdit() {
         return section;
       });
 
-      const updatedRestaurant = { ...restaurant, sections: updatedSections };
+      const updatedRestaurant = {
+        ...restaurant,
+        sections: updatedSections
+      };
+
       await saveRestaurantData(updatedRestaurant);
       setRestaurant(updatedRestaurant);
     } catch (error) {
@@ -312,20 +346,24 @@ function MenuEdit() {
     }
   };
 
-  // Modify the renderDraggableItem to accept sectionId
+  // First, update the renderDraggableItem function to handle editing properly
   const renderDraggableItem = React.useCallback(
     (item: MenuItem, index: number, sectionId: string) => (
-      <Draggable key={item.id} draggableId={item.id} index={index}>
+      <Draggable 
+        key={item.id} 
+        draggableId={item.id}
+        index={index}
+      >
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
             {...provided.draggableProps}
-            {...provided.dragHandleProps}
             className={`border rounded-lg p-4 bg-white ${
-              snapshot.isDragging ? 'shadow-lg opacity-50' : 'hover:shadow-md'
+              snapshot.isDragging ? 'shadow-lg opacity-50 scale-105' : 'hover:shadow-md'
             } transition-all`}
           >
             {editingItem?.id === item.id ? (
+              // Editing form
               <div className="space-y-4">
                 <input
                   type="text"
@@ -358,7 +396,7 @@ function MenuEdit() {
                     onChange={(e) =>
                       setEditingItem({
                         ...editingItem,
-                        price: parseFloat(e.target.value),
+                        price: parseFloat(e.target.value) || 0,
                       })
                     }
                     className="block w-32 border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
@@ -386,9 +424,7 @@ function MenuEdit() {
                     Cancel
                   </button>
                   <button
-                    onClick={() =>
-                      updateMenuItem(sectionId, editingItem)
-                    }
+                    onClick={() => updateMenuItem(sectionId, editingItem)}
                     className="btn"
                   >
                     Save
@@ -396,29 +432,40 @@ function MenuEdit() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">{item.name}</h3>
-                  {item.description && (
-                    <p className="text-gray-600 mt-1">{item.description}</p>
-                  )}
-                  <p className="text-emerald-600 font-semibold mt-2">
-                    ₺{item.price.toFixed(2)}
-                  </p>
+              // Display mode
+              <div className="flex items-start">
+                <div
+                  {...provided.dragHandleProps}
+                  className="touch-manipulation p-2 mr-2 cursor-grab active:cursor-grabbing"
+                >
+                  <GripVertical className="h-5 w-5 text-gray-400" />
                 </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setEditingItem(item)}
-                    className="p-2 text-gray-400 hover:text-gray-600"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => deleteMenuItem(sectionId, item.id)}
-                    className="p-2 text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                <div className="flex-1">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold">{item.name}</h3>
+                      {item.description && (
+                        <p className="text-gray-600 mt-1">{item.description}</p>
+                      )}
+                      <p className="text-emerald-600 font-semibold mt-2">
+                        ₺{item.price.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setEditingItem(item)}
+                        className="p-2 text-gray-400 hover:text-gray-600"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteMenuItem(sectionId, item.id)}
+                        className="p-2 text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -473,13 +520,16 @@ function MenuEdit() {
   // Then define renderDraggableSection
   const renderDraggableSection = React.useCallback(
     (section: MenuSection, index: number) => (
-      <Draggable key={section.id} draggableId={section.id} index={index}>
+      <Draggable 
+        key={section.id} 
+        draggableId={section.id}
+        index={index}
+      >
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
             {...provided.draggableProps}
-            {...provided.dragHandleProps}
-            className={`mb-12 bg-white rounded-lg shadow p-6 ${
+            className={`mb-12 bg-white rounded-lg shadow p-6 touch-manipulation ${
               snapshot.isDragging ? 'opacity-50' : ''
             }`}
           >
@@ -541,7 +591,10 @@ function MenuEdit() {
               </div>
             </div>
 
-            <Droppable droppableId={section.id} type="item">
+            <Droppable 
+              droppableId={section.id}
+              type="item"
+            >
               {(provided, snapshot) => (
                 <div
                   {...provided.droppableProps}
@@ -577,6 +630,19 @@ function MenuEdit() {
       setError('Failed to update restaurant name');
     }
   };
+
+  // Add this debug effect to monitor item IDs
+  useEffect(() => {
+    if (restaurant) {
+      console.log('All item IDs:', restaurant.sections.flatMap(section => 
+        section.items.map(item => ({
+          sectionId: section.id,
+          itemId: item.id,
+          itemName: item.name
+        }))
+      ));
+    }
+  }, [restaurant]);
 
   if (loading || !restaurant) {
     return <div>Loading...</div>;

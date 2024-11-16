@@ -17,9 +17,8 @@ export function Header({ restaurantName, onMenuClick }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            {/* Make sure this button is clickable and calls onMenuClick */}
             <button
-              onClick={onMenuClick}  // This should trigger the sidebar
+              onClick={onMenuClick}
               className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
             >
               <Menu className="h-6 w-6" />
@@ -29,6 +28,12 @@ export function Header({ restaurantName, onMenuClick }: HeaderProps) {
           <div className="flex items-center space-x-2">
             {user ? (
               <>
+                <button
+                  onClick={() => navigate('/restaurants')}
+                  className="btn"
+                >
+                  My Restaurants
+                </button>
                 <button
                   onClick={() => navigate(`/edit/${params.restaurantId}`)}
                   className="btn"
