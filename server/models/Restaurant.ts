@@ -27,6 +27,11 @@ const RestaurantSchema = new mongoose.Schema({
     restaurantId: { type: String, required: true, index: true },
     name: { type: String, required: true },
     description: { type: String, default: '' },
+    currency: { 
+        type: String, 
+        enum: ['TRY', 'USD', 'EUR', 'GBP'],
+        default: 'TRY'
+    },
     sections: [MenuSectionSchema]
 });
 

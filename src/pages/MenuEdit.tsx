@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode, GripVertical, Eye } from 'lucide-react';
-import type { MenuItem, MenuSection, Restaurant } from '../types';
+import type { MenuItem, MenuSection, Restaurant } from '../types/restaurant';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { useAuth } from '../hooks/useAuth';
 import { restaurantService } from '../services/restaurantService';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { v4 as uuidv4 } from 'uuid';
+import { CurrencySelect } from '../components/CurrencySelect';
+import { CURRENCIES, type CurrencyCode } from '../constants/currencies';
 
 function MenuEdit() {
   const { user } = useAuth();
@@ -39,13 +41,6 @@ function MenuEdit() {
     }
   }, [restaurant]);
 
-  // ID'leri normalize eden fonksiyon
-  const normalizeId = (id: string | number, type: 'section' | 'item'): string => {
-    if (typeof id === 'number') return `${type}-${uuidv4()}`;
-    if (!/^section-|^item-/.test(id)) return `${type}-${id}`;
-    return id;
-  };
-
   const loadRestaurantData = async () => {
     try {
       const data = await restaurantService.getRestaurant(restaurantId!);
@@ -53,7 +48,7 @@ function MenuEdit() {
         // Normalize data and create a stable reference
         const normalizedData = {
           ...data,
-          sections: data.sections.map(section => {
+          sections: data.sections.map((section: MenuSection) => {
             const sectionId = section.id.startsWith('section-') 
               ? section.id 
               : `section-${section.id}`;
@@ -61,7 +56,7 @@ function MenuEdit() {
             return {
               ...section,
               id: sectionId,
-              items: section.items.map(item => ({
+              items: section.items.map((item: MenuItem) => ({
                 ...item,
                 id: item.id.startsWith('item-') ? item.id : `item-${item.id}`
               }))
@@ -70,10 +65,10 @@ function MenuEdit() {
         };
         
         console.log('Loaded restaurant data:', {
-          sections: normalizedData.sections.map(s => ({
+          sections: normalizedData.sections.map((s: MenuSection) => ({
             id: s.id,
             itemCount: s.items.length,
-            items: s.items.map(i => i.id)
+            items: s.items.map((i: MenuItem) => i.id)
           }))
         });
         
@@ -448,7 +443,10 @@ function MenuEdit() {
                         <p className="text-gray-600 mt-1">{item.description}</p>
                       )}
                       <p className="text-emerald-600 font-semibold mt-2">
-                        ₺{item.price.toFixed(2)}
+                        {/* {restaurant?.currency}{item.price.toFixed(2)} */}
+                        <p className="text-emerald-600 font-semibold mt-2">
+                            {CURRENCIES[restaurant?.currency || 'EUR'].symbol}{item.price.toFixed(2)}
+                        </p>
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -631,6 +629,19 @@ function MenuEdit() {
     }
   };
 
+  const updateCurrency = async (newCurrency: CurrencyCode) => {
+    if (!restaurant || !user) return;
+
+    try {
+      const updatedRestaurant = { ...restaurant, currency: newCurrency };
+      await restaurantService.updateRestaurant(restaurantId!, updatedRestaurant);
+      setRestaurant(updatedRestaurant);
+    } catch (error) {
+      console.error('Failed to update currency:', error);
+      setError('Failed to update currency');
+    }
+  };
+
   // Add this debug effect to monitor item IDs
   useEffect(() => {
     if (restaurant) {
@@ -681,7 +692,11 @@ function MenuEdit() {
                 </h1>
               )}
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-4">
+              <CurrencySelect
+                value={restaurant?.currency || 'TRY'}
+                onChange={updateCurrency}
+              />
               <button
                 onClick={() => window.open(`/${restaurantId}`, '_blank')}
                 className="btn flex items-center space-x-2"

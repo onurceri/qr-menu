@@ -1,3 +1,5 @@
+import type { CurrencyCode } from '../constants/currencies';
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -19,5 +21,6 @@ export interface Restaurant {
   userId: string;
   name: string;
   sections: MenuSection[];
+  currency: CurrencyCode;
   __v?: number;
 }

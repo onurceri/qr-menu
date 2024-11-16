@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import type { MenuSection as MenuSectionType } from '../types';
+import React, { useState } from 'react';
+import type { MenuSection as MenuSectionType } from '../types/restaurant';
 import { ImageOff } from 'lucide-react';
+import { CurrencyCode, formatPrice } from '../constants/currencies';
 
 interface MenuSectionProps {
   section: MenuSectionType;
+  currency: CurrencyCode;
 }
 
-export function MenuSection({ section }: MenuSectionProps) {
+export function MenuSection({ section, currency }: MenuSectionProps) {
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   return (
@@ -45,7 +47,9 @@ export function MenuSection({ section }: MenuSectionProps) {
             <div className="p-4">
               <h3 className="font-semibold text-lg text-gray-900">{item.name}</h3>
               <p className="mt-2 text-gray-600 text-sm">{item.description}</p>
-              <p className="mt-2 text-emerald-600 font-medium">{item.price} ₺</p>
+              <p className="mt-2 text-emerald-600 font-medium">
+                {formatPrice(item.price, currency)}
+              </p>
             </div>
           </div>
         ))}

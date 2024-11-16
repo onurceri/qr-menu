@@ -6,7 +6,7 @@ import MenuView from './pages/MenuView';
 import MenuEdit from './pages/MenuEdit';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MenuSection } from './components/MenuSection';
-import type { MenuSection as MenuSectionType } from './types';
+import type { MenuSection as MenuSectionType } from './types/restaurant';
 import RestaurantList from './pages/RestaurantList';
 
 function App() {
@@ -49,7 +49,10 @@ function App() {
             path="/menu/:sectionId"
             element={
               <ProtectedRoute>
-                <MenuSection section={section} />
+                <MenuSection 
+                  section={section} 
+                  currency="TRY"
+                />
               </ProtectedRoute>
             }
           />
