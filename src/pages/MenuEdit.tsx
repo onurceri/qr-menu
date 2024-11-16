@@ -438,15 +438,13 @@ function MenuEdit() {
                 <div className="flex-1">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-lg font-semibold">{item.name}</h3>
+                      <h3 className="text-lg font-semibold text-zinc-900">{item.name}</h3>
                       {item.description && (
-                        <p className="text-gray-600 mt-1">{item.description}</p>
+                        <p className="text-zinc-600 mt-1">{item.description}</p>
                       )}
-                      <p className="text-emerald-600 font-semibold mt-2">
-                        {/* {restaurant?.currency}{item.price.toFixed(2)} */}
-                        <p className="text-emerald-600 font-semibold mt-2">
-                            {CURRENCIES[restaurant?.currency || 'EUR'].symbol}{item.price.toFixed(2)}
-                        </p>
+                      <p className="text-zinc-800 font-medium mt-2">
+                        {CURRENCIES[restaurant?.currency || 'TRY'].symbol}
+                        {item.price.toFixed(2)}
                       </p>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -533,7 +531,7 @@ function MenuEdit() {
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
-                <span {...provided.dragHandleProps} className="cursor-grab mr-2">
+                <span {...provided.dragHandleProps} className="cursor-grab mr-2 text-zinc-400">
                   &#x2630;
                 </span>
                 {editingSection === section.id ? (
@@ -542,7 +540,7 @@ function MenuEdit() {
                       type="text"
                       value={editingSectionTitle}
                       onChange={(e) => setEditingSectionTitle(e.target.value)}
-                      className="border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                      className="border-b border-zinc-200 focus:border-zinc-900 focus:outline-none"
                       onBlur={() => {
                         updateSectionTitle(section.id, editingSectionTitle);
                         setEditingSection(null);
@@ -551,14 +549,14 @@ function MenuEdit() {
                     />
                     <button
                       onClick={() => setEditingSection(null)}
-                      className="p-2 text-emerald-600 hover:text-emerald-700"
+                      className="p-2 text-zinc-600 hover:text-zinc-900"
                     >
                       <Save className="h-4 w-4" />
                     </button>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
-                    <h2 className="text-xl font-bold text-gray-900">
+                    <h2 className="text-xl font-bold text-zinc-900">
                       {section.title}
                     </h2>
                     <button
@@ -566,7 +564,7 @@ function MenuEdit() {
                         setEditingSectionTitle(section.title);
                         setEditingSection(section.id);
                       }}
-                      className="p-2 text-gray-400 hover:text-gray-600"
+                      className="p-2 text-zinc-400 hover:text-zinc-600"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
@@ -576,13 +574,13 @@ function MenuEdit() {
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => addMenuItem(section.id)}
-                  className="btn"
+                  className="btn-secondary-sm"
                 >
                   Add Item
                 </button>
                 <button
                   onClick={() => deleteSection(section.id)}
-                  className="p-2 text-red-600 hover:text-red-700"
+                  className="p-2 text-zinc-400 hover:text-zinc-600"
                 >
                   <Trash2 className="h-5 w-5" />
                 </button>
@@ -670,7 +668,7 @@ function MenuEdit() {
           <div className="flex items-center mb-4">
             <button
               onClick={() => navigate(`/${restaurantId}`)}
-              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              className="p-2 rounded-md text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -680,12 +678,12 @@ function MenuEdit() {
                 value={editingRestaurantName}
                 onChange={(e) => setEditingRestaurantName(e.target.value)}
                 onBlur={() => updateRestaurantName(editingRestaurantName)}
-                className="ml-4 text-xl font-semibold text-gray-900"
+                className="ml-4 text-xl font-semibold text-zinc-900 border-b border-zinc-200 focus:border-zinc-900 focus:outline-none"
                 autoFocus
               />
             ) : (
               <h1
-                className="ml-4 text-xl font-semibold text-gray-900 cursor-pointer"
+                className="ml-4 text-xl font-semibold text-zinc-900 cursor-pointer hover:text-zinc-700"
                 onClick={() => setEditingRestaurantName(restaurant?.name || '')}
               >
                 {restaurant?.name}
@@ -698,19 +696,18 @@ function MenuEdit() {
             <CurrencySelect
               value={restaurant?.currency || 'TRY'}
               onChange={updateCurrency}
-              className="w-32"
             />
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => window.open(`/${restaurantId}`, '_blank')}
-                className="btn-sm flex items-center space-x-2 whitespace-nowrap"
+                className="btn-secondary-sm flex items-center space-x-2 whitespace-nowrap"
               >
                 <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>View Menu</span>
               </button>
               <button
                 onClick={() => setIsQRModalOpen(true)}
-                className="btn-sm flex items-center space-x-2 whitespace-nowrap"
+                className="btn-secondary-sm flex items-center space-x-2 whitespace-nowrap"
               >
                 <QrCode className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>QR Code</span>

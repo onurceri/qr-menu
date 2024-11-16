@@ -9,7 +9,7 @@
   }
   
   body {
-    @apply antialiased text-gray-900 bg-gray-50;
+    @apply antialiased text-zinc-900 bg-zinc-50;
   }
 
   /* Better touch targets on mobile */
@@ -22,11 +22,32 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-transparent text-[11px] sm:text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200;
+    @apply inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 border border-transparent text-[11px] sm:text-sm font-medium 
+    rounded-md shadow-sm text-white bg-zinc-900 hover:bg-zinc-800 
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 
+    transition-colors duration-200;
   }
 
   .btn-sm {
-    @apply inline-flex items-center px-1.5 sm:px-3 py-1 sm:py-1.5 border border-transparent text-[11px] sm:text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500;
+    @apply inline-flex items-center px-1.5 sm:px-3 py-1 sm:py-1.5 border border-transparent text-[11px] sm:text-sm font-medium 
+    rounded-md shadow-sm text-white bg-zinc-900 hover:bg-zinc-800 
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500;
+  }
+
+  /* İkincil buton stili için */
+  .btn-secondary {
+    @apply inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 
+    border border-zinc-300 text-[11px] sm:text-sm font-medium 
+    rounded-md shadow-sm text-zinc-900 bg-white hover:bg-zinc-50 
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500 
+    transition-colors duration-200;
+  }
+
+  .btn-secondary-sm {
+    @apply inline-flex items-center px-1.5 sm:px-3 py-1 sm:py-1.5 
+    border border-zinc-300 text-[11px] sm:text-sm font-medium 
+    rounded-md shadow-sm text-zinc-900 bg-white hover:bg-zinc-50 
+    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500;
   }
 }
 

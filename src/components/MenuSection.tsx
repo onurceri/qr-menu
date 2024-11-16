@@ -9,51 +9,42 @@ interface MenuSectionProps {
 }
 
 export function MenuSection({ section, currency }: MenuSectionProps) {
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-
   return (
-    <section
-      id={section.title}
-      className="mb-8 pt-16 -mt-16 scroll-mt-16 relative"
-    >
-      <h2 className="text-2xl font-bold mb-4">{section.title}</h2>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div id={section.title} className="mb-8">
+      <h2 className="text-2xl font-bold text-zinc-900 mb-4">{section.title}</h2>
+      <div className="space-y-4">
         {section.items.map((item) => (
-          <div
-            key={item.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
-          >
-            <div className="relative aspect-video bg-gray-100">
-              {item.imageUrl && !imageErrors[item.id] ? (
+          <div key={item.id} className="bg-white rounded-lg shadow-sm p-4 border border-zinc-200">
+            <div className="flex">
+              {item.imageUrl ? (
                 <img
                   src={item.imageUrl}
                   alt={item.name}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+                  className="w-24 h-24 object-cover rounded-md"
                   onError={(e) => {
-                    console.error(`Failed to load image: ${item.imageUrl}`);
-                    setImageErrors(prev => ({
-                      ...prev,
-                      [item.id]: true
-                    }));
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = '/placeholder.png';
                   }}
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <ImageOff className="w-12 h-12 text-gray-400" />
+                <div className="w-24 h-24 bg-zinc-100 rounded-md flex items-center justify-center">
+                  <ImageOff className="w-8 h-8 text-zinc-400" />
                 </div>
               )}
-            </div>
-            <div className="p-4">
-              <h3 className="font-semibold text-lg text-gray-900">{item.name}</h3>
-              <p className="mt-2 text-gray-600 text-sm">{item.description}</p>
-              <p className="mt-2 text-emerald-600 font-medium">
-                {formatPrice(item.price, currency)}
-              </p>
+              <div className="ml-4 flex-1">
+                <h3 className="text-lg font-semibold text-zinc-900">{item.name}</h3>
+                {item.description && (
+                  <p className="text-zinc-600 mt-1 line-clamp-2">{item.description}</p>
+                )}
+                <p className="text-zinc-800 font-medium mt-2">
+                  {formatPrice(item.price, currency)}
+                </p>
+              </div>
             </div>
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

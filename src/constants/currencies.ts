@@ -32,6 +32,8 @@ export function formatPrice(price: number, currencyCode: CurrencyCode): string {
   
   return new Intl.NumberFormat(currency.locale, {
     style: 'currency',
-    currency: currency.code
+    currency: currency.code,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   }).format(price);
 } 

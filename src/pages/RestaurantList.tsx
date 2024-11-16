@@ -1,9 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState } from 'react';
 import { restaurantService } from '../services/restaurantService';
-import { Restaurant } from '../types';
+import type { Restaurant } from '../types/restaurant';
 import { useAuth } from '../contexts/AuthContext';
+import { Eye, Edit2, Trash2, Plus } from 'lucide-react';
 
 export default function RestaurantList() {
     const { user, signOut } = useAuth();
@@ -72,69 +73,96 @@ export default function RestaurantList() {
     };
 
     if (loading) {
-        return <div className="text-center">Loading...</div>;
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900"></div>
+            </div>
+        );
     }
 
     if (error) {
-        return <div className="text-center text-red-500">{error}</div>;
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-red-600">{error}</div>
+            </div>
+        );
     }
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <h1 className="text-2xl font-bold mb-4">Your Restaurants</h1>
-            <div className="mb-4">
-                <input 
-                    type="text" 
-                    value={newRestaurantName} 
-                    onChange={(e) => setNewRestaurantName(e.target.value)} 
-                    placeholder="New Restaurant Name" 
-                    className="border p-2 rounded-lg w-full"
-                />
-                <input 
-                    type="text" 
-                    value={newRestaurantDescription} 
-                    onChange={(e) => setNewRestaurantDescription(e.target.value)} 
-                    placeholder="Optional Description" 
-                    className="border p-2 rounded-lg w-full mt-2"
-                />
-                <button 
-                    onClick={handleCreateRestaurant} 
-                    className="mt-2 bg-green-500 text-white px-4 py-2 rounded-lg shadow hover:bg-green-600 transition"
-                >
-                    Add Restaurant
-                </button>
+            <div className="flex justify-between items-center mb-8">
+                <h1 className="text-2xl font-bold text-zinc-900">Your Restaurants</h1>
             </div>
-            <ul className="space-y-4">
+
+            <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-zinc-200">
+                <h2 className="text-lg font-semibold text-zinc-900 mb-4">Add New Restaurant</h2>
+                <div className="space-y-4">
+                    <input 
+                        type="text" 
+                        value={newRestaurantName} 
+                        onChange={(e) => setNewRestaurantName(e.target.value)} 
+                        placeholder="Restaurant Name" 
+                        className="w-full px-3 py-2 border border-zinc-300 rounded-md 
+                        focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
+                    />
+                    <input 
+                        type="text" 
+                        value={newRestaurantDescription} 
+                        onChange={(e) => setNewRestaurantDescription(e.target.value)} 
+                        placeholder="Restaurant Description (optional)" 
+                        className="w-full px-3 py-2 border border-zinc-300 rounded-md 
+                        focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
+                    />
+                    <button 
+                        onClick={handleCreateRestaurant} 
+                        className="btn flex items-center space-x-2"
+                    >
+                        <Plus className="h-4 w-4" />
+                        <span>Add Restaurant</span>
+                    </button>
+                </div>
+            </div>
+
+            <div className="space-y-4">
                 {restaurants.map((restaurant) => (
-                    <li key={restaurant.restaurantId} className="border p-4 rounded-lg shadow">
-                        <h2 className="text-xl font-semibold">{restaurant.name}</h2>
-                        <p>{restaurant.description}</p>
-                        <div className="flex justify-end space-x-2">
-                            <button 
-                                onClick={() => navigate(`/${restaurant.restaurantId}`)} 
-                                className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition"
-                            >
-                                <i className="fas fa-eye mr-2"></i> {/* Eye icon for View Menu */}
-                                View Menu
-                            </button>
-                            <button 
-                                onClick={() => navigate(`/edit/${restaurant.restaurantId}`)} 
-                                className="flex items-center bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600 transition"
-                            >
-                                <i className="fas fa-edit mr-2"></i> {/* Edit icon for Edit Menu */}
-                                Edit Menu
-                            </button>
-                            <button 
-                                onClick={() => handleDeleteRestaurant(restaurant.restaurantId)} 
-                                className="flex items-center bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 transition"
-                            >
-                                <i className="fas fa-trash mr-2"></i> {/* Trash icon for Delete */}
-                                Delete
-                            </button>
+                    <div 
+                        key={restaurant.restaurantId} 
+                        className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200"
+                    >
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h2 className="text-xl font-semibold text-zinc-900">{restaurant.name}</h2>
+                                {restaurant.description && (
+                                    <p className="mt-1 text-zinc-600">{restaurant.description}</p>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={() => navigate(`/${restaurant.restaurantId}`)} 
+                                    className="btn-secondary-sm flex items-center space-x-2"
+                                >
+                                    <Eye className="h-4 w-4" />
+                                    <span>View</span>
+                                </button>
+                                <button 
+                                    onClick={() => navigate(`/edit/${restaurant.restaurantId}`)} 
+                                    className="btn-secondary-sm flex items-center space-x-2"
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                    <span>Edit</span>
+                                </button>
+                                <button 
+                                    onClick={() => handleDeleteRestaurant(restaurant.restaurantId)} 
+                                    className="btn-sm flex items-center space-x-2"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span>Delete</span>
+                                </button>
+                            </div>
                         </div>
-                    </li>
+                    </div>
                 ))}
-            </ul>
+            </div>
         </div>
     );
 }
