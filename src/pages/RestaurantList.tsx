@@ -24,10 +24,12 @@ export default function RestaurantList() {
         const fetchRestaurants = async () => {
             try {
                 const fetchedRestaurants = await restaurantService.getRestaurants(user.uid);
-                setRestaurants(fetchedRestaurants);
+                setRestaurants(Array.isArray(fetchedRestaurants) ? fetchedRestaurants : []);
+                console.log("Fetched restaurants:", fetchedRestaurants);
             } catch (err) {
                 setError('Failed to fetch restaurants');
                 console.error(err);
+                setRestaurants([]);
             } finally {
                 setLoading(false);
             }
@@ -48,7 +50,7 @@ export default function RestaurantList() {
             });
             if (response.status === 201) {
                 const fetchedRestaurants = await restaurantService.getRestaurants(user!.uid);
-                setRestaurants(fetchedRestaurants);
+                setRestaurants(Array.isArray(fetchedRestaurants) ? fetchedRestaurants : []);
                 setNewRestaurantName('');
                 setNewRestaurantDescription('');
             }
