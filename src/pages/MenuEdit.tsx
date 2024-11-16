@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode, GripVertical } from 'lucide-react';
+import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode, GripVertical, Eye } from 'lucide-react';
 import type { MenuItem, MenuSection, Restaurant } from '../types';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { useAuth } from '../hooks/useAuth';
@@ -649,7 +649,7 @@ function MenuEdit() {
   }
 
   // Get the current URL for the QR code
-  const menuUrl = window.location.origin;
+  const menuUrl = `${window.location.origin}/${restaurantId}`;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -682,6 +682,13 @@ function MenuEdit() {
               )}
             </div>
             <div className="flex items-center space-x-2">
+              <button
+                onClick={() => window.open(`/${restaurantId}`, '_blank')}
+                className="btn flex items-center space-x-2"
+              >
+                <Eye className="h-4 w-4" />
+                <span>View Menu</span>
+              </button>
               <button
                 onClick={() => setIsQRModalOpen(true)}
                 className="btn flex items-center space-x-2"
