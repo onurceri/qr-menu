@@ -1,4 +1,4 @@
-import type { Restaurant, MenuSection, MenuItem } from '../types';
+import type { Restaurant, MenuSection, MenuItem } from '../types/restaurant';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
