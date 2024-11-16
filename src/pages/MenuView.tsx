@@ -2,12 +2,12 @@ import { restaurantService } from '../services/restaurantService';
 import { useEffect, useState } from 'react';
 import { Restaurant, MenuSection as MenuSectionType } from '../types/restaurant';
 import { MenuSection } from '../components/MenuSection';
-import { Header } from '../components/Header';
 import { AuthProvider } from '../contexts/AuthContext';
 import { useParams } from 'react-router-dom';
 import React from 'react';
 import { startTransition } from 'react';
 import type { CurrencyCode } from '../constants/currencies';
+import { Menu } from 'lucide-react';
 
 function MenuView() {
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -71,11 +71,15 @@ function MenuView() {
   return (
     <AuthProvider>
       <div className="h-screen flex flex-col">
-        <Header
-          restaurantName={restaurant?.name || ''}
-          onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        />
-        <div className="flex-1 relative flex overflow-hidden pt-16">
+        {/* Sidebar toggle button */}
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="fixed left-4 top-20 md:hidden z-50 p-2 bg-white rounded-md shadow-md"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+
+        <div className="flex-1 relative flex overflow-hidden">
           {/* Overlay */}
           <div
             className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 md:hidden ${
@@ -86,10 +90,10 @@ function MenuView() {
           {/* Sidebar */}
           <aside
             className={`fixed md:static w-64 h-full bg-white shadow-lg transition-transform duration-300 ease-in-out z-30 ${
-              isSidebarOpen ? '' : 'hidden'
+              isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
             }`}
           >
-            <div className="p-4">
+            <div className="p-4 pt-20"> {/* Increased top padding for header */}
               <h2 className="text-xl font-bold mb-4">Menu Sections</h2>
               <nav>
                 {restaurant?.sections?.map((section: MenuSectionType) => (
@@ -97,6 +101,7 @@ function MenuView() {
                     key={section.id}
                     href={`#${section.title}`}
                     className="block py-2 hover:bg-gray-100 rounded px-2"
+                    onClick={() => setIsSidebarOpen(false)}
                   >
                     {section.title}
                   </a>
@@ -105,9 +110,12 @@ function MenuView() {
             </div>
           </aside>
           {/* Main Content */}
-          <main className="flex-1 overflow-y-auto bg-gray-100 p-4">
+          <main className="flex-1 overflow-y-auto bg-gray-100 p-4 pt-20"> {/* Increased top padding for header */}
             {restaurant && (
               <div className="max-w-4xl mx-auto">
+                <h1 className="text-3xl font-bold text-zinc-900 mb-6">
+                  {restaurant.name}
+                </h1>
                 {restaurant.sections?.map((section: MenuSectionType) => (
                   <MenuSection
                     key={section.id}
