@@ -19,6 +19,7 @@ function MenuEdit() {
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [editingRestaurantName, setEditingRestaurantName] = useState<string | null>(null);
+  const [editingSectionTitle, setEditingSectionTitle] = useState<string>('');
 
   useEffect(() => {
     if (restaurantId) {
@@ -491,12 +492,13 @@ function MenuEdit() {
                   <div className="flex items-center space-x-2">
                     <input
                       type="text"
-                      value={section.title}
-                      onChange={(e) =>
-                        updateSectionTitle(section.id, e.target.value)
-                      }
+                      value={editingSectionTitle}
+                      onChange={(e) => setEditingSectionTitle(e.target.value)}
                       className="border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                      onBlur={() => setEditingSection(null)}
+                      onBlur={() => {
+                        updateSectionTitle(section.id, editingSectionTitle);
+                        setEditingSection(null);
+                      }}
                       autoFocus
                     />
                     <button
@@ -512,7 +514,10 @@ function MenuEdit() {
                       {section.title}
                     </h2>
                     <button
-                      onClick={() => setEditingSection(section.id)}
+                      onClick={() => {
+                        setEditingSectionTitle(section.title);
+                        setEditingSection(section.id);
+                      }}
                       className="p-2 text-gray-400 hover:text-gray-600"
                     >
                       <Edit2 className="h-4 w-4" />
@@ -556,7 +561,7 @@ function MenuEdit() {
         )}
       </Draggable>
     ),
-    [editingSection, setEditingSection, updateSectionTitle, deleteSection, addMenuItem, renderDraggableItem]
+    [editingSection, editingSectionTitle, setEditingSectionTitle, updateSectionTitle, deleteSection, addMenuItem, renderDraggableItem]
   );
 
   const updateRestaurantName = async (newName: string) => {
