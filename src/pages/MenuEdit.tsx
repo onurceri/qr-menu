@@ -665,55 +665,59 @@ function MenuEdit() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <button
-                onClick={() => navigate(`/${restaurantId}`)}
-                className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              {editingRestaurantName !== null ? (
-                <input
-                  type="text"
-                  value={editingRestaurantName}
-                  onChange={(e) => setEditingRestaurantName(e.target.value)}
-                  onBlur={() => updateRestaurantName(editingRestaurantName)}
-                  className="ml-4 text-xl font-semibold text-gray-900"
-                  autoFocus
-                />
-              ) : (
-                <h1
-                  className="ml-4 text-xl font-semibold text-gray-900"
-                  onClick={() => setEditingRestaurantName(restaurant?.name || '')}
-                >
-                  {restaurant?.name}
-                </h1>
-              )}
-            </div>
-            <div className="flex items-center space-x-4">
-              <CurrencySelect
-                value={restaurant?.currency || 'TRY'}
-                onChange={updateCurrency}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          {/* Üst satır - Geri butonu ve restoran adı */}
+          <div className="flex items-center mb-4">
+            <button
+              onClick={() => navigate(`/${restaurantId}`)}
+              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            {editingRestaurantName !== null ? (
+              <input
+                type="text"
+                value={editingRestaurantName}
+                onChange={(e) => setEditingRestaurantName(e.target.value)}
+                onBlur={() => updateRestaurantName(editingRestaurantName)}
+                className="ml-4 text-xl font-semibold text-gray-900"
+                autoFocus
               />
+            ) : (
+              <h1
+                className="ml-4 text-xl font-semibold text-gray-900 cursor-pointer"
+                onClick={() => setEditingRestaurantName(restaurant?.name || '')}
+              >
+                {restaurant?.name}
+              </h1>
+            )}
+          </div>
+
+          {/* Alt satır - Butonlar */}
+          <div className="flex flex-wrap items-center gap-3">
+            <CurrencySelect
+              value={restaurant?.currency || 'TRY'}
+              onChange={updateCurrency}
+              className="w-32"
+            />
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={() => window.open(`/${restaurantId}`, '_blank')}
-                className="btn flex items-center space-x-2"
+                className="btn-sm flex items-center space-x-2 whitespace-nowrap"
               >
                 <Eye className="h-4 w-4" />
                 <span>View Menu</span>
               </button>
               <button
                 onClick={() => setIsQRModalOpen(true)}
-                className="btn flex items-center space-x-2"
+                className="btn-sm flex items-center space-x-2 whitespace-nowrap"
               >
                 <QrCode className="h-4 w-4" />
-                <span>View QR Code</span>
+                <span>QR Code</span>
               </button>
               <button
                 onClick={addSection}
-                className="btn flex items-center space-x-2"
+                className="btn-sm flex items-center space-x-2 whitespace-nowrap"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add Section</span>
