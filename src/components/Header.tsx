@@ -32,7 +32,7 @@ export function Header({ restaurantName, onMenuClick }: HeaderProps) {
                   onClick={() => navigate('/restaurants')}
                   className="btn"
                 >
-                  My Restaurants
+                Profile
                 </button>
                 <button
                   onClick={() => navigate(`/edit/${params.restaurantId}`)}

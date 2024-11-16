@@ -705,21 +705,21 @@ function MenuEdit() {
                 onClick={() => window.open(`/${restaurantId}`, '_blank')}
                 className="btn-sm flex items-center space-x-2 whitespace-nowrap"
               >
-                <Eye className="h-4 w-4" />
+                <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>View Menu</span>
               </button>
               <button
                 onClick={() => setIsQRModalOpen(true)}
                 className="btn-sm flex items-center space-x-2 whitespace-nowrap"
               >
-                <QrCode className="h-4 w-4" />
+                <QrCode className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>QR Code</span>
               </button>
               <button
                 onClick={addSection}
                 className="btn-sm flex items-center space-x-2 whitespace-nowrap"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Add Section</span>
               </button>
             </div>
