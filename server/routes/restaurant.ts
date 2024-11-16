@@ -46,11 +46,13 @@ router.put<{ restaurantId: string }>(
       // Restoran sahibi kontrolü
       const restaurant = await Restaurant.findOne({ restaurantId });
       if (!restaurant) {
+        console.warn(`Auth: Restaurant not found - restaurantId: ${restaurantId}`);
         res.status(404).json({ error: 'Restaurant not found' });
         return;
       }
 
       if (restaurant.userId !== req.user?.uid) {
+        console.warn(`Auth: Unauthorized update attempt - userId: ${req.user?.uid}, restaurantId: ${restaurantId}`);
         res.status(403).json({ error: 'Not authorized to update this restaurant' });
         return;
       }
@@ -75,8 +77,13 @@ router.put<{ restaurantId: string }>(
       res.json(updatedRestaurant);
     } catch (error) {
       const mongoError = error as Error;
-      console.error('Database operation failed');
-      res.status(500).json({ error: mongoError.message || 'Failed to update restaurant data' });
+      console.error('Database operation failed:', {
+        error: mongoError.message,
+        userId: req.user?.uid,
+        path: req.path,
+        method: req.method
+      });
+      res.status(500).json({ error: 'Failed to update restaurant data' });
     }
   }
 );
@@ -109,14 +116,15 @@ router.delete<{ restaurantId: string }>(
     try {
       const { restaurantId } = req.params;
       
-      // Restoran sahibi kontrolü
       const restaurant = await Restaurant.findOne({ restaurantId });
       if (!restaurant) {
+        console.warn(`Auth: Restaurant not found for deletion - restaurantId: ${restaurantId}`);
         res.status(404).json({ error: 'Restaurant not found' });
         return;
       }
 
       if (restaurant.userId !== req.user?.uid) {
+        console.warn(`Auth: Unauthorized delete attempt - userId: ${req.user?.uid}, restaurantId: ${restaurantId}`);
         res.status(403).json({ error: 'Not authorized to delete this restaurant' });
         return;
       }
@@ -125,8 +133,13 @@ router.delete<{ restaurantId: string }>(
       res.json({ message: 'Restaurant deleted successfully' });
     } catch (error) {
       const mongoError = error as Error;
-      console.error('Database operation failed');
-      res.status(500).json({ error: mongoError.message || 'Failed to delete restaurant' });
+      console.error('Database operation failed:', {
+        error: mongoError.message,
+        userId: req.user?.uid,
+        path: req.path,
+        method: req.method
+      });
+      res.status(500).json({ error: 'Failed to delete restaurant' });
     }
   }
 );
