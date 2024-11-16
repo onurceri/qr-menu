@@ -5,9 +5,8 @@ import { ChefHat } from 'lucide-react';
 
 export function LoginPage() {
   const { user, signInWithGoogle, error } = useAuth();
-
   if (user) {
-    return <Navigate to="/edit" replace />;
+    return <Navigate to="/restaurants" replace />;
   }
 
   return (
@@ -34,9 +33,12 @@ export function LoginPage() {
           
           <button
             onClick={signInWithGoogle}
-            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition duration-300"
           >
-            Sign in with Google
+            <span className="flex items-center">
+              <img src="https://lh3.googleusercontent.com/COxitqgJr1sJnIDe8-jiKhxDx1FrYbtRHKJ9z_hELisAlapwE9LUPh6fcXIfb5vwpbMl4xl9H9TRFPc5NOO8Sb3VSgIBrfRYvW6cUA" alt="Google logo" className="h-5 w-5 mr-2" />
+              Sign in with Google
+            </span>
           </button>
         </div>
       </div>

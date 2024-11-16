@@ -14,7 +14,9 @@ export interface MenuSection {
 
 export interface Restaurant {
   id: string;
+  restaurantId: string;
   name: string;
+  description?: string;
   sections: MenuSection[];
   userId: string;
 }

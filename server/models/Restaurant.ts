@@ -7,9 +7,9 @@ const MenuItemSchema = new mongoose.Schema({
         set: (v: any) => v.toString()
     },
     name: { type: String, required: true },
-    description: String,
+    description: { type: String, default: '' },
     price: { type: Number, required: true },
-    imageUrl: String
+    imageUrl: { type: String, default: '' }
 }, { _id: false });
 
 const MenuSectionSchema = new mongoose.Schema({
@@ -24,7 +24,9 @@ const MenuSectionSchema = new mongoose.Schema({
 
 const RestaurantSchema = new mongoose.Schema({
     userId: { type: String, required: true, index: true },
+    restaurantId: { type: String, required: true, index: true },
     name: { type: String, required: true },
+    description: { type: String, default: '' },
     sections: [MenuSectionSchema]
 });
 

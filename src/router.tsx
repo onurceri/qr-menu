@@ -6,6 +6,8 @@ import { LoginPage } from './components/LoginPage';
 import MenuEdit from './pages/MenuEdit';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
+import RestaurantList from './pages/RestaurantList';
+import LandingPage from './pages/LandingPage';
 
 export function AppRouter() {
   return (
@@ -13,7 +15,8 @@ export function AppRouter() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<MenuView />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/restaurants" element={<RestaurantList />} />
           <Route path="/:restaurantId" element={<MenuView />} />
           <Route
             path="/edit/:restaurantId"

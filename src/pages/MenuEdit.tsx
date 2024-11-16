@@ -107,7 +107,7 @@ function MenuEdit() {
       };
 
       // Save the normalized data
-      await restaurantService.updateRestaurant(user.uid, validatedData);
+      await restaurantService.updateRestaurant(restaurantId!, validatedData);
       
       // Update state with the same normalized data
       setRestaurant(validatedData);
@@ -564,7 +564,7 @@ function MenuEdit() {
 
     try {
       const updatedRestaurant = { ...restaurant, name: newName };
-      await saveRestaurantData(updatedRestaurant);
+      await restaurantService.updateRestaurant(restaurantId!, updatedRestaurant);
       setRestaurant(updatedRestaurant);
       setEditingRestaurantName(null);
     } catch (error) {

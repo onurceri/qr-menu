@@ -8,9 +8,9 @@ const normalizeId = (id: string | number, prefix: string): string => {
 };
 
 export const restaurantService = {
-    async getRestaurant(userId: string): Promise<Restaurant | null> {
+    async getRestaurant(restaurantId: string): Promise<Restaurant | null> {
         try {
-            const response = await fetch(`${API_URL}/restaurant/${userId}`);
+            const response = await fetch(`${API_URL}/restaurant/${restaurantId}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -35,7 +35,7 @@ export const restaurantService = {
         }
     },
 
-    async updateRestaurant(userId: string, data: Partial<Restaurant>): Promise<Restaurant> {
+    async updateRestaurant(restaurantId: string, data: Partial<Restaurant>): Promise<Restaurant> {
         try {
             const normalizedData = { ...data };
             
@@ -51,7 +51,7 @@ export const restaurantService = {
                 }));
             }
 
-            const response = await fetch(`${API_URL}/restaurant/${userId}`, {
+            const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(normalizedData),
@@ -76,6 +76,42 @@ export const restaurantService = {
             return updatedData;
         } catch (error) {
             console.error('API Error:', error);
+            throw error;
+        }
+    },
+
+    async getRestaurants(userId: string): Promise<Restaurant[]> {
+        try {
+            const response = await fetch(`${API_URL}/user/${userId}/restaurants`);
+            const restaurants = await response.json();
+            console.log("restaurants", restaurants);
+            return restaurants;
+        } catch (error) {
+            console.error('Failed to fetch restaurants:', error);
+            throw error;
+        }
+    },
+
+    createRestaurant: async (userId: string, restaurantData: { name: string, description?: string }): Promise<Response> => {
+        try {
+            return await fetch(`${API_URL}/restaurant`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, ...restaurantData }),
+            });
+        } catch (error) {
+            console.error('Failed to create restaurant:', error);
+            throw error;
+        }
+    },
+
+    deleteRestaurant: async (restaurantId: string): Promise<Response> => {
+        try {
+            return await fetch(`${API_URL}/restaurant/${restaurantId}`, {
+                method: 'DELETE',
+            });
+        } catch (error) {
+            console.error('Failed to delete restaurant:', error);
             throw error;
         }
     },

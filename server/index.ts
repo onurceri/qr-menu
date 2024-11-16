@@ -3,6 +3,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import restaurantRoutes from './routes/restaurant.js';
+import userRoutes from './routes/user.js';
 import { Restaurant } from './models/Restaurant.js';
 
 dotenv.config();
@@ -21,6 +22,7 @@ mongoose.connect(process.env.MONGODB_URI!)
   .catch(err => console.error('MongoDB connection error:', err));
 
 app.use('/api/restaurant', restaurantRoutes);
+app.use('/api/user', userRoutes);
 
 const startServer = async () => {
   const PORT = Number(process.env.PORT || 5001);

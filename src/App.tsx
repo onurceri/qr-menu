@@ -7,6 +7,7 @@ import MenuEdit from './pages/MenuEdit';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MenuSection } from './components/MenuSection';
 import type { MenuSection as MenuSectionType } from './types';
+import RestaurantList from './pages/RestaurantList';
 
 function App() {
   const [section, setSection] = useState<MenuSectionType | null>(null);
@@ -35,6 +36,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<MenuView />} />
+          <Route path="/restaurants" element={<RestaurantList />} />
           <Route
             path="/edit"
             element={

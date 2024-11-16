@@ -5,12 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 const router: Router = express.Router();
 
-interface RestaurantBody {
-  name: string;
-  sections: Array<any>;
-  userId: string;
-}
-
 // ID'leri normalize eden fonksiyon
 const normalizeId = (id: string | number, type: 'section' | 'item'): string => {
   if (typeof id === 'number') return `${type}-${uuidv4()}`;
@@ -19,11 +13,11 @@ const normalizeId = (id: string | number, type: 'section' | 'item'): string => {
 };
 
 // GET Route
-router.get<{ userId: string }>(
-  '/:userId',
-  async (req: Request<{ userId: string }>, res: Response): Promise<void> => {
+router.get<{ restaurantId: string }>(
+  '/:restaurantId',
+  async (req: Request<{ restaurantId: string }>, res: Response): Promise<void> => {
     try {
-      const restaurant = await Restaurant.findOne({ userId: req.params.userId });
+      const restaurant = await Restaurant.findOne({ restaurantId: req.params.restaurantId });
       if (!restaurant) {
         res.status(404).json({ error: 'Restaurant not found' });
         return;
@@ -38,11 +32,11 @@ router.get<{ userId: string }>(
 );
 
 // PUT Route
-router.put<{ userId: string }>(
-  '/:userId',
-  async (req: Request<{ userId: string }>, res: Response) => {
+router.put<{ restaurantId: string }>(
+  '/:restaurantId',
+  async (req: Request<{ restaurantId: string }>, res: Response) => {
     try {
-      const { userId } = req.params;
+      const { restaurantId } = req.params;
       const updatedData = req.body;
 
       // Normalize sections and items IDs
@@ -58,8 +52,8 @@ router.put<{ userId: string }>(
       }
 
       const restaurant = await Restaurant.findOneAndUpdate(
-        { userId },
-        { ...updatedData, userId },
+        { restaurantId },
+        { ...updatedData, restaurantId },
         { new: true, upsert: true }
       );
       res.json(restaurant);
@@ -67,6 +61,44 @@ router.put<{ userId: string }>(
       const mongoError = error as Error;
       console.error('Database error:', mongoError);
       res.status(500).json({ error: mongoError.message || 'Failed to update restaurant data' });
+    }
+  }
+);
+
+// CREATE Route
+router.post(
+  '/',
+  async (req: Request, res: Response) => {
+    try {
+      // Generate a new restaurantId
+      const restaurantId = uuidv4(); // Create a unique restaurantId
+      const newRestaurant = new Restaurant({ ...req.body, restaurantId }); // Include the restaurantId in the new restaurant
+      const savedRestaurant = await newRestaurant.save();
+      res.status(201).json(savedRestaurant);
+    } catch (error) {
+      const mongoError = error as Error;
+      console.error('Database error:', mongoError);
+      res.status(500).json({ error: mongoError.message || 'Failed to create restaurant' });
+    }
+  }
+);
+
+// DELETE Route
+router.delete<{ restaurantId: string }>(
+  '/:restaurantId',
+  async (req: Request<{ restaurantId: string }>, res: Response) => {
+    try {
+      const { restaurantId } = req.params;
+      const deletedRestaurant = await Restaurant.findOneAndDelete({ restaurantId });
+      if (!deletedRestaurant) {
+        res.status(404).json({ error: 'Restaurant not found' });
+        return;
+      }
+      res.json({ message: 'Restaurant deleted successfully' });
+    } catch (error) {
+      const mongoError = error as Error;
+      console.error('Database error:', mongoError);
+      res.status(500).json({ error: mongoError.message || 'Failed to delete restaurant' });
     }
   }
 );
