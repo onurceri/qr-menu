@@ -1,4 +1,5 @@
 import type { Restaurant, MenuSection, MenuItem } from '../types/restaurant';
+import { getAuth } from 'firebase/auth';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -7,16 +8,22 @@ const normalizeId = (id: string | number, prefix: string): string => {
     return stringId.startsWith(prefix) ? stringId : `${prefix}-${stringId}`;
 };
 
+// Token alma yardımcı fonksiyonu
+const getAuthToken = async (): Promise<string | null> => {
+    const auth = getAuth();
+    return auth.currentUser?.getIdToken() || null;
+};
+
 export const restaurantService = {
     async getRestaurant(restaurantId: string): Promise<Restaurant | null> {
         try {
+            // Menü görüntüleme public olduğu için token gerektirmiyor
             const response = await fetch(`${API_URL}/restaurant/${restaurantId}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
             
-            // Normalize data before returning
             if (data && data.sections) {
                 data.sections = data.sections.map((section: MenuSection) => ({
                     ...section,
@@ -37,9 +44,10 @@ export const restaurantService = {
 
     async updateRestaurant(restaurantId: string, data: Partial<Restaurant>): Promise<Restaurant> {
         try {
+            const token = await getAuthToken();
+            if (!token) throw new Error('Not authenticated');
+
             const normalizedData = { ...data };
-            
-            // Normalize all IDs before sending to backend
             if (normalizedData.sections) {
                 normalizedData.sections = normalizedData.sections.map((section: MenuSection) => ({
                     ...section,
@@ -53,7 +61,10 @@ export const restaurantService = {
 
             const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(normalizedData),
             });
             
@@ -61,7 +72,6 @@ export const restaurantService = {
             
             const updatedData = await response.json();
             
-            // Normalize response data before returning
             if (updatedData.sections) {
                 updatedData.sections = updatedData.sections.map((section: MenuSection) => ({
                     ...section,
@@ -82,9 +92,18 @@ export const restaurantService = {
 
     async getRestaurants(userId: string): Promise<Restaurant[]> {
         try {
-            const response = await fetch(`${API_URL}/user/${userId}/restaurants`);
+            const token = await getAuthToken();
+            if (!token) throw new Error('Not authenticated');
+
+            const response = await fetch(`${API_URL}/user/${userId}/restaurants`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) throw new Error('Failed to fetch restaurants');
+            
             const restaurants = await response.json();
-            console.log("restaurants", restaurants);
             return restaurants;
         } catch (error) {
             console.error('Failed to fetch restaurants:', error);
@@ -94,11 +113,20 @@ export const restaurantService = {
 
     createRestaurant: async (userId: string, restaurantData: { name: string, description?: string }): Promise<Response> => {
         try {
-            return await fetch(`${API_URL}/restaurant`, {
+            const token = await getAuthToken();
+            if (!token) throw new Error('Not authenticated');
+
+            const response = await fetch(`${API_URL}/restaurant`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ userId, ...restaurantData }),
             });
+
+            if (!response.ok) throw new Error('Failed to create restaurant');
+            return response;
         } catch (error) {
             console.error('Failed to create restaurant:', error);
             throw error;
@@ -107,9 +135,18 @@ export const restaurantService = {
 
     deleteRestaurant: async (restaurantId: string): Promise<Response> => {
         try {
-            return await fetch(`${API_URL}/restaurant/${restaurantId}`, {
+            const token = await getAuthToken();
+            if (!token) throw new Error('Not authenticated');
+
+            const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
                 method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
+
+            if (!response.ok) throw new Error('Failed to delete restaurant');
+            return response;
         } catch (error) {
             console.error('Failed to delete restaurant:', error);
             throw error;
