@@ -16,7 +16,6 @@ export default function RestaurantList() {
     const [newRestaurantDescription, setNewRestaurantDescription] = useState<string>('');
 
     useEffect(() => {
-        console.log("user", user);  
         if (!user) {
             navigate('/login');
             return;
@@ -26,7 +25,6 @@ export default function RestaurantList() {
             try {
                 const fetchedRestaurants = await restaurantService.getRestaurants(user.uid);
                 setRestaurants(Array.isArray(fetchedRestaurants) ? fetchedRestaurants : []);
-                console.log("Fetched restaurants:", fetchedRestaurants);
             } catch (err) {
                 setError('Failed to fetch restaurants');
                 console.error(err);

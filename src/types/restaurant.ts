@@ -19,7 +19,9 @@ export interface MenuSection {
 export interface Restaurant {
   _id?: string;
   userId: string;
+  restaurantId: string;
   name: string;
+  description?: string;
   sections: MenuSection[];
   currency: CurrencyCode;
   __v?: number;

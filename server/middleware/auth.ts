@@ -25,7 +25,7 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     req.user = decodedToken;
     next();
   } catch (error) {
-    console.error('Auth error:', error);
+    console.error('Authentication failed');
     res.status(401).json({ error: 'Unauthorized' });
   }
 } 

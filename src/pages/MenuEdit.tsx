@@ -29,18 +29,6 @@ function MenuEdit() {
     }
   }, [restaurantId]);
 
-  useEffect(() => {
-    if (restaurant) {
-      console.log('Sections and Items:', restaurant.sections);
-      restaurant.sections.forEach(section => {
-        console.log('Section ID:', section.id);
-        section.items.forEach(item => {
-          console.log('Item ID:', item.id);
-        });
-      });
-    }
-  }, [restaurant]);
-
   const loadRestaurantData = async () => {
     try {
       const data = await restaurantService.getRestaurant(restaurantId!);
@@ -63,14 +51,6 @@ function MenuEdit() {
             };
           })
         };
-        
-        console.log('Loaded restaurant data:', {
-          sections: normalizedData.sections.map((s: MenuSection) => ({
-            id: s.id,
-            itemCount: s.items.length,
-            items: s.items.map((i: MenuItem) => i.id)
-          }))
-        });
         
         setRestaurant(normalizedData);
       } else {
@@ -113,43 +93,22 @@ function MenuEdit() {
       
       // Update state with the same normalized data
       setRestaurant(validatedData);
-      console.log('Saved and normalized data:', validatedData);
     } catch (err) {
       console.error('Failed to save changes:', err);
       setError('Failed to save changes');
     }
   };
 
-  // Debug için useEffect ekleyelim
-  useEffect(() => {
-    if (restaurant) {
-      console.log('Current Restaurant State:', {
-        sections: restaurant.sections.map(section => ({
-          id: section.id,
-          items: section.items.map(item => item.id)
-        }))
-      });
-    }
-  }, [restaurant]);
-
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, type, draggableId } = result;
 
     if (!destination || !restaurant) return;
-
-    console.log('Drag Event:', {
-      type,
-      draggableId,
-      source,
-      destination
-    });
 
     // Aynı yere bırakıldıysa işlem yapma
     if (
       destination.droppableId === source.droppableId &&
       destination.index === source.index
     ) {
-      console.log('Item dropped in the same position, no action taken.');
       return;
     }
 
@@ -173,30 +132,13 @@ function MenuEdit() {
         const sourceSection = restaurant.sections.find(s => s.id === sourceId);
         const destSection = restaurant.sections.find(s => s.id === destId);
 
-        console.log('Looking for sections:', {
-          sourceId,
-          destId,
-          foundSource: !!sourceSection,
-          foundDest: !!destSection,
-          availableSections: restaurant.sections.map(s => s.id)
-        });
-
         if (!sourceSection || !destSection) {
-          console.error('Section not found:', { 
-            source: sourceId, 
-            destination: destId,
-            availableSections: restaurant.sections.map(s => s.id)
-          });
           return;
         }
 
         // Taşınan öğeyi bul
         const movedItem = sourceSection.items.find(item => item.id === draggableId);
         if (!movedItem) {
-          console.error('Item not found:', {
-            itemId: draggableId,
-            sectionItems: sourceSection.items.map(i => i.id)
-          });
           return;
         }
 
@@ -238,7 +180,6 @@ function MenuEdit() {
       }
 
       if (updatedRestaurant) {
-        console.log('Updated Restaurant:', updatedRestaurant);
         setRestaurant(updatedRestaurant);
         await saveRestaurantData(updatedRestaurant);
       }
@@ -639,19 +580,6 @@ function MenuEdit() {
       setError('Failed to update currency');
     }
   };
-
-  // Add this debug effect to monitor item IDs
-  useEffect(() => {
-    if (restaurant) {
-      console.log('All item IDs:', restaurant.sections.flatMap(section => 
-        section.items.map(item => ({
-          sectionId: section.id,
-          itemId: item.id,
-          itemName: item.name
-        }))
-      ));
-    }
-  }, [restaurant]);
 
   if (loading || !restaurant) {
     return <div>Loading...</div>;

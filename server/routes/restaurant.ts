@@ -26,7 +26,7 @@ router.get<{ restaurantId: string }>(
       res.json(restaurant);
     } catch (error) {
       const mongoError = error as Error;
-      console.error('Database error:', mongoError);
+      console.error('Database operation failed');
       res.status(500).json({ error: mongoError.message || 'Failed to fetch restaurant data' });
     }
   }
@@ -75,7 +75,7 @@ router.put<{ restaurantId: string }>(
       res.json(updatedRestaurant);
     } catch (error) {
       const mongoError = error as Error;
-      console.error('Database error:', mongoError);
+      console.error('Database operation failed');
       res.status(500).json({ error: mongoError.message || 'Failed to update restaurant data' });
     }
   }
@@ -96,7 +96,7 @@ router.post(
       res.status(201).json(savedRestaurant);
     } catch (error) {
       const mongoError = error as Error;
-      console.error('Database error:', mongoError);
+      console.error('Database operation failed');
       res.status(500).json({ error: mongoError.message || 'Failed to create restaurant' });
     }
   }
@@ -125,7 +125,7 @@ router.delete<{ restaurantId: string }>(
       res.json({ message: 'Restaurant deleted successfully' });
     } catch (error) {
       const mongoError = error as Error;
-      console.error('Database error:', mongoError);
+      console.error('Database operation failed');
       res.status(500).json({ error: mongoError.message || 'Failed to delete restaurant' });
     }
   }
