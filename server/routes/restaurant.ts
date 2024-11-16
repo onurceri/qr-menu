@@ -1,8 +1,10 @@
 import { authMiddleware, AuthRequest } from '../middleware/auth.js';
-import express, { Response, Router, Request } from 'express';
+import express, { Response, Router, Request, NextFunction } from 'express';
 import { Restaurant } from '../models/Restaurant.js';
 import type { Error } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
+import { restaurantValidators } from '../middleware/validators.js';
+import { validationResult } from 'express-validator';
 
 const router: Router = express.Router();
 
@@ -35,9 +37,21 @@ router.get<{ restaurantId: string }>(
 // Protected routes - sadece yetkilendirilmiş kullanıcılar
 router.use(authMiddleware as express.RequestHandler); // Bundan sonraki tüm route'lar korunacak
 
+// Validation middleware
+const validate = (req: Request, res: Response, next: NextFunction): void => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.status(400).json({ errors: errors.array() });
+    return;
+  }
+  next();
+};
+
 // PUT Route - Sadece restoran sahibi güncelleyebilir
 router.put<{ restaurantId: string }>(
   '/:restaurantId',
+  restaurantValidators.update,
+  validate,
   async (req: AuthRequest<{ restaurantId: string }>, res: Response) => {
     try {
       const { restaurantId } = req.params;
@@ -91,6 +105,8 @@ router.put<{ restaurantId: string }>(
 // CREATE Route - Sadece yetkilendirilmiş kullanıcılar
 router.post(
   '/',
+  restaurantValidators.create,
+  validate,
   async (req: AuthRequest, res: Response) => {
     try {
       const restaurantId = uuidv4();

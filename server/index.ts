@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { authLimiter, apiLimiter } from './middleware/rateLimiter.js';
 import restaurantRoutes from './routes/restaurant.js';
 import userRoutes from './routes/user.js';
 import { Restaurant } from './models/Restaurant.js';
@@ -9,13 +11,21 @@ import { Restaurant } from './models/Restaurant.js';
 dotenv.config();
 
 const app = express();
+
+// Güvenlik middleware'leri
+app.use(helmet());
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   methods: ['GET', 'PUT', 'POST', 'DELETE'],
   credentials: true
 }));
 
-app.use(express.json());
+// Request body boyut limiti
+app.use(express.json({ limit: '10kb' }));
+
+// Rate limiting
+app.use('/api/auth', authLimiter);
+app.use('/api', apiLimiter);
 
 mongoose.connect(process.env.MONGODB_URI!)
   .then(() => console.log('Connected to MongoDB'))
