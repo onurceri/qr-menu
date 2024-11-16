@@ -1,11 +1,12 @@
-import { useParams } from 'react-router-dom';
 import { restaurantService } from '../services/restaurantService';
 import { useEffect, useState } from 'react';
 import { Restaurant } from '../types/restaurant';
 import { MenuSection } from '../components/MenuSection';
-import { Menu as MenuIcon } from 'lucide-react';
 import { Header } from '../components/Header';
 import { AuthProvider } from '../contexts/AuthContext';
+import { useParams } from 'react-router-dom';
+import React from 'react';
+import { startTransition } from 'react';
 
 function MenuView() {
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -25,7 +26,9 @@ function MenuView() {
       setIsLoading(true);
       setError(null);
       const data = await restaurantService.getRestaurant(restaurantId!);
-      setRestaurant(data);
+      startTransition(() => {
+        setRestaurant(data);
+      });
     } catch (error) {
       console.error('Failed to load restaurant data:', error);
       setError('Failed to load restaurant data. Please try again later.');
@@ -77,7 +80,6 @@ function MenuView() {
                     key={section.id}
                     href={`#${section.title}`}
                     className="block py-2 hover:bg-gray-100 rounded px-2"
-                  // onClick={() => setIsSidebarOpen(false)}
                   >
                     {section.title}
                   </a>
@@ -104,4 +106,4 @@ function MenuView() {
   );
 }
 
-export default MenuView;
+export default React.memo(MenuView);

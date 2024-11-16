@@ -5,7 +5,10 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
-    User
+    User,
+    UserCredential,
+    signInWithPopup,
+    GoogleAuthProvider
 } from 'firebase/auth';
 
 // Initialize Firebase
@@ -40,5 +43,10 @@ export const authService = {
 
     getCurrentUser() {
         return auth.currentUser;
+    },
+
+    signInWithGoogle: async (): Promise<UserCredential> => {
+        const googleProvider = new GoogleAuthProvider();
+        return await signInWithPopup(auth, googleProvider);
     }
 };

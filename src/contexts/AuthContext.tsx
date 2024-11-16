@@ -5,8 +5,8 @@ import { authService } from '../services/authService';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  signInWithGoogle: () => Promise<void>;
   error: string | null;
-  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,11 +42,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const userCredential = await authService.signInWithGoogle();
+      setUser(userCredential.user);
+    } catch (err) {
+      setError('Failed to sign in with Google');
+      console.error(err);
+    }
+  };
+
   const value = {
     user,
     loading,
     error,
-    signOut
+    signOut,
+    signInWithGoogle
   };
 
   return (

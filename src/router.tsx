@@ -1,6 +1,6 @@
 // src/router.ts
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import MenuView from './components/MenuView';
+import MenuView from './pages/MenuView';
 import NotFound from './components/NotFound';
 import { LoginPage } from './components/LoginPage';
 import MenuEdit from './pages/MenuEdit';

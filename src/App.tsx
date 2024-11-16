@@ -6,9 +6,10 @@ import MenuView from './pages/MenuView';
 import MenuEdit from './pages/MenuEdit';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MenuSection } from './components/MenuSection';
+import type { MenuSection as MenuSectionType } from './types';
 
 function App() {
-  const [section, setSection] = useState<Section | null>(null);
+  const [section, setSection] = useState<MenuSectionType | null>(null);
   const { sectionId } = useParams();
 
   useEffect(() => {
