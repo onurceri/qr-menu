@@ -18,6 +18,7 @@ function MenuEdit() {
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [editingRestaurantName, setEditingRestaurantName] = useState<string | null>(null);
 
   useEffect(() => {
     if (restaurantId) {
@@ -558,6 +559,20 @@ function MenuEdit() {
     [editingSection, setEditingSection, updateSectionTitle, deleteSection, addMenuItem, renderDraggableItem]
   );
 
+  const updateRestaurantName = async (newName: string) => {
+    if (!restaurant || !user) return;
+
+    try {
+      const updatedRestaurant = { ...restaurant, name: newName };
+      await saveRestaurantData(updatedRestaurant);
+      setRestaurant(updatedRestaurant);
+      setEditingRestaurantName(null);
+    } catch (error) {
+      console.error('Failed to update restaurant name:', error);
+      setError('Failed to update restaurant name');
+    }
+  };
+
   if (loading || !restaurant) {
     return <div>Loading...</div>;
   }
@@ -577,9 +592,23 @@ function MenuEdit() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <h1 className="ml-4 text-xl font-semibold text-gray-900">
-                Edit Menu
-              </h1>
+              {editingRestaurantName !== null ? (
+                <input
+                  type="text"
+                  value={editingRestaurantName}
+                  onChange={(e) => setEditingRestaurantName(e.target.value)}
+                  onBlur={() => updateRestaurantName(editingRestaurantName)}
+                  className="ml-4 text-xl font-semibold text-gray-900"
+                  autoFocus
+                />
+              ) : (
+                <h1
+                  className="ml-4 text-xl font-semibold text-gray-900"
+                  onClick={() => setEditingRestaurantName(restaurant?.name || '')}
+                >
+                  {restaurant?.name}
+                </h1>
+              )}
             </div>
             <div className="flex items-center space-x-2">
               <button
