@@ -15,8 +15,12 @@ const app = express();
 // Güvenlik middleware'leri
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
-  methods: ['GET', 'PUT', 'POST', 'DELETE'],
+  origin: process.env.NODE_ENV === 'production' 
+    ? [
+        'https://qr-menu-beta-nine.vercel.app',
+      ]
+    : 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true
 }));
 

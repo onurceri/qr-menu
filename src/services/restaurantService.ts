@@ -1,7 +1,7 @@
 import type { Restaurant, MenuSection, MenuItem } from '../types/restaurant';
 import { getAuth } from 'firebase/auth';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const normalizeId = (id: string | number, prefix: string): string => {
     const stringId = String(id);
@@ -14,30 +14,25 @@ const getAuthToken = async (): Promise<string | null> => {
     return auth.currentUser?.getIdToken() || null;
 };
 
+// Hata yakalama ve loglama ekleyelim
+const handleApiError = (error: any, message: string) => {
+  console.error(`API Error (${message}):`, error);
+  throw error;
+};
+
 export const restaurantService = {
     async getRestaurant(restaurantId: string): Promise<Restaurant | null> {
         try {
-            // Menü görüntüleme public olduğu için token gerektirmiyor
             const response = await fetch(`${API_URL}/restaurant/${restaurantId}`);
+            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
+            
             const data = await response.json();
-            
-            if (data && data.sections) {
-                data.sections = data.sections.map((section: MenuSection) => ({
-                    ...section,
-                    id: normalizeId(section.id, 'section'),
-                    items: section.items.map((item: MenuItem) => ({
-                        ...item,
-                        id: normalizeId(item.id, 'item')
-                    }))
-                }));
-            }
-            
             return data;
         } catch (error) {
-            console.error('Failed to fetch restaurant data:', error);
+            handleApiError(error, 'Failed to fetch restaurant data');
             throw error;
         }
     },
