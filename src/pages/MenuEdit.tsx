@@ -11,6 +11,11 @@ import { CurrencySelect } from '../components/CurrencySelect';
 import { CURRENCIES, type CurrencyCode } from '../constants/currencies';
 import { StrictModeDroppable } from '../components/StrictModeDroppable';
 
+// MenuItem interface'ine price'ı string olarak tutan geçici bir alan ekleyelim
+interface EditingMenuItem extends MenuItem {
+  tempPrice?: string;
+}
+
 function MenuEdit() {
   const { user } = useAuth();
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -18,7 +23,7 @@ function MenuEdit() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [editingItem, setEditingItem] = useState<EditingMenuItem | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [editingRestaurantName, setEditingRestaurantName] = useState<string | null>(null);
@@ -198,16 +203,26 @@ function MenuEdit() {
     }
   };
 
-  const updateMenuItem = async (sectionId: string, updatedItem: MenuItem) => {
+  const updateMenuItem = async (sectionId: string, updatedItem: EditingMenuItem) => {
     if (!restaurant) return;
 
     try {
+      // tempPrice'ı number'a çevir veya 0 kullan
+      const finalPrice = updatedItem.tempPrice 
+        ? parseFloat(updatedItem.tempPrice) || 0 
+        : updatedItem.price;
+
+      const itemToSave: MenuItem = {
+        ...updatedItem,
+        price: finalPrice,
+      };
+
       const updatedSections = restaurant.sections.map(section => {
         if (section.id === sectionId) {
           return {
             ...section,
             items: section.items.map(item => 
-              item.id === updatedItem.id ? updatedItem : item
+              item.id === itemToSave.id ? itemToSave : item
             )
           };
         }
@@ -221,7 +236,7 @@ function MenuEdit() {
 
       await saveRestaurantData(updatedRestaurant);
       setRestaurant(updatedRestaurant);
-      setEditingItem(null); // Clear editing state
+      setEditingItem(null);
     } catch (error) {
       console.error('Failed to update menu item:', error);
       setError('Failed to update menu item');
@@ -303,60 +318,73 @@ function MenuEdit() {
           <div
             ref={provided.innerRef}
             {...provided.draggableProps}
-            className={`border rounded-lg p-4 bg-white ${
+            className={`border rounded-lg p-2 sm:p-4 bg-white ${
               snapshot.isDragging ? 'shadow-lg opacity-50 scale-105' : 'hover:shadow-md'
             } transition-all`}
           >
             <div className="flex items-start">
               <div
                 {...provided.dragHandleProps}
-                className="touch-manipulation p-2 mr-2 cursor-grab active:cursor-grabbing"
+                className="touch-manipulation p-1 sm:p-2 mr-1 sm:mr-2 cursor-grab active:cursor-grabbing"
               >
-                <GripVertical className="h-5 w-5 text-gray-400" />
+                <GripVertical className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0 max-w-full">
                 {editingItem?.id === item.id ? (
-                  // Editing form
-                  <div className="space-y-4">
-                    <input
-                      type="text"
-                      value={editingItem.name}
-                      onChange={(e) =>
-                        setEditingItem({
-                          ...editingItem,
-                          name: e.target.value,
-                        })
-                      }
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="Item name"
-                    />
-                    <input
-                      type="text"
-                      value={editingItem.description || ''}
-                      onChange={(e) =>
-                        setEditingItem({
-                          ...editingItem,
-                          description: e.target.value,
-                        })
-                      }
-                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="Description"
-                    />
-                    <div className="flex items-center space-x-4">
+                  <div className="space-y-3">
+                    <div className="w-full">
                       <input
-                        type="number"
-                        value={editingItem.price}
+                        type="text"
+                        value={editingItem.name}
                         onChange={(e) =>
                           setEditingItem({
                             ...editingItem,
-                            price: parseFloat(e.target.value) || 0,
+                            name: e.target.value,
                           })
                         }
-                        className="block w-32 border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder="Price"
+                        className="block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="Item name"
+                      />
+                    </div>
+                    <div className="w-full">
+                      <input
+                        type="text"
+                        value={editingItem.description || ''}
+                        onChange={(e) =>
+                          setEditingItem({
+                            ...editingItem,
+                            description: e.target.value,
+                          })
+                        }
+                        className="block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="Description"
+                      />
+                    </div>
+                    <div className="w-full sm:w-48">
+                      <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+                        Price
+                      </label>
+                      <input
+                        id="price"
+                        type="number"
+                        value={editingItem.tempPrice ?? editingItem.price.toString()}
+                        onChange={(e) =>
+                          setEditingItem({
+                            ...editingItem,
+                            tempPrice: e.target.value,
+                          })
+                        }
+                        className="block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="0.00"
                         step="0.01"
                       />
+                    </div>
+                    <div className="w-full">
+                      <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                        Image URL
+                      </label>
                       <input
+                        id="imageUrl"
                         type="text"
                         value={editingItem.imageUrl || ''}
                         onChange={(e) =>
@@ -365,49 +393,74 @@ function MenuEdit() {
                             imageUrl: e.target.value,
                           })
                         }
-                        className="block flex-1 border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder="Image URL"
+                        className="block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="https://..."
                       />
                     </div>
-                    <div className="flex justify-end space-x-2">
+                    <div className="flex justify-end space-x-2 pt-2">
                       <button
                         onClick={() => setEditingItem(null)}
-                        className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm text-gray-600 hover:text-gray-900"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={() => updateMenuItem(sectionId, editingItem)}
-                        className="btn"
+                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm btn"
                       >
                         Save
                       </button>
                     </div>
                   </div>
                 ) : (
-                  // Modified display mode
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h3 className="text-lg font-semibold text-zinc-900">{item.name}</h3>
-                        <button
-                          onClick={() => setEditingItem(item)}
-                          className="p-1 text-zinc-400 hover:text-zinc-600"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                      {item.description && (
-                        <p className="text-zinc-600 mt-1">{item.description}</p>
+                    <div className="flex flex-1 min-w-0 space-x-3">
+                      {/* Image container */}
+                      {item.imageUrl && (
+                        <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden">
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Resim yüklenemezse error class'ı ekle
+                              (e.target as HTMLImageElement).classList.add('error');
+                              // Placeholder göster
+                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64';
+                            }}
+                          />
+                        </div>
                       )}
-                      <p className="text-zinc-800 font-medium mt-2">
-                        {CURRENCIES[restaurant?.currency || 'TRY'].symbol}
-                        {item.price.toFixed(2)}
-                      </p>
+                      {/* Content container */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="text-lg font-semibold text-zinc-900 truncate">
+                            {item.name}
+                          </h3>
+                          <button
+                            onClick={() => setEditingItem({
+                              ...item,
+                              tempPrice: item.price.toString()
+                            })}
+                            className="p-1 text-zinc-400 hover:text-zinc-600 flex-shrink-0"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        {item.description && (
+                          <p className="text-zinc-600 mt-1 line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
+                        <p className="text-zinc-800 font-medium mt-2">
+                          {CURRENCIES[restaurant?.currency || 'TRY'].symbol}
+                          {item.price.toFixed(2)}
+                        </p>
+                      </div>
                     </div>
                     <button
                       onClick={() => deleteMenuItem(sectionId, item.id)}
-                      className="p-2 text-red-600 hover:text-red-700 ml-2"
+                      className="p-2 text-red-600 hover:text-red-700 ml-2 flex-shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -435,6 +488,12 @@ function MenuEdit() {
         price: 0,
         imageUrl: '',
       };
+
+      // Yeni item'ı düzenleme modunda açalım
+      setEditingItem({
+        ...newItem,
+        tempPrice: '', // Boş string olarak başlat
+      });
 
       const updatedSections = restaurant.sections.map(section =>
         section.id === sectionId
