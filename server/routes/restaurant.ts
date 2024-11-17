@@ -183,13 +183,35 @@ router.post(
     try {
       const restaurantId = uuidv4();
       const { name, description } = req.body;
+      const defaultMenuId = uuidv4();
+      const userLanguage = req.user?.preferredLanguage || 'en';
 
       const newRestaurant = new Restaurant({ 
         name,
         description,
         restaurantId,
         userId: req.user?.uid,
-        menus: [] // Başlangıçta boş menu array'i
+        menus: [{
+          id: defaultMenuId,
+          name: 'Default Menu',
+          language: userLanguage,
+          sections: [],
+          currency: 'EUR'
+        }],
+        // Default location ve address bilgileri
+        location: {
+          type: 'Point',
+          coordinates: [0, 0], // Default coordinates
+          isManuallySet: false
+        },
+        address: {
+          street: '',
+          city: '',
+          country: '',
+          postalCode: ''
+        },
+        imageUrl: '',
+        openingHours: ''
       });
 
       const savedRestaurant = await newRestaurant.save();

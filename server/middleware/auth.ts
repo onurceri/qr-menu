@@ -13,14 +13,6 @@ const __dirname = dirname(__filename);
 const envPath = join(__dirname, '../../.env');
 dotenv.config({ path: envPath });
 
-// Environment variables'ı kontrol et
-console.log('Environment Check:', {
-    envKeys: Object.keys(process.env),
-    serviceAccountExists: !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON,
-    currentDir: __dirname,
-    envPath: envPath
-});
-
 interface ServiceAccount {
     type: string;
     project_id: string;
@@ -37,14 +29,6 @@ interface ServiceAccount {
 
 // Firebase admin initialization
 try {
-    // Environment variables'ı kontrol et
-    console.log('Environment Check:', {
-        envKeys: Object.keys(process.env),
-        serviceAccountExists: !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON,
-        currentDir: __dirname,
-        envPath: envPath
-    });
-
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     
     if (!serviceAccountJson) {

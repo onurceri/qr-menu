@@ -159,12 +159,15 @@ export function RestaurantEdit() {
             setSaving(true);
             const hasImageChanged = restaurant.imageUrl !== formData.imageUrl;
 
+            // schedule'ı string'e çevir
+            const openingHoursString = stringifyOpeningHours(schedule);
+
             // Önce restaurant'ı güncelle
             const updatedData = {
                 name: formData.name,
                 description: formData.description,
                 address: formData.address,
-                openingHours: formData.openingHours,
+                openingHours: openingHoursString, // schedule'dan gelen string
                 imageUrl: formData.imageUrl
             };
 
