@@ -19,6 +19,16 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
         code: 'fr',
         name: 'Français',
         flag: '🇫🇷'
+    },
+    {
+        code: 'ar',
+        name: 'العربية',
+        flag: '🇸🇦'
+    },
+    {
+        code: 'nl',
+        name: 'Nederlands',
+        flag: '🇳🇱'
     }
 ];
 

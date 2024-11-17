@@ -5,4 +5,13 @@ export default {
     extend: {},
   },
   plugins: [],
+  variants: {
+    extend: {
+      margin: ['rtl'],
+      padding: ['rtl'],
+      space: ['rtl'],
+      float: ['rtl'],
+      textAlign: ['rtl'],
+    },
+  },
 };

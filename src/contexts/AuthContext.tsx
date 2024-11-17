@@ -7,10 +7,10 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   error: string | null;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function useAuth() {
   const context = useContext(AuthContext);

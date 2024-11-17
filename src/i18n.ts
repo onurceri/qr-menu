@@ -212,6 +212,146 @@ const resources = {
         collapseAll: 'Tout réduire'
       }
     }
+  },
+  ar: {
+    translation: {
+      common: {
+        loading: 'جاري التحميل...',
+        error: 'حدث خطأ',
+        login: 'تسجيل الدخول',
+        register: 'تسجيل',
+        logout: 'تسجيل الخروج',
+        language: 'اللغة',
+        profile: 'الملف الشخصي',
+        view: 'عرض',
+        edit: 'تعديل',
+        delete: 'حذف',
+        back: 'رجوع'
+      },
+      restaurants: {
+        title: 'مطاعمك',
+        addNew: 'إضافة مطعم جديد',
+        noRestaurants: 'لا توجد مطاعم',
+        noRestaurantsDesc: 'لم تقم بإضافة أي مطعم بعد. استخدم النموذج أعلاه لإنشاء مطعمك الأول.',
+        tip: '💡 نصيحة: بعد إنشاء مطعم، يمكنك إضافة أقسام القائمة والعناصر لتقديم عروضك.',
+        name: 'اسم المطعم',
+        description: 'وصف المطعم (اختياري)',
+        creating: 'جاري الإنشاء...',
+        add: 'إضافة',
+        view: 'عرض',
+        edit: 'تعديل',
+        delete: 'حذف',
+        deleting: 'جاري الحذف...',
+        menus: 'القوائم',
+        addMenu: 'إضافة قائمة',
+        noMenus: 'لم تتم إضافة قوائم بعد',
+        selectLanguage: 'اختر اللغة',
+        menuExists: 'القائمة موجودة بالفعل بهذه اللغة',
+        menuInLanguage: 'قائمة {{language}}'
+      },
+      validation: {
+        nameRequired: 'اسم المطعم مطلوب',
+        nameTooLong: 'يجب أن يكون اسم المطعم أقل من 100 حرف',
+        descriptionTooLong: 'يجب أن يكون الوصف أقل من 500 حرف',
+        invalidCharacters: 'تم اكتشاف أحرف غير صالحة',
+        invalidImageUrl: 'رابط الصورة غير صالح'
+      },
+      menu: {
+        sections: 'أقسام القائمة',
+        addSection: 'إضافة قسم',
+        sectionName: 'اسم القسم',
+        addItem: 'إضافة عنصر',
+        itemName: 'اسم العنصر',
+        itemDescription: 'وصف العنصر',
+        itemPrice: 'السعر',
+        dragToReorder: 'اسحب لإعادة الترتيب',
+        noSections: 'لا توجد أقسام في القائمة بعد',
+        noItems: 'لا توجد عناصر في هذا القسم',
+        currency: 'العملة',
+        save: 'حفظ التغييرات',
+        saving: 'جاري الحفظ...',
+        delete: 'حذف',
+        edit: 'تعديل',
+        cancel: 'إلغاء',
+        imageUrl: 'رابط الصورة',
+        newItem: 'عنصر جديد',
+        viewMenu: 'عرض القائمة',
+        qrCode: 'رمز QR',
+        newSection: 'قسم جديد',
+        expandAll: 'توسيع الكل',
+        collapseAll: 'طي الكل'
+      }
+    }
+  },
+  nl: {
+    translation: {
+      common: {
+        loading: 'Laden...',
+        error: 'Er is een fout opgetreden',
+        login: 'Inloggen',
+        register: 'Registreren',
+        logout: 'Uitloggen',
+        language: 'Taal',
+        profile: 'Profiel',
+        view: 'Bekijken',
+        edit: 'Bewerken',
+        delete: 'Verwijderen',
+        back: 'Terug'
+      },
+      restaurants: {
+        title: 'Uw Restaurants',
+        addNew: 'Nieuw Restaurant Toevoegen',
+        noRestaurants: 'Nog Geen Restaurants',
+        noRestaurantsDesc: 'U heeft nog geen restaurants toegevoegd. Gebruik het formulier hierboven om uw eerste restaurant aan te maken.',
+        tip: '💡 Tip: Na het aanmaken van een restaurant kunt u menusecties en items toevoegen om uw aanbod te presenteren.',
+        name: 'Restaurantnaam',
+        description: 'Restaurantbeschrijving (optioneel)',
+        creating: 'Aanmaken...',
+        add: 'Toevoegen',
+        view: 'Bekijken',
+        edit: 'Bewerken',
+        delete: 'Verwijderen',
+        deleting: 'Verwijderen...',
+        menus: "Menu's",
+        addMenu: 'Menu Toevoegen',
+        noMenus: "Nog geen menu's toegevoegd",
+        selectLanguage: 'Selecteer Taal',
+        menuExists: 'Menu in deze taal bestaat al',
+        menuInLanguage: '{{language}} Menu'
+      },
+      validation: {
+        nameRequired: 'Restaurantnaam is verplicht',
+        nameTooLong: 'Restaurantnaam moet korter zijn dan 100 tekens',
+        descriptionTooLong: 'Beschrijving moet korter zijn dan 500 tekens',
+        invalidCharacters: 'Ongeldige tekens gedetecteerd',
+        invalidImageUrl: 'Ongeldige afbeeldings-URL'
+      },
+      menu: {
+        sections: 'Menusecties',
+        addSection: 'Sectie Toevoegen',
+        sectionName: 'Sectienaam',
+        addItem: 'Item Toevoegen',
+        itemName: 'Itemnaam',
+        itemDescription: 'Itembeschrijving',
+        itemPrice: 'Prijs',
+        dragToReorder: 'Sleep om te herordenen',
+        noSections: 'Nog geen menusecties',
+        noItems: 'Geen items in deze sectie',
+        currency: 'Valuta',
+        save: 'Wijzigingen Opslaan',
+        saving: 'Opslaan...',
+        delete: 'Verwijderen',
+        edit: 'Bewerken',
+        cancel: 'Annuleren',
+        imageUrl: 'Afbeeldings-URL',
+        newItem: 'Nieuw Item',
+        viewMenu: 'Menu Bekijken',
+        qrCode: 'QR Code',
+        newSection: 'Nieuwe Sectie',
+        expandAll: 'Alles Uitvouwen',
+        collapseAll: 'Alles Invouwen'
+      }
+    }
   }
 };
 
@@ -223,6 +363,9 @@ i18n
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false
+    },
+    language: {
+      ar: { dir: 'rtl' }
     }
   });
 

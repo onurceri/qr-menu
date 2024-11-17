@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { restaurantService } from '../services/restaurantService';
 import type { Restaurant } from '../types/restaurant';
 import { useAuth } from '../contexts/AuthContext';
@@ -49,7 +49,9 @@ const RestaurantList = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [isDeletingRestaurant, setIsDeletingRestaurant] = useState<string | null>(null);
     const [isAddingMenu, setIsAddingMenu] = useState<string | null>(null);
+    const [isDeletingMenu, setIsDeletingMenu] = useState<string | null>(null);
     const { t } = useTranslation();
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const validateInput = {
         restaurantName: (value: string) => {
@@ -184,10 +186,51 @@ const RestaurantList = () => {
         }
     };
 
+    const handleDeleteMenu = async (restaurantId: string, menuId: string) => {
+        try {
+            const restaurant = restaurants.find(r => r.restaurantId === restaurantId);
+            if (!restaurant) return;
+
+            setIsDeletingMenu(menuId);
+            
+            // Menüyü filtrele
+            const updatedMenus = restaurant.menus.filter(menu => menu.id !== menuId);
+            
+            // Restoranı güncelle
+            const updatedRestaurant = await restaurantService.updateRestaurant(restaurantId, {
+                menus: updatedMenus
+            });
+
+            // Restoran listesini güncelle
+            setRestaurants(restaurants.map(r => 
+                r.restaurantId === restaurantId ? updatedRestaurant : r
+            ));
+        } catch (err) {
+            setError('Failed to delete menu');
+            console.error(err);
+        } finally {
+            setIsDeletingMenu(null);
+        }
+    };
+
     // Add this helper function at the component level
     const hasAllSupportedLanguageMenus = (restaurant: Restaurant) => {
         return restaurant.menus.length >= SUPPORTED_LANGUAGES.length;
     };
+
+    // Click-outside handler
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsAddingMenu(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     if (loading) {
         return (
@@ -333,7 +376,10 @@ const RestaurantList = () => {
 
                                 {/* Menü Ekleme Dropdown'ı */}
                                 {isAddingMenu === restaurant.restaurantId && (
-                                    <div className="mt-2 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+                                    <div 
+                                        ref={dropdownRef}
+                                        className="mt-2 p-4 bg-zinc-50 rounded-lg border border-zinc-200"
+                                    >
                                         <h4 className="text-sm font-medium text-zinc-700 mb-2">
                                             {t('restaurants.selectLanguage')}
                                         </h4>
@@ -397,6 +443,22 @@ const RestaurantList = () => {
                                                         >
                                                             <Edit2 className="w-4 h-4 mr-1" />
                                                             {t('common.edit')}
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleDeleteMenu(restaurant.restaurantId, menu.id)}
+                                                            disabled={isDeletingMenu === menu.id}
+                                                            className="btn-secondary-sm text-red-600 hover:text-red-700 
+                                                                     hover:border-red-300 hover:bg-red-50"
+                                                        >
+                                                            {isDeletingMenu === menu.id ? (
+                                                                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent 
+                                                                      rounded-full animate-spin" />
+                                                            ) : (
+                                                                <>
+                                                                    <Trash2 className="w-4 h-4 mr-1" />
+                                                                    {t('common.delete')}
+                                                                </>
+                                                            )}
                                                         </button>
                                                     </div>
                                                 </div>
