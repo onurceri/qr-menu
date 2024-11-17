@@ -251,6 +251,12 @@ router.put<{ menuId: string }>(
       const { menuId } = req.params;
       const menuData = req.body;
 
+      // Menü ID'sinin geçerli olduğunu kontrol et
+      if (!menuId || typeof menuId !== 'string' || menuId.length === 0) {
+        res.status(400).json({ error: 'Invalid menu ID' });
+        return;
+      }
+
       // Önce restoranı ve menüyü bul
       const restaurant = await Restaurant.findOne({ 'menus.id': menuId });
       if (!restaurant) {
@@ -278,45 +284,25 @@ router.put<{ menuId: string }>(
         }));
       }
 
-      // Menüyü güncelle - pozisyonal operatr yerine arrayFilters kullan
+      // Menü güncellemesi yaparken ID'nin değişmediğinden emin ol
+      const updatedMenus = restaurant.menus.map(menu => 
+        menu.id === menuId ? { ...menuData, id: menuId } : menu
+      );
+
       const updatedRestaurant = await Restaurant.findOneAndUpdate(
         { 'menus.id': menuId },
-        {
-          $set: {
-            'menus.$[menu].name': menuData.name,
-            'menus.$[menu].description': menuData.description,
-            'menus.$[menu].sections': menuData.sections,
-            'menus.$[menu].currency': menuData.currency,
-            'menus.$[menu].language': menuData.language
-          }
-        },
-        {
-          arrayFilters: [{ 'menu.id': menuId }],
-          new: true
-        }
+        { $set: { menus: updatedMenus } },
+        { new: true, runValidators: true }
       );
 
       if (!updatedRestaurant) {
-        res.status(404).json({ error: 'Failed to update menu' });
+        res.status(404).json({ error: 'Restaurant not found' });
         return;
       }
 
-      const updatedMenu = updatedRestaurant.menus.find(m => m.id === menuId);
-      if (!updatedMenu) {
-        res.status(404).json({ error: 'Updated menu not found' });
-        return;
-      }
-
-      res.json(updatedMenu);
+      res.json(updatedRestaurant);
     } catch (error) {
-      const mongoError = error as Error;
-      console.error('Database operation failed:', {
-        error: mongoError.message,
-        path: req.path,
-        method: req.method,
-        menuId: req.params.menuId,
-        userId: req.user?.uid
-      });
+      console.error('Menu update failed:', error);
       res.status(500).json({ error: 'Failed to update menu' });
     }
   }

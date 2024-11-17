@@ -1,170 +1,125 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-const MenuItemSchema = new mongoose.Schema({
-    id: { 
-        type: String, 
-        required: true,
-        maxlength: 100
-    },
-    name: { 
-        type: String, 
-        required: true,
-        trim: true,
-        maxlength: 100
-    },
-    description: { 
-        type: String, 
-        maxlength: 500,
-        default: ''
-    },
-    price: { 
-        type: Number, 
-        required: true,
-        min: 0,
-        max: 1000000
-    },
-    imageUrl: { 
-        type: String, 
-        maxlength: 1000,
-        default: ''
-    }
+// Interface tanımlamaları
+interface IMenuItem extends Document {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    imageUrl: string;
+}
+
+interface IMenuSection extends Document {
+    id: string;
+    title: string;
+    items: IMenuItem[];
+}
+
+interface IMenu extends Document {
+    id: string;
+    language: string;
+    name: string;
+    description: string;
+    sections: IMenuSection[];
+    currency: string;
+}
+
+interface IRestaurant extends Document {
+    userId: string;
+    restaurantId: string;
+    name: string;
+    description: string;
+    imageUrl: string;
+    menus: IMenu[];
+    address: {
+        street: string;
+        city: string;
+        country: string;
+        postalCode: string;
+    };
+    location: {
+        type: string;
+        coordinates: number[];
+        isManuallySet: boolean;
+    };
+    openingHours: string;
+}
+
+// Şema tanımlamaları
+const MenuItemSchema = new Schema<IMenuItem>({
+    id: { type: String, required: true },
+    name: { type: String, required: true, trim: true },
+    description: { type: String, default: '' },
+    price: { type: Number, required: true },
+    imageUrl: { type: String, default: '' }
 }, { _id: false });
 
-const MenuSectionSchema = new mongoose.Schema({
+const MenuSectionSchema = new Schema<IMenuSection>({
+    id: { type: String, required: true },
+    title: { type: String, required: true, trim: true },
+    items: [MenuItemSchema]
+}, { _id: false });
+
+const MenuSchema = new Schema<IMenu>({
     id: { 
-        type: String, 
+        type: String,
         required: true,
-        maxlength: 100
+        unique: true,
+        validate: {
+            validator: function(v: string): boolean {
+                return Boolean(v && v.length > 0);
+            },
+            message: 'Menu ID cannot be empty'
+        }
     },
-    title: { 
-        type: String, 
-        required: true,
-        trim: true,
-        maxlength: 100
-    },
-    items: {
-        type: [MenuItemSchema],
+    language: { type: String, required: true },
+    name: { type: String, required: true, trim: true },
+    description: { type: String, default: '' },
+    sections: [MenuSectionSchema],
+    currency: { type: String, default: 'TRY' }
+}, { timestamps: true });
+
+const RestaurantSchema = new Schema<IRestaurant>({
+    userId: { type: String, required: true },
+    restaurantId: { type: String, required: true, unique: true },
+    name: { type: String, required: true, trim: true },
+    description: { type: String, default: '' },
+    imageUrl: { type: String, default: '' },
+    menus: {
+        type: [MenuSchema],
+        default: [],
         validate: [
             {
-                validator: function(items: any[]) {
-                    return items.length <= 100; // Max 100 item per section
+                validator: function(menus: IMenu[]): boolean {
+                    const ids = menus.map(menu => menu.id);
+                    return new Set(ids).size === ids.length;
                 },
-                message: 'Too many items in section'
+                message: 'Duplicate menu IDs are not allowed'
+            },
+            {
+                validator: function(menus: IMenu[]): boolean {
+                    return menus.every(menu => Boolean(menu.id && menu.id.length > 0));
+                },
+                message: 'All menus must have valid IDs'
             }
         ]
-    }
-}, { _id: false });
-
-const MenuSchema = new mongoose.Schema({
-    id: { 
-        type: String,
-        required: true,
-        unique: true
-    },
-    language: {
-        type: String,
-        required: true,
-        maxlength: 10
-    },
-    name: {
-        type: String,
-        required: true,
-        trim: true,
-        maxlength: 100
-    },
-    description: {
-        type: String,
-        maxlength: 500,
-        default: ''
-    },
-    sections: [MenuSectionSchema],
-    currency: {
-        type: String,
-        default: 'TRY'
-    }
-}, { timestamps: true });
-
-const RestaurantSchema = new mongoose.Schema({
-    userId: {
-        type: String,
-        required: true
-    },
-    restaurantId: {
-        type: String,
-        required: true,
-        unique: true
-    },
-    name: {
-        type: String,
-        required: true,
-        trim: true,
-        maxlength: 100
-    },
-    description: {
-        type: String,
-        maxlength: 500,
-        default: ''
-    },
-    imageUrl: {
-        type: String,
-        maxlength: 1000,
-        default: ''
-    },
-    menus: [MenuSchema],
-    profileImage: {
-        type: String,
-        maxlength: 1000,
-        default: ''
     },
     address: {
-        street: {
-            type: String,
-            maxlength: 200,
-            default: ''
-        },
-        city: {
-            type: String,
-            maxlength: 100,
-            default: ''
-        },
-        country: {
-            type: String,
-            maxlength: 100,
-            default: ''
-        },
-        postalCode: {
-            type: String,
-            maxlength: 20,
-            default: ''
-        }
+        street: { type: String, default: '' },
+        city: { type: String, default: '' },
+        country: { type: String, default: '' },
+        postalCode: { type: String, default: '' }
     },
     location: {
-        type: {
-            type: String,
-            enum: ['Point'],
-            default: 'Point'
-        },
-        coordinates: {
-            type: [Number], // [longitude, latitude]
-            default: undefined
-        },
-        isManuallySet: {
-            type: Boolean,
-            default: false
-        }
+        type: { type: String, enum: ['Point'], default: 'Point' },
+        coordinates: { type: [Number], default: undefined },
+        isManuallySet: { type: Boolean, default: false }
     },
-    defaultMenuId: {
-        type: String,
-        default: null
-    },
-    openingHours: {
-        type: String,
-        maxlength: 1000,
-        default: ''
-    }
+    openingHours: { type: String, default: '' }
 }, { timestamps: true });
 
-// Add geospatial index
+// Geospatial index
 RestaurantSchema.index({ location: '2dsphere' });
 
-export const Restaurant = mongoose.model('Restaurant', RestaurantSchema);
+// Model oluşturma
+export const Restaurant = mongoose.model<IRestaurant>('Restaurant', RestaurantSchema);
