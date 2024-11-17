@@ -85,16 +85,19 @@ const ItemForm = ({
   item,
   onUpdate,
   onDelete,
-  dragHandleProps
+  dragHandleProps,
+  currency
 }: {
   item: MenuItem;
   onUpdate: (updates: Partial<MenuItem>) => void;
   onDelete: () => void;
   dragHandleProps: any;
+  currency: CurrencyCode;
 }) => {
   const { t } = useTranslation();
   const [isImageValid, setIsImageValid] = useState<boolean | null>(null);
   const [isCheckingImage, setIsCheckingImage] = useState(false);
+  const [tempPrice, setTempPrice] = useState(item.price.toString());
 
   const handleImageUrlChange = async (url: string) => {
     onUpdate({ imageUrl: url });
@@ -108,6 +111,54 @@ const ItemForm = ({
     setIsImageValid(isValid);
     setIsCheckingImage(false);
   };
+
+  // Format price helper function
+  const formatPrice = (value: string) => {
+    // Remove any non-digit characters except decimal point
+    let cleaned = value.replace(/[^\d.]/g, '');
+    
+    // Ensure only one decimal point
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      cleaned = parts[0] + '.' + parts.slice(1).join('');
+    }
+    
+    // Limit to 2 decimal places
+    if (parts.length > 1) {
+      cleaned = parts[0] + '.' + parts[1].slice(0, 2);
+    }
+
+    return cleaned;
+  };
+
+  // Price change handler
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedPrice = formatPrice(e.target.value);
+    setTempPrice(formattedPrice);
+    
+    // Only update the actual price if we have a valid number
+    if (formattedPrice !== '') {
+      const numericPrice = parseFloat(formattedPrice) || 0;
+      onUpdate({ price: numericPrice });
+    }
+  };
+
+  // Price blur handler - format on blur
+  const handlePriceBlur = () => {
+    if (tempPrice === '') {
+      setTempPrice('0');
+      onUpdate({ price: 0 });
+    } else {
+      const numericPrice = parseFloat(tempPrice) || 0;
+      setTempPrice(numericPrice.toFixed(2));
+      onUpdate({ price: numericPrice });
+    }
+  };
+
+  // Update tempPrice when item.price changes externally
+  useEffect(() => {
+    setTempPrice(item.price.toString());
+  }, [item.price]);
 
   return (
     <div className="flex flex-col gap-3 bg-white p-4 rounded-lg border border-zinc-200 hover:border-zinc-300 transition-colors">
@@ -177,20 +228,20 @@ const ItemForm = ({
           )}
         </div>
 
-        {/* Price */}
+        {/* Price input - Currency symbol'ü güncellendi */}
         <div className="relative">
           <div className="relative">
             <input
-              type="number"
-              value={item.price}
-              onChange={(e) => onUpdate({ price: parseFloat(e.target.value) || 0 })}
+              type="text"
+              inputMode="decimal"
+              value={tempPrice}
+              onChange={handlePriceChange}
+              onBlur={handlePriceBlur}
               className="w-full border-0 bg-zinc-50 rounded-md pl-8 focus:ring-1 focus:ring-zinc-300 text-sm"
               placeholder="0.00"
-              min="0"
-              step="0.01"
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-zinc-500">₺</span>
+              <span className="text-zinc-500">{CURRENCIES[currency].symbol}</span>
             </div>
           </div>
         </div>
@@ -681,6 +732,7 @@ function MenuEdit() {
                                           onUpdate={(updates) => handleItemUpdate(section.id, item.id, updates)}
                                           onDelete={() => handleDeleteItem(section.id, item.id)}
                                           dragHandleProps={provided.dragHandleProps}
+                                          currency={menu.currency}
                                         />
                                       </div>
                                     )}

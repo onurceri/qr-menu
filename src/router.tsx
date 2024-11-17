@@ -1,5 +1,5 @@
 // src/router.ts
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MenuView from './pages/MenuView';
 import NotFound from './components/NotFound';
 import { LoginPage } from './components/LoginPage';
@@ -18,8 +18,8 @@ export function AppRouter() {
           <GlobalHeader />
           <div className="pt-16">
             <Routes>
-              <Route path="/login" element={<LoginPage />} />
               <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Navigate to="/" replace />} />
               <Route path="/restaurants" element={
                 <ProtectedRoute>
                   <RestaurantList />
