@@ -1,7 +1,7 @@
 import type { Restaurant, MenuSection, MenuItem } from '../types/restaurant';
 import { getAuth } from 'firebase/auth';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = '/api';
 
 const normalizeId = (id: string | number, prefix: string): string => {
     const stringId = String(id);
