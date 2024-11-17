@@ -55,52 +55,57 @@ const MenuSectionSchema = new mongoose.Schema({
     }
 }, { _id: false });
 
-const RestaurantSchema = new mongoose.Schema({
-    userId: { 
-        type: String, 
-        required: true, 
-        index: true,
-        maxlength: 100
+const MenuSchema = new mongoose.Schema({
+    id: { 
+        type: String,
+        required: true,
+        unique: true
     },
-    restaurantId: { 
-        type: String, 
-        required: true, 
-        unique: true,
-        maxlength: 100
+    language: {
+        type: String,
+        required: true,
+        maxlength: 10
     },
-    name: { 
-        type: String, 
+    name: {
+        type: String,
         required: true,
         trim: true,
         maxlength: 100
     },
-    description: { 
-        type: String, 
+    description: {
+        type: String,
         maxlength: 500,
         default: ''
     },
-    currency: { 
-        type: String, 
-        enum: ['TRY', 'USD', 'EUR', 'GBP'],
+    sections: [MenuSectionSchema],
+    currency: {
+        type: String,
         default: 'TRY'
-    },
-    sections: {
-        type: [MenuSectionSchema],
-        validate: [
-            {
-                validator: function(sections: any[]) {
-                    return sections.length <= 20; // Max 20 sections
-                },
-                message: 'Too many sections'
-            }
-        ]
     }
-}, {
-    timestamps: true, // created_at ve updated_at ekler
-    collection: 'restaurants'
-});
+}, { timestamps: true });
 
-RestaurantSchema.index({ userId: 1, restaurantId: 1 }, { unique: true });
-RestaurantSchema.index({ "sections.items.name": "text" }); // Arama için
+const RestaurantSchema = new mongoose.Schema({
+    userId: {
+        type: String,
+        required: true
+    },
+    restaurantId: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    name: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 100
+    },
+    description: {
+        type: String,
+        maxlength: 500,
+        default: ''
+    },
+    menus: [MenuSchema]
+}, { timestamps: true });
 
 export const Restaurant = mongoose.model('Restaurant', RestaurantSchema);

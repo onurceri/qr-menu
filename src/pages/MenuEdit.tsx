@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, startTransition, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode, GripVertical, Eye } from 'lucide-react';
-import type { MenuItem, MenuSection, Restaurant } from '../types/restaurant';
+import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode, GripVertical, Eye, ChevronDown, ChevronRight } from 'lucide-react';
+import type { MenuItem, MenuSection, Menu } from '../types/restaurant';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { useAuth } from '../hooks/useAuth';
 import { restaurantService } from '../services/restaurantService';
-import { DragDropContext, Draggable, DropResult, DroppableProvided, DroppableStateSnapshot } from '@hello-pangea/dnd';
+import { DragDropContext, Draggable, DropResult } from '@hello-pangea/dnd';
 import { v4 as uuidv4 } from 'uuid';
 import { CurrencySelect } from '../components/CurrencySelect';
 import { CURRENCIES, type CurrencyCode } from '../constants/currencies';
@@ -80,97 +80,290 @@ const validateInput = {
   }
 };
 
-function MenuEdit() {
-  const { user } = useAuth();
-  const { restaurantId } = useParams<{ restaurantId: string }>();
-  const navigate = useNavigate();
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [editingItem, setEditingItem] = useState<EditingMenuItem | null>(null);
-  const [editingSection, setEditingSection] = useState<string | null>(null);
-  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
-  const [editingRestaurantName, setEditingRestaurantName] = useState<string | null>(null);
-  const [editingSectionTitle, setEditingSectionTitle] = useState<string>('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeletingSection, setIsDeletingSection] = useState<string | null>(null);
-  const [isDeletingItem, setIsDeletingItem] = useState<string | null>(null);
-  const [isAddingItem, setIsAddingItem] = useState<string | null>(null);
-  const [isAddingSection, setIsAddingSection] = useState(false);
-  const [imageError, setImageError] = useState<string | null>(null);
+// Item form component'i ekleyelim
+const ItemForm = ({
+  item,
+  onUpdate,
+  onDelete,
+  dragHandleProps
+}: {
+  item: MenuItem;
+  onUpdate: (updates: Partial<MenuItem>) => void;
+  onDelete: () => void;
+  dragHandleProps: any;
+}) => {
   const { t } = useTranslation();
+  const [isImageValid, setIsImageValid] = useState<boolean | null>(null);
+  const [isCheckingImage, setIsCheckingImage] = useState(false);
 
-  useEffect(() => {
-    if (restaurantId) {
-      loadRestaurantData();
+  const handleImageUrlChange = async (url: string) => {
+    onUpdate({ imageUrl: url });
+    if (!url) {
+      setIsImageValid(null);
+      return;
     }
-  }, [restaurantId]);
 
-  const loadRestaurantData = async () => {
-    try {
-      const data = await restaurantService.getRestaurant(restaurantId!);
-      if (data) {
-        // Normalize data and create a stable reference
-        const normalizedData = {
-          ...data,
-          sections: data.sections.map((section: MenuSection) => {
-            const sectionId = section.id.startsWith('section-') 
-              ? section.id 
-              : `section-${section.id}`;
-            
-            return {
-              ...section,
-              id: sectionId,
-              items: section.items.map((item: MenuItem) => ({
-                ...item,
-                id: item.id.startsWith('item-') ? item.id : `item-${item.id}`
-              }))
-            };
-          })
-        };
-        
-        setRestaurant(normalizedData);
-      } else {
-        setError('Restaurant not found');
+    setIsCheckingImage(true);
+    const isValid = await checkImageExists(url);
+    setIsImageValid(isValid);
+    setIsCheckingImage(false);
+  };
+
+  return (
+    <div className="flex flex-col gap-3 bg-white p-4 rounded-lg border border-zinc-200 hover:border-zinc-300 transition-colors">
+      {/* Header - Name and Actions */}
+      <div className="flex items-center gap-2 pb-3 border-b border-zinc-100">
+        <div {...dragHandleProps} className="p-2 hover:bg-zinc-50 rounded cursor-grab active:cursor-grabbing">
+          <GripVertical className="h-5 w-5 text-zinc-400" />
+        </div>
+        <div className="flex-1">
+          <input
+            type="text"
+            value={item.name}
+            onChange={(e) => onUpdate({ name: e.target.value })}
+            className="w-full border-0 border-b border-transparent hover:border-zinc-200 focus:border-zinc-300 rounded-none focus:ring-0 px-0 text-base font-medium"
+            placeholder={t('menu.itemName')}
+          />
+        </div>
+        <button
+          onClick={onDelete}
+          className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="space-y-4 pl-9">
+        {/* Description */}
+        <div className="relative">
+          <textarea
+            value={item.description || ''}
+            onChange={(e) => onUpdate({ description: e.target.value })}
+            className="w-full border-0 bg-zinc-50 rounded-md h-20 resize-none focus:ring-1 focus:ring-zinc-300 text-sm"
+            placeholder={t('menu.itemDescription')}
+          />
+          <div className="absolute bottom-2 right-2 text-xs text-zinc-400">
+            {(item.description?.length || 0)}/500
+          </div>
+        </div>
+
+        {/* Image URL */}
+        <div className="relative">
+          <div className="relative">
+            <input
+              type="url"
+              value={item.imageUrl || ''}
+              onChange={(e) => handleImageUrlChange(e.target.value)}
+              className={`w-full border-0 bg-zinc-50 rounded-md focus:ring-1 focus:ring-zinc-300 pr-10 text-sm
+                ${isImageValid === false ? 'bg-red-50 focus:ring-red-300' : ''}
+                ${isImageValid === true ? 'bg-green-50 focus:ring-green-300' : ''}`}
+              placeholder={t('menu.imageUrl')}
+            />
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              {isCheckingImage ? (
+                <div className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin" />
+              ) : isImageValid === true ? (
+                <div className="text-green-500">✓</div>
+              ) : isImageValid === false ? (
+                <div className="text-red-500">✗</div>
+              ) : null}
+            </div>
+          </div>
+          {isImageValid === false && (
+            <p className="mt-1 text-xs text-red-500">
+              {t('validation.invalidImageUrl')}
+            </p>
+          )}
+        </div>
+
+        {/* Price */}
+        <div className="relative">
+          <div className="relative">
+            <input
+              type="number"
+              value={item.price}
+              onChange={(e) => onUpdate({ price: parseFloat(e.target.value) || 0 })}
+              className="w-full border-0 bg-zinc-50 rounded-md pl-8 focus:ring-1 focus:ring-zinc-300 text-sm"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+            />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span className="text-zinc-500">₺</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Ana komponent
+function MenuEdit() {
+  const { menuId } = useParams<{ menuId: string }>();
+  const [menu, setMenu] = useState<Menu | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [previousMenu, setPreviousMenu] = useState<string>(''); // Menu'nun önceki halini tutmak için
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [allExpanded, setAllExpanded] = useState(false);
+
+  // Debounced save fonksiyonu
+  const debouncedSave = useCallback(
+    (() => {
+      let timeoutId: NodeJS.Timeout;
+      return (menuData: Menu) => {
+        if (timeoutId) clearTimeout(timeoutId);
+        setIsSaving(true);
+        timeoutId = setTimeout(async () => {
+          try {
+            await restaurantService.updateMenu(menuId!, menuData);
+            setHasChanges(false);
+          } catch (err) {
+            console.error('Failed to save changes:', err);
+            setError('Failed to save changes');
+          } finally {
+            setIsSaving(false);
+          }
+        }, 1000);
+      };
+    })(),
+    [menuId]
+  );
+
+  // Menu değişikliklerini takip et ve otomatik kaydet
+  useEffect(() => {
+    // Sadece değişiklik varsa ve ilk yükleme değilse kaydet
+    if (menu && hasChanges && !isLoading) {
+      // Menu'nun JSON stringini karşılaştır
+      const currentMenuString = JSON.stringify(menu);
+      if (currentMenuString !== previousMenu) {
+        debouncedSave(menu);
+        setPreviousMenu(currentMenuString);
       }
-    } catch (err) {
-      console.error('Failed to load restaurant data:', err);
-      setError('Failed to load restaurant data');
+    }
+  }, [menu, debouncedSave, isLoading, hasChanges, previousMenu]);
+
+  // İlk yükleme için ayrı bir useEffect
+  useEffect(() => {
+    if (menuId) {
+      loadMenuData();
+    }
+  }, [menuId]);
+
+  const loadMenuData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await restaurantService.getMenu(menuId!);
+      
+      if (!data) {
+        throw new Error('Menu data not found');
+      }
+
+      startTransition(() => {
+        setMenu(data);
+        setPreviousMenu(JSON.stringify(data)); // İlk yüklemede önceki menu'yu set et
+        setHasChanges(false); // İlk yüklemede değişiklik yok
+      });
+    } catch (error) {
+      console.error('Failed to load menu data:', error);
+      setError('Failed to load menu data. Please try again later.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const saveRestaurantData = async (updatedData: Restaurant) => {
-    if (!user || isSaving) return;
+  const handleDragEnd = (result: DropResult) => {
+    if (!menu || !result.destination) return;
+
+    const { source, destination, type } = result;
+
+    const reorder = <T extends any>(list: T[], startIndex: number, endIndex: number): T[] => {
+      const result = Array.from(list);
+      const [removed] = result.splice(startIndex, 1);
+      result.splice(endIndex, 0, removed);
+      return result;
+    };
+
+    let updatedMenu = { ...menu };
+
+    if (type === 'section') {
+      // Bölüm sıralaması değişti
+      updatedMenu.sections = reorder(
+        menu.sections,
+        source.index,
+        destination.index
+      );
+    } else if (type === 'item') {
+      // droppableId formatı: "items-{sectionId}"
+      const sourceSectionId = source.droppableId.replace('items-', '');
+      const destinationSectionId = destination.droppableId.replace('items-', '');
+      
+      if (sourceSectionId === destinationSectionId) {
+        // Aynı bölüm içinde item sıralaması
+        const sectionIndex = menu.sections.findIndex(s => s.id === sourceSectionId);
+        if (sectionIndex === -1) return;
+
+        const items = reorder(
+          menu.sections[sectionIndex].items,
+          source.index,
+          destination.index
+        );
+        updatedMenu.sections[sectionIndex].items = items;
+      } else {
+        // Farklı bölümler arası item taşıma
+        const sourceSectionIndex = menu.sections.findIndex(s => s.id === sourceSectionId);
+        const destSectionIndex = menu.sections.findIndex(s => s.id === destinationSectionId);
+        
+        if (sourceSectionIndex === -1 || destSectionIndex === -1) return;
+        
+        const sourceItems = [...menu.sections[sourceSectionIndex].items];
+        const destItems = [...menu.sections[destSectionIndex].items];
+        
+        const [movedItem] = sourceItems.splice(source.index, 1);
+        destItems.splice(destination.index, 0, movedItem);
+        
+        updatedMenu.sections[sourceSectionIndex].items = sourceItems;
+        updatedMenu.sections[destSectionIndex].items = destItems;
+      }
+    }
+
+    setMenu(updatedMenu);
+    setHasChanges(true);
+  };
+
+  const handleSave = async () => {
+    if (!menu || isSaving) return;
 
     try {
       setIsSaving(true);
       setError(null);
-      // Create a new reference with normalized IDs
+
+      // Validate menu data
       const validatedData = {
-        ...updatedData,
-        sections: updatedData.sections.map(section => {
-          const sectionId = section.id.startsWith('section-') 
-            ? section.id 
-            : `section-${section.id}`;
-            
-          return {
-            ...section,
-            id: sectionId,
-            items: section.items.map(item => ({
-              ...item,
-              id: item.id.startsWith('item-') ? item.id : `item-${item.id}`
-            }))
-          };
-        })
+        ...menu,
+        sections: menu.sections.map((section: MenuSection) => ({
+          ...section,
+          items: section.items.map((item: MenuItem) => ({
+            ...item,
+            price: Number(item.price)
+          }))
+        }))
       };
 
       // Save the normalized data
-      await restaurantService.updateRestaurant(restaurantId!, validatedData);
+      await restaurantService.updateMenu(menuId!, validatedData);
       
       // Update state with the same normalized data
-      setRestaurant(validatedData);
+      setMenu(validatedData);
     } catch (err) {
       console.error('Failed to save changes:', err);
       setError('Failed to save changes');
@@ -179,724 +372,355 @@ function MenuEdit() {
     }
   };
 
-  const onDragEnd = async (result: DropResult) => {
-    const { destination, source, type, draggableId } = result;
-
-    if (!destination || !restaurant) return;
-
-    // Aynı yere bırakıldıysa işlem yapma
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
+  // Menu state'ini güncelleyen ve değişiklikleri kaydeden yardımcı fonksiyon
+  const updateMenu = useCallback((updatedMenu: Menu) => {
+    const currentMenuString = JSON.stringify(updatedMenu);
+    if (currentMenuString !== previousMenu) {
+      setMenu(updatedMenu);
+      setHasChanges(true);
     }
+  }, [previousMenu]);
 
-    try {
-      let updatedRestaurant;
+  const handleAddSection = () => {
+    if (!menu) return;
 
-      // Bölüm taşıma
-      if (type === 'section') {
-        const reorderedSections = Array.from(restaurant.sections);
-        const [movedSection] = reorderedSections.splice(source.index, 1);
-        reorderedSections.splice(destination.index, 0, movedSection);
+    const newSection: MenuSection = {
+      id: `section-${uuidv4()}`,
+      title: t('menu.newSection'),
+      items: []
+    };
 
-        updatedRestaurant = { ...restaurant, sections: reorderedSections };
-      }
-      // Öğe taşıma
-      else if (type === 'item') {
-        // Remove any potential 'items-' prefix from the droppableIds
-        const sourceId = source.droppableId.replace('items-', '');
-        const destId = destination.droppableId.replace('items-', '');
-        
-        const sourceSection = restaurant.sections.find(s => s.id === sourceId);
-        const destSection = restaurant.sections.find(s => s.id === destId);
-
-        if (!sourceSection || !destSection) {
-          return;
-        }
-
-        // Taşınan öğeyi bul
-        const movedItem = sourceSection.items.find(item => item.id === draggableId);
-        if (!movedItem) {
-          return;
-        }
-
-        // Aynı bölüm içinde taşıma
-        if (source.droppableId === destination.droppableId) {
-          const newItems = Array.from(sourceSection.items);
-          newItems.splice(source.index, 1);
-          newItems.splice(destination.index, 0, movedItem);
-
-          updatedRestaurant = {
-            ...restaurant,
-            sections: restaurant.sections.map(section =>
-              section.id === sourceSection.id
-                ? { ...section, items: newItems }
-                : section
-            )
-          };
-        }
-        // Farklı bölümler arası taşıma
-        else {
-          const sourceItems = Array.from(sourceSection.items);
-          const [movedItem] = sourceItems.splice(source.index, 1);
-          const destItems = Array.from(destSection.items);
-          destItems.splice(destination.index, 0, movedItem);
-
-          updatedRestaurant = {
-            ...restaurant,
-            sections: restaurant.sections.map(section => {
-              if (section.id === sourceSection.id) {
-                return { ...section, items: sourceItems };
-              }
-              if (section.id === destSection.id) {
-                return { ...section, items: destItems };
-              }
-              return section;
-            })
-          };
-        }
-      }
-
-      if (updatedRestaurant) {
-        setRestaurant(updatedRestaurant);
-        await saveRestaurantData(updatedRestaurant);
-      }
-    } catch (error) {
-      console.error('Error during drag and drop:', error);
-      await loadRestaurantData();
-    }
-  };
-
-  const updateMenuItem = async (sectionId: string, updatedItem: EditingMenuItem) => {
-    if (!restaurant) return;
-
-    try {
-      setImageError(null);
-      setError(null);
-
-      // Tüm alanları validate et
-      const nameError = validateInput.name(updatedItem.name);
-      const descriptionError = validateInput.description(updatedItem.description || '');
-      const priceError = validateInput.price(updatedItem.tempPrice || '0');
-      const imageUrlError = validateInput.imageUrl(updatedItem.imageUrl || '');
-
-      // Hataları topla
-      const errors = [nameError, descriptionError, priceError, imageUrlError]
-        .filter(Boolean);
-
-      if (errors.length > 0) {
-        setError(errors[0]);
-        return;
-      }
-
-      // Sadece image URL'in çalışıp çalışmadığını kontrol et
-      if (updatedItem.imageUrl) {
-        const imageExists = await checkImageExists(updatedItem.imageUrl);
-        if (!imageExists) {
-          setImageError('Unable to load the image. Please check the URL');
-          return;
-        }
-      }
-
-      // tempPrice'ı number'a çevir veya 0 kullan
-      const finalPrice = updatedItem.tempPrice 
-        ? parseFloat(updatedItem.tempPrice) || 0 
-        : updatedItem.price;
-
-      // XSS koruması için HTML escape işlemi
-      const sanitizedItem: MenuItem = {
-        ...updatedItem,
-        name: updatedItem.name.replace(/[<>]/g, ''),
-        description: updatedItem.description?.replace(/[<>]/g, '') || '',
-        price: finalPrice,
-      };
-
-      const updatedSections = restaurant.sections.map(section => {
-        if (section.id === sectionId) {
-          return {
-            ...section,
-            items: section.items.map(item => 
-              item.id === sanitizedItem.id ? sanitizedItem : item
-            )
-          };
-        }
-        return section;
-      });
-
-      const updatedRestaurant = {
-        ...restaurant,
-        sections: updatedSections
-      };
-
-      await saveRestaurantData(updatedRestaurant);
-      setRestaurant(updatedRestaurant);
-      setEditingItem(null);
-    } catch (error) {
-      console.error('Failed to update menu item:', error);
-      setError('Failed to update menu item');
-    }
-  };
-
-  const deleteMenuItem = async (sectionId: string, itemId: string) => {
-    if (!restaurant || isDeletingItem) return;
-
-    try {
-      setIsDeletingItem(itemId);
-      const updatedSections = restaurant.sections.map(section => {
-        if (section.id === sectionId) {
-          return {
-            ...section,
-            items: section.items.filter(item => item.id !== itemId)
-          };
-        }
-        return section;
-      });
-
-      const updatedRestaurant = {
-        ...restaurant,
-        sections: updatedSections
-      };
-
-      await saveRestaurantData(updatedRestaurant);
-      setRestaurant(updatedRestaurant);
-    } finally {
-      setIsDeletingItem(null);
-    }
-  };
-
-  // Yeni: Section başlığını güncelleyen fonksiyon
-  const updateSectionTitle = async (sectionId: string, newTitle: string) => {
-    if (!restaurant) return;
-
-    try {
-      const titleError = validateInput.sectionTitle(newTitle);
-      if (titleError) {
-        setError(titleError);
-        return;
-      }
-
-      // XSS koruması için HTML escape işlemi
-      const sanitizedTitle = newTitle.replace(/[<>]/g, '');
-
-      const updatedSections = restaurant.sections.map(section => {
-        if (section.id === sectionId) {
-          return { ...section, title: sanitizedTitle };
-        }
-        return section;
-      });
-
-      const updatedRestaurant = { ...restaurant, sections: updatedSections };
-      await saveRestaurantData(updatedRestaurant);
-      setRestaurant(updatedRestaurant);
-      setEditingSection(null);
-    } catch (error) {
-      console.error('Failed to update section title:', error);
-      setError('Failed to update section title');
-    }
-  };
-
-  const deleteSection = async (sectionId: string) => {
-    if (!restaurant || isDeletingSection) return;
+    setExpandedSections(prev => new Set([...prev, newSection.id]));
     
-    try {
-      setIsDeletingSection(sectionId);
-      const updatedSections = restaurant.sections.filter(section => section.id !== sectionId);
-      const updatedRestaurant = { ...restaurant, sections: updatedSections };
-      await saveRestaurantData(updatedRestaurant);
-      setRestaurant(updatedRestaurant);
-    } finally {
-      setIsDeletingSection(null);
-    }
+    updateMenu({
+      ...menu,
+      sections: [...menu.sections, newSection]
+    });
   };
 
-  // First, update the renderDraggableItem function to handle editing properly
-  const renderDraggableItem = React.useCallback(
-    (item: MenuItem, index: number, sectionId: string) => (
-      <Draggable 
-        key={item.id} 
-        draggableId={item.id}
-        index={index}
-      >
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            className={`border rounded-lg p-2 sm:p-4 bg-white ${
-              snapshot.isDragging ? 'shadow-lg opacity-50 scale-105' : 'hover:shadow-md'
-            } transition-all`}
-          >
-            <div className="flex items-start">
-              <div
-                {...provided.dragHandleProps}
-                className="touch-manipulation p-1 sm:p-2 mr-1 sm:mr-2 cursor-grab active:cursor-grabbing"
-              >
-                <GripVertical className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-              </div>
-              <div className="flex-1 min-w-0 max-w-full">
-                {editingItem?.id === item.id ? (
-                  <div className="space-y-3">
-                    <div className="w-full">
-                      <input
-                        type="text"
-                        value={editingItem.name}
-                        onChange={(e) =>
-                          setEditingItem({
-                            ...editingItem,
-                            name: e.target.value,
-                          })
-                        }
-                        className="block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder={t('menu.itemName')}
-                      />
-                    </div>
-                    <div className="w-full">
-                      <input
-                        type="text"
-                        value={editingItem.description || ''}
-                        onChange={(e) =>
-                          setEditingItem({
-                            ...editingItem,
-                            description: e.target.value,
-                          })
-                        }
-                        className="block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder={t('menu.itemDescription')}
-                      />
-                    </div>
-                    <div className="w-full sm:w-48">
-                      <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('menu.itemPrice')}
-                      </label>
-                      <input
-                        id="price"
-                        type="number"
-                        value={editingItem.tempPrice ?? editingItem.price.toString()}
-                        onChange={(e) =>
-                          setEditingItem({
-                            ...editingItem,
-                            tempPrice: e.target.value,
-                          })
-                        }
-                        className="block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder="0.00"
-                        step="0.01"
-                      />
-                    </div>
-                    <div className="w-full">
-                      <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-1">
-                        {t('menu.imageUrl')}
-                      </label>
-                      <input
-                        id="imageUrl"
-                        type="text"
-                        value={editingItem.imageUrl || ''}
-                        onChange={(e) => {
-                          setImageError(null);
-                          setEditingItem({
-                            ...editingItem,
-                            imageUrl: e.target.value,
-                          })
-                        }}
-                        className={`block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 ${
-                          imageError ? 'border-red-300' : ''
-                        }`}
-                        placeholder="https://..."
-                      />
-                      {imageError && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {imageError}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex justify-end space-x-2 pt-2">
-                      <button
-                        onClick={() => {
-                          setEditingItem(null);
-                          setImageError(null);
-                        }}
-                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm text-gray-600 hover:text-gray-900"
-                      >
-                        {t('menu.cancel')}
-                      </button>
-                      <button
-                        onClick={() => updateMenuItem(sectionId, editingItem)}
-                        className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm btn"
-                        disabled={!!imageError}
-                      >
-                        {t('menu.save')}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-start justify-between">
-                    <div className="flex flex-1 min-w-0 space-x-3">
-                      {/* Image container */}
-                      {item.imageUrl && (
-                        <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden">
-                          <img
-                            src={item.imageUrl}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Resim yüklenemezse error class'ı ekle
-                              (e.target as HTMLImageElement).classList.add('error');
-                              // Placeholder göster
-                              (e.target as HTMLImageElement).src = 'https://via.placeholder.com/64';
-                            }}
-                          />
-                        </div>
-                      )}
-                      {/* Content container */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="text-lg font-semibold text-zinc-900 truncate">
-                            {item.name}
-                          </h3>
-                          <button
-                            onClick={() => setEditingItem({
-                              ...item,
-                              tempPrice: item.price.toString()
-                            })}
-                            className="p-1 text-zinc-400 hover:text-zinc-600 flex-shrink-0"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                        {item.description && (
-                          <p className="text-zinc-600 mt-1 line-clamp-2">
-                            {item.description}
-                          </p>
-                        )}
-                        <p className="text-zinc-800 font-medium mt-2">
-                          {CURRENCIES[restaurant?.currency || 'TRY'].symbol}
-                          {item.price.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => deleteMenuItem(sectionId, item.id)}
-                      className="p-2 text-red-600 hover:text-red-700 ml-2 flex-shrink-0"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </Draggable>
-    ),
-    [editingItem, setEditingItem, updateMenuItem, deleteMenuItem, restaurant?.currency, imageError]
-  );
+  const handleAddItem = (sectionId: string) => {
+    if (!menu) return;
 
-  // Move addMenuItem here
-  const addMenuItem = async (sectionId: string) => {
-    if (!restaurant || isAddingItem) return;
+    const newItem: MenuItem = {
+      id: `item-${uuidv4()}`,
+      name: t('menu.newItem'),
+      description: '',
+      price: 0,
+      imageUrl: ''
+    };
 
-    try {
-      setIsAddingItem(sectionId);
-      const newItem: MenuItem = {
-        id: `item-${uuidv4()}`,
-        name: t('menu.newItem'),
-        description: '',
-        price: 0,
-        imageUrl: '',
-      };
-
-      // Yeni item'ı düzenleme modunda açalım
-      setEditingItem({
-        ...newItem,
-        tempPrice: '', // Boş string olarak başlat
-      });
-
-      const updatedSections = restaurant.sections.map(section =>
-        section.id === sectionId
+    setMenu({
+      ...menu,
+      sections: menu.sections.map(section => 
+        section.id === sectionId 
           ? { ...section, items: [...section.items, newItem] }
           : section
-      );
+      )
+    });
+  };
 
-      const updatedRestaurant = { ...restaurant, sections: updatedSections };
-      saveRestaurantData(updatedRestaurant);
-      setRestaurant(updatedRestaurant);
-    } finally {
-      setIsAddingItem(null);
+  const handleCurrencyChange = (currency: CurrencyCode) => {
+    if (!menu) return;
+    updateMenu({ ...menu, currency });
+  };
+
+  const handleSectionTitleChange = (sectionId: string, newTitle: string) => {
+    if (!menu) return;
+
+    updateMenu({
+      ...menu,
+      sections: menu.sections.map(section =>
+        section.id === sectionId ? { ...section, title: newTitle } : section
+      )
+    });
+  };
+
+  const handleDeleteSection = (sectionId: string) => {
+    if (!menu) return;
+
+    updateMenu({
+      ...menu,
+      sections: menu.sections.filter(section => section.id !== sectionId)
+    });
+  };
+
+  const handleItemUpdate = (sectionId: string, itemId: string, updates: Partial<MenuItem>) => {
+    if (!menu) return;
+
+    updateMenu({
+      ...menu,
+      sections: menu.sections.map(section =>
+        section.id === sectionId
+          ? {
+              ...section,
+              items: section.items.map(item =>
+                item.id === itemId ? { ...item, ...updates } : item
+              )
+            }
+          : section
+      )
+    });
+  };
+
+  const handleDeleteItem = (sectionId: string, itemId: string) => {
+    if (!menu) return;
+
+    updateMenu({
+      ...menu,
+      sections: menu.sections.map(section =>
+        section.id === sectionId
+          ? {
+              ...section,
+              items: section.items.filter(item => item.id !== itemId)
+            }
+          : section
+      )
+    });
+  };
+
+  // Tüm section'ları expand/collapse etmek için
+  const handleExpandAll = (expand: boolean) => {
+    if (expand) {
+      setExpandedSections(new Set(menu?.sections.map(s => s.id) || []));
+      setAllExpanded(true);
+    } else {
+      setExpandedSections(new Set());
+      setAllExpanded(false);
     }
   };
 
-  const addSection = async () => {
-    if (!restaurant || isAddingSection) return;
-
-    try {
-      setIsAddingSection(true);
-      const newSection: MenuSection = {
-        id: `section-${uuidv4()}`,
-        title: t('menu.newSection'),
-        items: [],
-      };
-
-      const updatedRestaurant = {
-        ...restaurant,
-        sections: [...restaurant.sections, newSection],
-      };
-
-      saveRestaurantData(updatedRestaurant);
-      setRestaurant(updatedRestaurant);
-    } finally {
-      setIsAddingSection(false);
+  // Tekil section'ları expand/collapse etmek için
+  const toggleSection = (sectionId: string) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(sectionId)) {
+      newExpanded.delete(sectionId);
+    } else {
+      newExpanded.add(sectionId);
     }
+    setExpandedSections(newExpanded);
+    setAllExpanded(newExpanded.size === menu?.sections.length);
   };
 
-  // Then define renderDraggableSection
-  const renderDraggableSection = React.useCallback(
-    (section: MenuSection, index: number) => (
-      <Draggable 
-        key={section.id} 
-        draggableId={section.id}
-        index={index}
-      >
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.draggableProps}
-            className={`mb-12 bg-white rounded-lg shadow p-6 touch-manipulation ${
-              snapshot.isDragging ? 'opacity-50' : ''
-            }`}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center">
-                <span {...provided.dragHandleProps} className="cursor-grab mr-2 text-zinc-400">
-                  &#x2630;
-                </span>
-                {editingSection === section.id ? (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={editingSectionTitle}
-                      onChange={(e) => setEditingSectionTitle(e.target.value)}
-                      className="border-b border-zinc-200 focus:border-zinc-900 focus:outline-none"
-                      onBlur={() => {
-                        updateSectionTitle(section.id, editingSectionTitle);
-                        setEditingSection(null);
-                      }}
-                      autoFocus
-                    />
-                    <button
-                      onClick={() => setEditingSection(null)}
-                      className="p-2 text-zinc-600 hover:text-zinc-900"
-                    >
-                      <Save className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <h2 className="text-xl font-bold text-zinc-900">
-                      {section.title}
-                    </h2>
-                    <button
-                      onClick={() => {
-                        setEditingSectionTitle(section.title);
-                        setEditingSection(section.id);
-                      }}
-                      className="p-2 text-zinc-400 hover:text-zinc-600"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => addMenuItem(section.id)}
-                  disabled={isAddingItem === section.id}
-                  className="btn-secondary-sm"
-                >
-                  {isAddingItem === section.id ? (
-                    <span className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin" />
-                      <span>{t('menu.saving')}</span>
-                    </span>
-                  ) : (
-                    <span className="flex items-center space-x-2">
-                      <Plus className="h-4 w-4" />
-                      <span>{t('menu.addItem')}</span>
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => deleteSection(section.id)}
-                  disabled={isDeletingSection === section.id}
-                  className="p-2 text-zinc-400 hover:text-zinc-600 disabled:opacity-50"
-                >
-                  {isDeletingSection === section.id ? (
-                    <div className="w-5 h-5 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Trash2 className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <StrictModeDroppable 
-              droppableId={section.id}
-              type="item"
-            >
-              {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className={`space-y-4 ${
-                    snapshot.isDraggingOver ? 'bg-gray-50' : ''
-                  }`}
-                >
-                  {section.items.map((item, itemIndex) =>
-                    renderDraggableItem(item, itemIndex, section.id)
-                  )}
-                  {provided.placeholder}
-                </div>
-              )}
-            </StrictModeDroppable>
-          </div>
-        )}
-      </Draggable>
-    ),
-    [editingSection, editingSectionTitle, setEditingSectionTitle, updateSectionTitle, deleteSection, addMenuItem, renderDraggableItem]
-  );
-
-  const updateRestaurantName = async (newName: string) => {
-    if (!restaurant || !user) return;
-
-    try {
-      const updatedRestaurant = { ...restaurant, name: newName };
-      await restaurantService.updateRestaurant(restaurantId!, updatedRestaurant);
-      setRestaurant(updatedRestaurant);
-      setEditingRestaurantName(null);
-    } catch (error) {
-      console.error('Failed to update restaurant name:', error);
-      setError('Failed to update restaurant name');
-    }
-  };
-
-  const updateCurrency = async (newCurrency: CurrencyCode) => {
-    if (!restaurant || !user) return;
-
-    try {
-      const updatedRestaurant = { ...restaurant, currency: newCurrency };
-      await restaurantService.updateRestaurant(restaurantId!, updatedRestaurant);
-      setRestaurant(updatedRestaurant);
-    } catch (error) {
-      console.error('Failed to update currency:', error);
-      setError('Failed to update currency');
-    }
-  };
-
-  if (loading || !restaurant) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900"></div>
+      </div>
+    );
   }
 
-  // Get the current URL for the QR code
-  const menuUrl = `${window.location.origin}/${restaurantId}`;
+  if (error || !menu) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-red-50 p-4 rounded-md">
+          <p className="text-red-700">{error || t('common.error')}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          {/* Üst satır - Geri butonu ve restoran adı */}
-          <div className="flex items-center mb-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 rounded-md text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            {editingRestaurantName !== null ? (
-              <input
-                type="text"
-                value={editingRestaurantName}
-                onChange={(e) => setEditingRestaurantName(e.target.value)}
-                onBlur={() => updateRestaurantName(editingRestaurantName)}
-                className="ml-4 text-xl font-semibold text-zinc-900 border-b border-zinc-200 focus:border-zinc-900 focus:outline-none"
-                autoFocus
-              />
-            ) : (
-              <h1
-                className="ml-4 text-xl font-semibold text-zinc-900 cursor-pointer hover:text-zinc-700"
-                onClick={() => setEditingRestaurantName(restaurant?.name || '')}
-              >
-                {restaurant?.name}
-              </h1>
-            )}
-          </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="btn-secondary flex items-center space-x-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>{t('common.back')}</span>
+        </button>
 
-          {/* Alt satır - Butonlar */}
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleAddSection}
+            className="btn-secondary flex items-center space-x-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>{t('menu.addSection')}</span>
+          </button>
+          <a
+            href={`/menu/${menuId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary flex items-center space-x-2"
+          >
+            <Eye className="h-4 w-4" />
+            <span>{t('menu.viewMenu')}</span>
+          </a>
+          <button
+            onClick={() => setIsQrModalOpen(true)}
+            className="btn-secondary flex items-center space-x-2"
+          >
+            <QrCode className="h-4 w-4" />
+            <span>{t('menu.qrCode')}</span>
+          </button>
+          {isSaving && (
+            <span className="text-sm text-zinc-500 flex items-center">
+              <div className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin mr-2" />
+              {t('menu.saving')}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Currency Selection and Expand/Collapse Controls */}
+      {menu && menu.sections.length > 0 && (
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center">
+            <span className="text-zinc-700 font-medium mr-2">{t('menu.currency')}:</span>
             <CurrencySelect
-              value={restaurant?.currency || 'TRY'}
-              onChange={updateCurrency}
+              value={menu?.currency || 'TRY'}
+              onChange={handleCurrencyChange}
             />
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => window.open(`/${restaurantId}`, '_blank')}
-                className="btn-secondary-sm flex items-center space-x-2 whitespace-nowrap"
-              >
-                <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{t('menu.viewMenu')}</span>
-              </button>
-              <button
-                onClick={() => setIsQRModalOpen(true)}
-                className="btn-secondary-sm flex items-center space-x-2 whitespace-nowrap"
-              >
-                <QrCode className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>{t('menu.qrCode')}</span>
-              </button>
-              <button
-                onClick={addSection}
-                disabled={isAddingSection}
-                className="btn-sm flex items-center space-x-2 whitespace-nowrap"
-              >
-                {isAddingSection ? (
-                  <span className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>{t('menu.saving')}</span>
-                  </span>
-                ) : (
-                  <>
-                    <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span>{t('menu.addSection')}</span>
-                  </>
-                )}
-              </button>
-            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleExpandAll(true)}
+              className="btn-secondary-sm flex items-center space-x-2"
+              disabled={allExpanded}
+            >
+              <ChevronDown className="h-4 w-4" />
+              <span>{t('menu.expandAll')}</span>
+            </button>
+            <button
+              onClick={() => handleExpandAll(false)}
+              className="btn-secondary-sm flex items-center space-x-2"
+              disabled={!allExpanded && expandedSections.size === 0}
+            >
+              <ChevronRight className="h-4 w-4" />
+              <span>{t('menu.collapseAll')}</span>
+            </button>
           </div>
         </div>
-      </header>
+      )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <DragDropContext onDragEnd={onDragEnd}>
+      {menu && (
+        <DragDropContext onDragEnd={handleDragEnd}>
           <StrictModeDroppable droppableId="sections" type="section">
-            {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
-              <div {...provided.droppableProps} ref={provided.innerRef}>
-                {restaurant.sections.map((section, index) => 
-                  renderDraggableSection(section, index)
-                )}
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="space-y-6"
+              >
+                {menu.sections.map((section, index) => (
+                  <Draggable
+                    key={section.id}
+                    draggableId={section.id}
+                    index={index}
+                  >
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={`bg-white rounded-lg shadow-sm border-2 ${
+                          snapshot.isDragging ? 'border-zinc-400 shadow-lg' : 'border-zinc-200'
+                        }`}
+                      >
+                        {/* Section header */}
+                        <div className="p-4 border-b border-zinc-200 flex items-center bg-zinc-50 rounded-t-lg">
+                          <div {...provided.dragHandleProps} className="p-2 hover:bg-zinc-100 rounded cursor-grab active:cursor-grabbing">
+                            <GripVertical className="h-5 w-5 text-zinc-400" />
+                          </div>
+                          <button
+                            onClick={() => toggleSection(section.id)}
+                            className="p-2 hover:bg-zinc-100 rounded-md mr-2"
+                          >
+                            {expandedSections.has(section.id) ? (
+                              <ChevronDown className="h-5 w-5 text-zinc-500" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-zinc-500" />
+                            )}
+                          </button>
+                          <input
+                            type="text"
+                            value={section.title}
+                            onChange={(e) => handleSectionTitleChange(section.id, e.target.value)}
+                            className="flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 focus:border-none"
+                            placeholder={t('menu.sectionName')}
+                          />
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-zinc-500">
+                              {section.items.length} {section.items.length === 1 ? 'item' : 'items'}
+                            </span>
+                            <button
+                              onClick={() => handleDeleteSection(section.id)}
+                              className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Section items - Collapsible content */}
+                        {expandedSections.has(section.id) && (
+                          <StrictModeDroppable
+                            droppableId={`items-${section.id}`}
+                            type="item"
+                          >
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.droppableProps}
+                                className="p-4 space-y-4 min-h-[100px]"
+                              >
+                                {section.items.map((item, itemIndex) => (
+                                  <Draggable
+                                    key={item.id}
+                                    draggableId={item.id}
+                                    index={itemIndex}
+                                  >
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        className={snapshot.isDragging ? 'shadow-lg' : ''}
+                                      >
+                                        <ItemForm
+                                          item={item}
+                                          onUpdate={(updates) => handleItemUpdate(section.id, item.id, updates)}
+                                          onDelete={() => handleDeleteItem(section.id, item.id)}
+                                          dragHandleProps={provided.dragHandleProps}
+                                        />
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                ))}
+                                {provided.placeholder}
+                                <button
+                                  onClick={() => handleAddItem(section.id)}
+                                  className="w-full py-3 border-2 border-dashed border-zinc-200 rounded-lg text-zinc-500 
+                                  hover:border-zinc-300 hover:text-zinc-600 hover:bg-zinc-50 transition-colors
+                                  flex items-center justify-center"
+                                >
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  {t('menu.addItem')}
+                                </button>
+                              </div>
+                            )}
+                          </StrictModeDroppable>
+                        )}
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
                 {provided.placeholder}
               </div>
             )}
           </StrictModeDroppable>
         </DragDropContext>
-      </main>
+      )}
 
-      <QRCodeModal
-        isOpen={isQRModalOpen}
-        onClose={() => setIsQRModalOpen(false)}
-        menuUrl={menuUrl}
-        restaurantName={restaurant.name}
-      />
+      {isQrModalOpen && (
+        <QRCodeModal
+          isOpen={isQrModalOpen}
+          onClose={() => setIsQrModalOpen(false)}
+          menuUrl={`${window.location.origin}/menu/${menuId}`}
+          restaurantName={menu?.name || ''}
+        />
+      )}
     </div>
   );
 }
 
-// Bileşeni memo ile sarmalayalım
-export default React.memo(MenuEdit);
+export default MenuEdit;

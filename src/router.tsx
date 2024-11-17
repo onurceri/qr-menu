@@ -20,16 +20,17 @@ export function AppRouter() {
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/" element={<LandingPage />} />
-              <Route path="/restaurants" element={<RestaurantList />} />
-              <Route path="/:restaurantId" element={<MenuView />} />
-              <Route
-                path="/edit/:restaurantId"
-                element={
-                  <ProtectedRoute>
-                    <MenuEdit />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/restaurants" element={
+                <ProtectedRoute>
+                  <RestaurantList />
+                </ProtectedRoute>
+              } />
+              <Route path="/menu/:menuId" element={<MenuView />} />
+              <Route path="/edit/menu/:menuId" element={
+                <ProtectedRoute>
+                  <MenuEdit />
+                </ProtectedRoute>
+              } />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>

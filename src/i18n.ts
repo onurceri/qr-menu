@@ -12,7 +12,11 @@ const resources = {
         register: 'Register',
         logout: 'Logout',
         language: 'Language',
-        profile: 'Profile'
+        profile: 'Profile',
+        view: 'View',
+        edit: 'Edit',
+        delete: 'Delete',
+        back: 'Back'
       },
       restaurants: {
         title: 'Your Restaurants',
@@ -27,13 +31,19 @@ const resources = {
         view: 'View',
         edit: 'Edit',
         delete: 'Delete',
-        deleting: 'Deleting...'
+        deleting: 'Deleting...',
+        menus: 'Menus',
+        addMenu: 'Add Menu',
+        noMenus: 'No menus added yet',
+        selectLanguage: 'Select Language',
+        menuExists: 'Menu in this language already exists',
       },
       validation: {
         nameRequired: 'Restaurant name is required',
         nameTooLong: 'Restaurant name must be less than 100 characters',
         descriptionTooLong: 'Description must be less than 500 characters',
-        invalidCharacters: 'Invalid characters detected'
+        invalidCharacters: 'Invalid characters detected',
+        invalidImageUrl: 'Invalid image URL'
       },
       menu: {
         sections: 'Menu Sections',
@@ -56,7 +66,9 @@ const resources = {
         newItem: 'New Item',
         viewMenu: 'View Menu',
         qrCode: 'QR Code',
-        newSection: 'New Section'
+        newSection: 'New Section',
+        expandAll: 'Expand All',
+        collapseAll: 'Collapse All'
       }
     }
   },
@@ -69,7 +81,11 @@ const resources = {
         register: 'Kayıt Ol',
         logout: 'Çıkış Yap',
         language: 'Dil',
-        profile: 'Profil'
+        profile: 'Profil',
+        view: 'Görüntüle',
+        edit: 'Düzenle',
+        delete: 'Sil',
+        back: 'Geri'
       },
       restaurants: {
         title: 'Restoranlarınız',
@@ -84,13 +100,19 @@ const resources = {
         view: 'Görüntüle',
         edit: 'Düzenle',
         delete: 'Sil',
-        deleting: 'Siliniyor...'
+        deleting: 'Siliniyor...',
+        menus: 'Menüler',
+        addMenu: 'Menü Ekle',
+        noMenus: 'Henüz menü eklenmemiş',
+        selectLanguage: 'Dil Seçin',
+        menuExists: 'Bu dilde menü zaten mevcut',
       },
       validation: {
         nameRequired: 'Restoran adı zorunludur',
         nameTooLong: 'Restoran adı 100 karakterden kısa olmalıdır',
         descriptionTooLong: 'Açıklama 500 karakterden kısa olmalıdır',
-        invalidCharacters: 'Geçersiz karakterler tespit edildi'
+        invalidCharacters: 'Geçersiz karakterler tespit edildi',
+        invalidImageUrl: 'Geçersiz görsel URL\'si'
       },
       menu: {
         sections: 'Menü Bölümleri',
@@ -113,7 +135,9 @@ const resources = {
         newItem: 'Yeni Ürün',
         viewMenu: 'Menüyü Görüntüle',
         qrCode: 'QR Kod',
-        newSection: 'Yeni Bölüm'
+        newSection: 'Yeni Bölüm',
+        expandAll: 'Tümünü Genişlet',
+        collapseAll: 'Tümünü Daralt'
       }
     }
   },
@@ -126,7 +150,11 @@ const resources = {
         register: 'Inscription',
         logout: 'Déconnexion',
         language: 'Langue',
-        profile: 'Profil'
+        profile: 'Profil',
+        view: 'Voir',
+        edit: 'Modifier',
+        delete: 'Supprimer',
+        back: 'Retour'
       },
       restaurants: {
         title: 'Vos Restaurants',
@@ -141,13 +169,19 @@ const resources = {
         view: 'Voir',
         edit: 'Modifier',
         delete: 'Supprimer',
-        deleting: 'Suppression...'
+        deleting: 'Suppression...',
+        menus: 'Menus',
+        addMenu: 'Ajouter un Menu',
+        noMenus: 'Aucun menu ajouté',
+        selectLanguage: 'Sélectionner la Langue',
+        menuExists: 'Le menu dans cette langue existe déjà',
       },
       validation: {
         nameRequired: 'Le nom du restaurant est requis',
         nameTooLong: 'Le nom du restaurant doit faire moins de 100 caractères',
         descriptionTooLong: 'La description doit faire moins de 500 caractères',
-        invalidCharacters: 'Caractères invalides détectés'
+        invalidCharacters: 'Caractères invalides détectés',
+        invalidImageUrl: 'URL d\'image invalide'
       },
       menu: {
         sections: 'Sections du Menu',
@@ -170,7 +204,9 @@ const resources = {
         newItem: 'Nouvel Article',
         viewMenu: 'Voir le Menu',
         qrCode: 'Code QR',
-        newSection: 'Nouvelle Section'
+        newSection: 'Nouvelle Section',
+        expandAll: 'Tout développer',
+        collapseAll: 'Tout réduire'
       }
     }
   }

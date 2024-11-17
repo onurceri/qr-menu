@@ -16,26 +16,71 @@ const normalizeId = (id: string | number, type: 'section' | 'item'): string => {
 };
 
 // Public route - herkes menüyü görebilir
+router.get<{ menuId: string }>(
+  '/menu/:menuId',
+  async (req: Request<{ menuId: string }>, res: Response): Promise<void> => {
+    try {
+      const restaurant = await Restaurant.findOne({ 'menus.id': req.params.menuId });
+      if (!restaurant) {
+        console.warn(`Menu not found - menuId: ${req.params.menuId}`);
+        res.status(404).json({ error: 'Menu not found' });
+        return;
+      }
+
+      const menu = restaurant.menus.find(m => m.id === req.params.menuId);
+      if (!menu) {
+        console.warn(`Menu not found in restaurant - menuId: ${req.params.menuId}`);
+        res.status(404).json({ error: 'Menu not found' });
+        return;
+      }
+
+      res.json(menu);
+    } catch (error) {
+      const mongoError = error as Error;
+      console.error('Database operation failed:', {
+        error: mongoError.message,
+        path: req.path,
+        method: req.method
+      });
+      res.status(500).json({ error: 'Failed to fetch menu data' });
+    }
+  }
+);
+
+// Protected routes - sadece yetkilendirilmiş kullanıcılar
+router.use(authMiddleware as express.RequestHandler);
+
+// Protected route - sadece yetkilendirilmiş kullanıcılar görebilir
 router.get<{ restaurantId: string }>(
   '/:restaurantId',
-  async (req: Request<{ restaurantId: string }>, res: Response): Promise<void> => {
+  async (req: AuthRequest<{ restaurantId: string }>, res: Response): Promise<void> => {
     try {
       const restaurant = await Restaurant.findOne({ restaurantId: req.params.restaurantId });
       if (!restaurant) {
         res.status(404).json({ error: 'Restaurant not found' });
         return;
       }
+
+      // Yetki kontrolü ekleyelim
+      if (restaurant.userId !== req.user?.uid) {
+        console.warn(`Auth: Unauthorized restaurant access attempt - userId: ${req.user?.uid}, restaurantId: ${req.params.restaurantId}`);
+        res.status(403).json({ error: 'Not authorized to access this restaurant' });
+        return;
+      }
+
       res.json(restaurant);
     } catch (error) {
       const mongoError = error as Error;
-      console.error('Database operation failed');
-      res.status(500).json({ error: mongoError.message || 'Failed to fetch restaurant data' });
+      console.error('Database operation failed:', {
+        error: mongoError.message,
+        userId: req.user?.uid,
+        path: req.path,
+        method: req.method
+      });
+      res.status(500).json({ error: 'Failed to fetch restaurant data' });
     }
   }
 );
-
-// Protected routes - sadece yetkilendirilmiş kullanıcılar
-router.use(authMiddleware as express.RequestHandler); // Bundan sonraki tüm route'lar korunacak
 
 // Validation middleware
 const validate = (req: Request, res: Response, next: NextFunction): void => {
@@ -110,17 +155,27 @@ router.post(
   async (req: AuthRequest, res: Response) => {
     try {
       const restaurantId = uuidv4();
+      const { name, description } = req.body;
+
       const newRestaurant = new Restaurant({ 
-        ...req.body, 
+        name,
+        description,
         restaurantId,
-        userId: req.user?.uid // Kullanıcı ID'sini ekle
+        userId: req.user?.uid,
+        menus: [] // Başlangıçta boş menu array'i
       });
+
       const savedRestaurant = await newRestaurant.save();
       res.status(201).json(savedRestaurant);
     } catch (error) {
       const mongoError = error as Error;
-      console.error('Database operation failed');
-      res.status(500).json({ error: mongoError.message || 'Failed to create restaurant' });
+      console.error('Database operation failed:', {
+        error: mongoError.message,
+        userId: req.user?.uid,
+        path: req.path,
+        method: req.method
+      });
+      res.status(500).json({ error: 'Failed to create restaurant' });
     }
   }
 );
@@ -156,6 +211,86 @@ router.delete<{ restaurantId: string }>(
         method: req.method
       });
       res.status(500).json({ error: 'Failed to delete restaurant' });
+    }
+  }
+);
+
+// Menu güncelleme endpoint'i
+router.put<{ menuId: string }>(
+  '/menu/:menuId',
+  authMiddleware as express.RequestHandler,
+  async (req: AuthRequest<{ menuId: string }>, res: Response): Promise<void> => {
+    try {
+      const { menuId } = req.params;
+      const menuData = req.body;
+
+      // Önce restoranı ve menüyü bul
+      const restaurant = await Restaurant.findOne({ 'menus.id': menuId });
+      if (!restaurant) {
+        console.warn(`Menu not found - menuId: ${menuId}`);
+        res.status(404).json({ error: 'Menu not found' });
+        return;
+      }
+
+      // Yetki kontrolü
+      if (restaurant.userId !== req.user?.uid) {
+        console.warn(`Auth: Unauthorized menu update attempt - userId: ${req.user?.uid}, menuId: ${menuId}`);
+        res.status(403).json({ error: 'Not authorized to update this menu' });
+        return;
+      }
+
+      // Section ve item ID'lerini normalize et
+      if (menuData.sections) {
+        menuData.sections = menuData.sections.map((section: any) => ({
+          ...section,
+          id: normalizeId(section.id, 'section'),
+          items: section.items.map((item: any) => ({
+            ...item,
+            id: normalizeId(item.id, 'item')
+          }))
+        }));
+      }
+
+      // Menüyü güncelle - pozisyonal operatör yerine arrayFilters kullan
+      const updatedRestaurant = await Restaurant.findOneAndUpdate(
+        { 'menus.id': menuId },
+        {
+          $set: {
+            'menus.$[menu].name': menuData.name,
+            'menus.$[menu].description': menuData.description,
+            'menus.$[menu].sections': menuData.sections,
+            'menus.$[menu].currency': menuData.currency,
+            'menus.$[menu].language': menuData.language
+          }
+        },
+        {
+          arrayFilters: [{ 'menu.id': menuId }],
+          new: true
+        }
+      );
+
+      if (!updatedRestaurant) {
+        res.status(404).json({ error: 'Failed to update menu' });
+        return;
+      }
+
+      const updatedMenu = updatedRestaurant.menus.find(m => m.id === menuId);
+      if (!updatedMenu) {
+        res.status(404).json({ error: 'Updated menu not found' });
+        return;
+      }
+
+      res.json(updatedMenu);
+    } catch (error) {
+      const mongoError = error as Error;
+      console.error('Database operation failed:', {
+        error: mongoError.message,
+        path: req.path,
+        method: req.method,
+        menuId: req.params.menuId,
+        userId: req.user?.uid
+      });
+      res.status(500).json({ error: 'Failed to update menu' });
     }
   }
 );

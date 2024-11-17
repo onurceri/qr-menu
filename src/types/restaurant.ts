@@ -16,13 +16,25 @@ export interface MenuSection {
   _id?: string;
 }
 
+export interface Menu {
+  id: string;
+  language: string;
+  name: string;
+  description?: string;
+  sections: MenuSection[];
+  currency: CurrencyCode;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface Restaurant {
   _id?: string;
   userId: string;
   restaurantId: string;
   name: string;
   description?: string;
-  sections: MenuSection[];
-  currency: CurrencyCode;
+  menus: Menu[];
+  createdAt?: Date;
+  updatedAt?: Date;
   __v?: number;
 }

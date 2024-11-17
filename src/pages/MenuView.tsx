@@ -1,54 +1,40 @@
 import { restaurantService } from '../services/restaurantService';
-import { useEffect, useState } from 'react';
-import { Restaurant, MenuSection as MenuSectionType } from '../types/restaurant';
+import { useEffect, useState, startTransition } from 'react';
+import type { Menu, MenuSection as MenuSectionType } from '../types/restaurant';
 import { MenuSection } from '../components/MenuSection';
-import { AuthProvider } from '../contexts/AuthContext';
 import { useParams } from 'react-router-dom';
 import React from 'react';
-import { startTransition } from 'react';
-import type { CurrencyCode } from '../constants/currencies';
-import { Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 function MenuView() {
-  const { restaurantId } = useParams<{ restaurantId: string }>();
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const { menuId } = useParams<{ menuId: string }>();
+  const [menu, setMenu] = useState<Menu | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (restaurantId) {
-      loadRestaurantData();
+    if (menuId) {
+      loadMenuData();
     }
-  }, [restaurantId]);
+  }, [menuId]);
 
-  const loadRestaurantData = async () => {
+  const loadMenuData = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await restaurantService.getRestaurant(restaurantId!);
+      const data = await restaurantService.getMenu(menuId!);
       
       if (!data) {
-        throw new Error('Restaurant data not found');
+        throw new Error('Menu data not found');
       }
 
       startTransition(() => {
-        const validatedRestaurant: Restaurant = {
-          _id: data._id,
-          userId: data.userId || '',
-          name: data.name || '',
-          sections: data.sections || [],
-          currency: (data.currency || 'TRY') as CurrencyCode,
-          __v: data.__v
-        };
-        
-        setRestaurant(validatedRestaurant);
+        setMenu(data);
       });
     } catch (error) {
-      console.error('Failed to load restaurant data:', error);
-      setError('Failed to load restaurant data. Please try again later.');
+      console.error('Failed to load menu data:', error);
+      setError('Failed to load menu data. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -57,80 +43,48 @@ function MenuView() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900"></div>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !menu) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-600">{error}</div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-red-50 p-4 rounded-md">
+          <p className="text-red-700">{error || t('common.error')}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <AuthProvider>
-      <div className="h-screen flex flex-col">
-        {/* Sidebar toggle button */}
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="fixed left-4 top-20 md:hidden z-50 p-2 bg-white rounded-md shadow-md"
-        >
-          <Menu className="h-6 w-6" />
-        </button>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="bg-white rounded-lg shadow-sm">
+        <div className="p-6 border-b border-zinc-200">
+          <h1 className="text-3xl font-bold text-zinc-900">{menu.name}</h1>
+          {menu.description && (
+            <p className="mt-2 text-zinc-600">{menu.description}</p>
+          )}
+        </div>
 
-        <div className="flex-1 relative flex overflow-hidden">
-          {/* Overlay */}
-          <div
-            className={`fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 md:hidden ${
-              isSidebarOpen ? 'opacity-100 z-20' : 'opacity-0 pointer-events-none'
-            }`}
-            onClick={() => setIsSidebarOpen(false)}
-          />
-          {/* Sidebar */}
-          <aside
-            className={`fixed md:static w-64 h-full bg-white shadow-lg transition-transform duration-300 ease-in-out z-30 ${
-              isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-            }`}
-          >
-            <div className="p-4 pt-20"> {/* Increased top padding for header */}
-              <h2 className="text-xl font-bold mb-4">{t('menu.sections')}</h2>
-              <nav>
-                {restaurant?.sections?.map((section: MenuSectionType) => (
-                  <a
-                    key={section.id}
-                    href={`#${section.title}`}
-                    className="block py-2 hover:bg-gray-100 rounded px-2"
-                    onClick={() => setIsSidebarOpen(false)}
-                  >
-                    {section.title}
-                  </a>
-                ))}
-              </nav>
+        <div className="p-6">
+          {menu.sections.map((section: MenuSectionType) => (
+            <MenuSection 
+              key={section.id} 
+              section={section} 
+              currency={menu.currency} 
+            />
+          ))}
+
+          {menu.sections.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-zinc-500">{t('menu.noSections')}</p>
             </div>
-          </aside>
-          {/* Main Content */}
-          <main className="flex-1 overflow-y-auto bg-gray-100 p-4 pt-20"> {/* Increased top padding for header */}
-            {restaurant && (
-              <div className="max-w-4xl mx-auto">
-                <h1 className="text-3xl font-bold text-zinc-900 mb-6">
-                  {restaurant.name}
-                </h1>
-                  {restaurant.sections?.map((section: MenuSectionType) => (
-                    <MenuSection
-                      key={section.id}
-                      section={section}
-                      currency={restaurant.currency}
-                    />
-                  ))}
-              </div>
-            )}
-          </main>
+          )}
         </div>
       </div>
-    </AuthProvider>
+    </div>
   );
 }
 

@@ -1,9 +1,11 @@
-import type { Restaurant, MenuSection, MenuItem } from '../types/restaurant';
+import type { Restaurant, MenuSection, MenuItem, Menu } from '../types/restaurant';
 import { getAuth } from 'firebase/auth';
 
 const API_URL = '/api';
 
 const normalizeId = (id: string | number, prefix: string): string => {
+    if (prefix === 'menu') return String(id);
+    
     const stringId = String(id);
     return stringId.startsWith(prefix) ? stringId : `${prefix}-${stringId}`;
 };
@@ -36,21 +38,26 @@ export const restaurantService = {
         }
     },
 
-    async updateRestaurant(restaurantId: string, data: Partial<Restaurant>): Promise<Restaurant> {
+    async updateRestaurant(restaurantId: string, data: Partial<Restaurant> | Partial<Menu>): Promise<Restaurant> {
         try {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
             const normalizedData = { ...data };
-            if (normalizedData.sections) {
-                normalizedData.sections = normalizedData.sections.map((section: MenuSection) => ({
-                    ...section,
-                    id: normalizeId(section.id, 'section'),
-                    items: section.items.map((item: MenuItem) => ({
-                        ...item,
-                        id: normalizeId(item.id, 'item')
-                    }))
-                }));
+            
+            // Menu güncellemesi ise
+            if ('sections' in normalizedData) {
+                const menuData = normalizedData as Partial<Menu>;
+                if (menuData.sections) {
+                    menuData.sections = menuData.sections.map((section: MenuSection) => ({
+                        ...section,
+                        id: normalizeId(section.id, 'section'),
+                        items: section.items.map((item: MenuItem) => ({
+                            ...item,
+                            id: normalizeId(item.id, 'item')
+                        }))
+                    }));
+                }
             }
 
             const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
@@ -139,6 +146,44 @@ export const restaurantService = {
         } catch (error) {
             logError('deleteRestaurant error:', error);
             throw new Error('Failed to delete restaurant');
+        }
+    },
+
+    async getMenu(menuId: string): Promise<Menu | null> {
+        try {
+            const response = await fetch(`${API_URL}/restaurant/menu/${menuId}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch menu');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            logError('getMenu error:', error);
+            throw new Error('Failed to fetch menu');
+        }
+    },
+
+    async updateMenu(menuId: string, data: Menu): Promise<Menu> {
+        try {
+            const token = await getAuthToken();
+            if (!token) throw new Error('Not authenticated');
+
+            const response = await fetch(`${API_URL}/restaurant/menu/${menuId}`, {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(data),
+            });
+            
+            if (!response.ok) throw new Error('Failed to update menu');
+            
+            return await response.json();
+        } catch (error) {
+            logError('updateMenu error:', error);
+            throw new Error('Failed to update menu');
         }
     },
 };

@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { restaurantService } from '../services/restaurantService';
 import type { Restaurant } from '../types/restaurant';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, Edit2, Trash2, Plus } from 'lucide-react';
+import { Eye, Edit2, Trash2, Plus, Globe, PlusCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../constants/languages';
+import { v4 as uuidv4 } from 'uuid';
 
 const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void }) => (
   <div className="rounded-md bg-red-50 p-4 mb-4">
@@ -36,22 +38,7 @@ const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void
 );
 
 // Input validation fonksiyonlarını ekleyelim
-const validateInput = {
-  restaurantName: (value: string) => {
-    if (!value.trim()) return t('validation.nameRequired');
-    if (value.length > 100) return t('validation.nameTooLong');
-    if (/[<>{}]/g.test(value)) return t('validation.invalidCharacters');
-    return null;
-  },
-
-  description: (value: string) => {
-    if (value.length > 500) return t('validation.descriptionTooLong');
-    if (/[<>{}]/g.test(value)) return t('validation.invalidCharacters');
-    return null;
-  }
-};
-
-export default function RestaurantList() {
+const RestaurantList = () => {
     const { user, signOut } = useAuth();
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -61,7 +48,23 @@ export default function RestaurantList() {
     const [newRestaurantDescription, setNewRestaurantDescription] = useState<string>('');
     const [isCreating, setIsCreating] = useState(false);
     const [isDeletingRestaurant, setIsDeletingRestaurant] = useState<string | null>(null);
+    const [isAddingMenu, setIsAddingMenu] = useState<string | null>(null);
     const { t } = useTranslation();
+
+    const validateInput = {
+        restaurantName: (value: string) => {
+            if (!value.trim()) return t('validation.nameRequired');
+            if (value.length > 100) return t('validation.nameTooLong');
+            if (/[<>{}]/g.test(value)) return t('validation.invalidCharacters');
+            return null;
+        },
+
+        description: (value: string) => {
+            if (value.length > 500) return t('validation.descriptionTooLong');
+            if (/[<>{}]/g.test(value)) return t('validation.invalidCharacters');
+            return null;
+        }
+    };
 
     useEffect(() => {
         if (!user) {
@@ -142,6 +145,42 @@ export default function RestaurantList() {
             console.error(err);
         } finally {
             setIsDeletingRestaurant(null);
+        }
+    };
+
+    const handleCreateMenu = async (restaurantId: string, language: string) => {
+        try {
+            const restaurant = restaurants.find(r => r.restaurantId === restaurantId);
+            if (!restaurant) return;
+
+            // Eğer bu dilde zaten bir menü varsa, oluşturma
+            if (restaurant.menus.some(menu => menu.language === language)) {
+                setError(t('restaurants.menuExists'));
+                return;
+            }
+
+            const menuData = {
+                id: uuidv4(),
+                language,
+                name: restaurant.name,
+                description: restaurant.description,
+                sections: [],
+                currency: 'TRY' as const
+            };
+
+            const updatedRestaurant = await restaurantService.updateRestaurant(restaurantId, {
+                menus: [...restaurant.menus, menuData]
+            });
+
+            // Restoran listesini güncelle
+            setRestaurants(restaurants.map(r => 
+                r.restaurantId === restaurantId ? updatedRestaurant : r
+            ));
+        } catch (err) {
+            setError('Failed to create menu');
+            console.error(err);
+        } finally {
+            setIsAddingMenu(null);
         }
     };
 
@@ -241,7 +280,7 @@ export default function RestaurantList() {
                 <div className="space-y-4">
                     {restaurants.map((restaurant) => (
                         <div key={restaurant.restaurantId} className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200">
-                            <div className="flex justify-between items-start">
+                            <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <h2 className="text-xl font-semibold text-zinc-900">{restaurant.name}</h2>
                                     {restaurant.description && (
@@ -249,20 +288,6 @@ export default function RestaurantList() {
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <button 
-                                        onClick={() => navigate(`/${restaurant.restaurantId}`)} 
-                                        className="btn-secondary-sm flex items-center space-x-2"
-                                    >
-                                        <Eye className="h-4 w-4" />
-                                        <span>{t('restaurants.view')}</span>
-                                    </button>
-                                    <button 
-                                        onClick={() => navigate(`/edit/${restaurant.restaurantId}`)} 
-                                        className="btn-secondary-sm flex items-center space-x-2"
-                                    >
-                                        <Edit2 className="h-4 w-4" />
-                                        <span>{t('restaurants.edit')}</span>
-                                    </button>
                                     <button 
                                         onClick={() => handleDeleteRestaurant(restaurant.restaurantId)}
                                         disabled={isDeletingRestaurant === restaurant.restaurantId}
@@ -282,6 +307,95 @@ export default function RestaurantList() {
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Menü Listesi */}
+                            <div className="mt-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-lg font-medium text-zinc-800">
+                                        <Globe className="inline-block w-5 h-5 mr-2" />
+                                        {t('restaurants.menus')}
+                                    </h3>
+                                    <button
+                                        onClick={() => setIsAddingMenu(restaurant.restaurantId)}
+                                        className="btn-secondary-sm"
+                                    >
+                                        <PlusCircle className="w-4 h-4 mr-1" />
+                                        {t('restaurants.addMenu')}
+                                    </button>
+                                </div>
+
+                                {/* Menü Ekleme Dropdown'ı */}
+                                {isAddingMenu === restaurant.restaurantId && (
+                                    <div className="mt-2 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+                                        <h4 className="text-sm font-medium text-zinc-700 mb-2">
+                                            {t('restaurants.selectLanguage')}
+                                        </h4>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                            {SUPPORTED_LANGUAGES.map((lang: SupportedLanguage) => {
+                                                const hasMenu = restaurant.menus.some(
+                                                    menu => menu.language === lang.code
+                                                );
+                                                return (
+                                                    <button
+                                                        key={lang.code}
+                                                        onClick={() => handleCreateMenu(restaurant.restaurantId, lang.code)}
+                                                        disabled={hasMenu}
+                                                        className={`flex items-center p-2 rounded ${
+                                                            hasMenu 
+                                                                ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' 
+                                                                : 'bg-white hover:bg-zinc-50 text-zinc-700'
+                                                        }`}
+                                                    >
+                                                        <span className="mr-2">{lang.flag}</span>
+                                                        <span>{lang.name}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Mevcut Menüler */}
+                                <div className="space-y-2 mt-4">
+                                    {restaurant.menus.length === 0 ? (
+                                        <p className="text-zinc-500 text-sm">
+                                            {t('restaurants.noMenus')}
+                                        </p>
+                                    ) : (
+                                        restaurant.menus.map(menu => {
+                                            const language = SUPPORTED_LANGUAGES.find(
+                                                (lang: SupportedLanguage) => lang.code === menu.language
+                                            );
+                                            return (
+                                                <div key={menu.id} 
+                                                    className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg"
+                                                >
+                                                    <div className="flex items-center">
+                                                        <span className="mr-2">{language?.flag}</span>
+                                                        <span className="text-zinc-700">{menu.name}</span>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button 
+                                                            onClick={() => navigate(`/menu/${menu.id}`)}
+                                                            className="btn-secondary-sm"
+                                                        >
+                                                            <Eye className="w-4 h-4 mr-1" />
+                                                            {t('common.view')}
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => navigate(`/edit/menu/${menu.id}`)}
+                                                            className="btn-secondary-sm"
+                                                        >
+                                                            <Edit2 className="w-4 h-4 mr-1" />
+                                                            {t('common.edit')}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -289,3 +403,5 @@ export default function RestaurantList() {
         </div>
     );
 }
+
+export default RestaurantList;
