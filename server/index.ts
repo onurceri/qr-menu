@@ -36,9 +36,20 @@ app.use(express.json({ limit: '10kb' }));
 app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
 
-mongoose.connect(process.env.MONGODB_URI!)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+mongoose.connect(process.env.MONGODB_URI!, {
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  family: 4,  // Sadece IPv4 kullan
+  retryWrites: true,
+  w: 'majority',
+  maxPoolSize: 10,
+  minPoolSize: 5
+})
+.then(() => console.log('✅ Connected to MongoDB'))
+.catch(err => {
+  console.error('❌ MongoDB connection error:', err);
+  console.error('Connection string:', process.env.MONGODB_URI?.replace(/\/\/.*@/, '//<credentials>@'));
+});
 
 app.use('/api/restaurant', restaurantRoutes);
 app.use('/api/user', userRoutes);
