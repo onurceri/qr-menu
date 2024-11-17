@@ -37,6 +37,7 @@ const resources = {
         noMenus: 'No menus added yet',
         selectLanguage: 'Select Language',
         menuExists: 'Menu in this language already exists',
+        menuInLanguage: '{{language}} Menu'
       },
       validation: {
         nameRequired: 'Restaurant name is required',
@@ -106,6 +107,7 @@ const resources = {
         noMenus: 'Henüz menü eklenmemiş',
         selectLanguage: 'Dil Seçin',
         menuExists: 'Bu dilde menü zaten mevcut',
+        menuInLanguage: '{{language}} Menü'
       },
       validation: {
         nameRequired: 'Restoran adı zorunludur',
@@ -175,6 +177,7 @@ const resources = {
         noMenus: 'Aucun menu ajouté',
         selectLanguage: 'Sélectionner la Langue',
         menuExists: 'Le menu dans cette langue existe déjà',
+        menuInLanguage: 'Menu {{language}}'
       },
       validation: {
         nameRequired: 'Le nom du restaurant est requis',

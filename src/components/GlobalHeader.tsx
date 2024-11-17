@@ -10,6 +10,14 @@ export function GlobalHeader() {
   const { user, signOut } = useAuth();
   const { t } = useTranslation();
 
+  const handleLogoClick = () => {
+    if (user) {
+      navigate('/restaurants');
+    } else {
+      navigate('/');
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -24,7 +32,7 @@ export function GlobalHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex items-center justify-between h-full">
           <button 
-            onClick={() => navigate('/')}
+            onClick={handleLogoClick}
             className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
           >
             <ChefHat className="icon-responsive-xl text-zinc-900" />
