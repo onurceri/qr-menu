@@ -8,6 +8,7 @@ import React from 'react';
 import { startTransition } from 'react';
 import type { CurrencyCode } from '../constants/currencies';
 import { Menu } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function MenuView() {
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -15,6 +16,7 @@ function MenuView() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (restaurantId) {
@@ -94,7 +96,7 @@ function MenuView() {
             }`}
           >
             <div className="p-4 pt-20"> {/* Increased top padding for header */}
-              <h2 className="text-xl font-bold mb-4">Menu Sections</h2>
+              <h2 className="text-xl font-bold mb-4">{t('menu.sections')}</h2>
               <nav>
                 {restaurant?.sections?.map((section: MenuSectionType) => (
                   <a
@@ -116,13 +118,13 @@ function MenuView() {
                 <h1 className="text-3xl font-bold text-zinc-900 mb-6">
                   {restaurant.name}
                 </h1>
-                {restaurant.sections?.map((section: MenuSectionType) => (
-                  <MenuSection
-                    key={section.id}
-                    section={section}
-                    currency={restaurant.currency}
-                  />
-                ))}
+                  {restaurant.sections?.map((section: MenuSectionType) => (
+                    <MenuSection
+                      key={section.id}
+                      section={section}
+                      currency={restaurant.currency}
+                    />
+                  ))}
               </div>
             )}
           </main>

@@ -5,6 +5,7 @@ import { restaurantService } from '../services/restaurantService';
 import type { Restaurant } from '../types/restaurant';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, Edit2, Trash2, Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void }) => (
   <div className="rounded-md bg-red-50 p-4 mb-4">
@@ -37,17 +38,15 @@ const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void
 // Input validation fonksiyonlarını ekleyelim
 const validateInput = {
   restaurantName: (value: string) => {
-    if (!value.trim()) return 'Restaurant name is required';
-    if (value.length > 100) return 'Restaurant name must be less than 100 characters';
-    // XSS koruması için özel karakterleri kontrol et
-    if (/[<>{}]/g.test(value)) return 'Invalid characters detected';
+    if (!value.trim()) return t('validation.nameRequired');
+    if (value.length > 100) return t('validation.nameTooLong');
+    if (/[<>{}]/g.test(value)) return t('validation.invalidCharacters');
     return null;
   },
 
   description: (value: string) => {
-    if (value.length > 500) return 'Description must be less than 500 characters';
-    // XSS koruması için özel karakterleri kontrol et
-    if (/[<>{}]/g.test(value)) return 'Invalid characters detected';
+    if (value.length > 500) return t('validation.descriptionTooLong');
+    if (/[<>{}]/g.test(value)) return t('validation.invalidCharacters');
     return null;
   }
 };
@@ -62,6 +61,7 @@ export default function RestaurantList() {
     const [newRestaurantDescription, setNewRestaurantDescription] = useState<string>('');
     const [isCreating, setIsCreating] = useState(false);
     const [isDeletingRestaurant, setIsDeletingRestaurant] = useState<string | null>(null);
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (!user) {
@@ -153,14 +153,18 @@ export default function RestaurantList() {
         );
     }
 
+    if (error) {
+        return <div>{t('common.error')}</div>;
+    }
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex justify-between items-center mb-8">
-                <h1 className="text-2xl font-bold text-zinc-900">Your Restaurants</h1>
+                <h1 className="text-2xl font-bold text-zinc-900">{t('restaurants.title')}</h1>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-zinc-200">
-                <h2 className="text-lg font-semibold text-zinc-900 mb-4">Add New Restaurant</h2>
+                <h2 className="text-lg font-semibold text-zinc-900 mb-4">{t('restaurants.addNew')}</h2>
                 {error && (
                     <ErrorAlert 
                         message={error} 
@@ -179,7 +183,7 @@ export default function RestaurantList() {
                             else setError(null);
                         }}
                         maxLength={100}
-                        placeholder="Restaurant Name" 
+                        placeholder={t('restaurants.name')}
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent
                             ${error ? 'border-red-300' : 'border-zinc-300'}`}
                     />
@@ -194,7 +198,7 @@ export default function RestaurantList() {
                             else setError(null);
                         }}
                         maxLength={500}
-                        placeholder="Restaurant Description (optional)" 
+                        placeholder={t('restaurants.description')}
                         className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
                     />
                     <button 
@@ -205,12 +209,12 @@ export default function RestaurantList() {
                         {isCreating ? (
                             <span className="flex items-center space-x-2">
                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                <span>Creating...</span>
+                                <span>{t('restaurants.creating')}</span>
                             </span>
                         ) : (
                             <>
                                 <Plus className="h-4 w-4" />
-                                <span>Add Restaurant</span>
+                                <span>{t('restaurants.add')}</span>
                             </>
                         )}
                     </button>
@@ -221,14 +225,14 @@ export default function RestaurantList() {
                 <div className="bg-white p-8 rounded-lg shadow-sm border border-zinc-200 text-center">
                     <div className="max-w-md mx-auto">
                         <h3 className="text-lg font-medium text-zinc-900 mb-2">
-                            No Restaurants Yet
+                            {t('restaurants.noRestaurants')}
                         </h3>
                         <p className="text-zinc-600 mb-4">
-                            You haven't added any restaurants yet. Create your first restaurant using the form above to get started.
+                            {t('restaurants.noRestaurantsDesc')}
                         </p>
                         <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-100">
                             <p className="text-sm text-zinc-500">
-                                💡 Tip: After creating a restaurant, you can add menu sections and items to showcase your offerings.
+                                {t('restaurants.tip')}
                             </p>
                         </div>
                     </div>
@@ -236,10 +240,7 @@ export default function RestaurantList() {
             ) : (
                 <div className="space-y-4">
                     {restaurants.map((restaurant) => (
-                        <div 
-                            key={restaurant.restaurantId} 
-                            className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200"
-                        >
+                        <div key={restaurant.restaurantId} className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200">
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h2 className="text-xl font-semibold text-zinc-900">{restaurant.name}</h2>
@@ -253,14 +254,14 @@ export default function RestaurantList() {
                                         className="btn-secondary-sm flex items-center space-x-2"
                                     >
                                         <Eye className="h-4 w-4" />
-                                        <span>View</span>
+                                        <span>{t('restaurants.view')}</span>
                                     </button>
                                     <button 
                                         onClick={() => navigate(`/edit/${restaurant.restaurantId}`)} 
                                         className="btn-secondary-sm flex items-center space-x-2"
                                     >
                                         <Edit2 className="h-4 w-4" />
-                                        <span>Edit</span>
+                                        <span>{t('restaurants.edit')}</span>
                                     </button>
                                     <button 
                                         onClick={() => handleDeleteRestaurant(restaurant.restaurantId)}
@@ -270,12 +271,12 @@ export default function RestaurantList() {
                                         {isDeletingRestaurant === restaurant.restaurantId ? (
                                             <span className="flex items-center space-x-2">
                                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                <span>Deleting...</span>
+                                                <span>{t('restaurants.deleting')}</span>
                                             </span>
                                         ) : (
                                             <>
                                                 <Trash2 className="h-4 w-4" />
-                                                <span>Delete</span>
+                                                <span>{t('restaurants.delete')}</span>
                                             </>
                                         )}
                                     </button>

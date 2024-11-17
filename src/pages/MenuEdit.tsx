@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CurrencySelect } from '../components/CurrencySelect';
 import { CURRENCIES, type CurrencyCode } from '../constants/currencies';
 import { StrictModeDroppable } from '../components/StrictModeDroppable';
+import { useTranslation } from 'react-i18next';
 
 // MenuItem interface'ine price'ı string olarak tutan geçici bir alan ekleyelim
 interface EditingMenuItem extends MenuItem {
@@ -97,6 +98,7 @@ function MenuEdit() {
   const [isAddingItem, setIsAddingItem] = useState<string | null>(null);
   const [isAddingSection, setIsAddingSection] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (restaurantId) {
@@ -446,7 +448,7 @@ function MenuEdit() {
                           })
                         }
                         className="block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder="Item name"
+                        placeholder={t('menu.itemName')}
                       />
                     </div>
                     <div className="w-full">
@@ -460,12 +462,12 @@ function MenuEdit() {
                           })
                         }
                         className="block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder="Description"
+                        placeholder={t('menu.itemDescription')}
                       />
                     </div>
                     <div className="w-full sm:w-48">
                       <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                        Price
+                        {t('menu.itemPrice')}
                       </label>
                       <input
                         id="price"
@@ -484,7 +486,7 @@ function MenuEdit() {
                     </div>
                     <div className="w-full">
                       <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-1">
-                        Image URL
+                        {t('menu.imageUrl')}
                       </label>
                       <input
                         id="imageUrl"
@@ -516,14 +518,14 @@ function MenuEdit() {
                         }}
                         className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm text-gray-600 hover:text-gray-900"
                       >
-                        Cancel
+                        {t('menu.cancel')}
                       </button>
                       <button
                         onClick={() => updateMenuItem(sectionId, editingItem)}
                         className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm btn"
                         disabled={!!imageError}
                       >
-                        Save
+                        {t('menu.save')}
                       </button>
                     </div>
                   </div>
@@ -598,7 +600,7 @@ function MenuEdit() {
       setIsAddingItem(sectionId);
       const newItem: MenuItem = {
         id: `item-${uuidv4()}`,
-        name: 'New Item',
+        name: t('menu.newItem'),
         description: '',
         price: 0,
         imageUrl: '',
@@ -714,12 +716,12 @@ function MenuEdit() {
                   {isAddingItem === section.id ? (
                     <span className="flex items-center space-x-2">
                       <div className="w-4 h-4 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin" />
-                      <span>Adding...</span>
+                      <span>{t('menu.saving')}</span>
                     </span>
                   ) : (
                     <span className="flex items-center space-x-2">
                       <Plus className="h-4 w-4" />
-                      <span>Add Item</span>
+                      <span>{t('menu.addItem')}</span>
                     </span>
                   )}
                 </button>
@@ -857,12 +859,12 @@ function MenuEdit() {
                 {isAddingSection ? (
                   <span className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Adding...</span>
+                    <span>{t('menu.saving')}</span>
                   </span>
                 ) : (
                   <>
                     <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span>Add Section</span>
+                    <span>{t('menu.addSection')}</span>
                   </>
                 )}
               </button>
