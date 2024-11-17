@@ -10,7 +10,7 @@ interface MenuSectionProps {
 
 export function MenuSection({ section, currency }: MenuSectionProps) {
   return (
-    <div id={section.title} className="mb-8">
+    <div id={section.id} className="mb-8">
       <h2 className="text-2xl font-bold text-zinc-900 mb-4">{section.title}</h2>
       <div className="space-y-4">
         {section.items.map((item) => (
