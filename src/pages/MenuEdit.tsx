@@ -385,10 +385,18 @@ function MenuEdit() {
                     </div>
                   </div>
                 ) : (
-                  // Display mode
+                  // Modified display mode
                   <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-zinc-900">{item.name}</h3>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <h3 className="text-lg font-semibold text-zinc-900">{item.name}</h3>
+                        <button
+                          onClick={() => setEditingItem(item)}
+                          className="p-1 text-zinc-400 hover:text-zinc-600"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                       {item.description && (
                         <p className="text-zinc-600 mt-1">{item.description}</p>
                       )}
@@ -397,20 +405,12 @@ function MenuEdit() {
                         {item.price.toFixed(2)}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => setEditingItem(item)}
-                        className="p-2 text-gray-400 hover:text-gray-600"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteMenuItem(sectionId, item.id)}
-                        className="p-2 text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => deleteMenuItem(sectionId, item.id)}
+                      className="p-2 text-red-600 hover:text-red-700 ml-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 )}
               </div>
