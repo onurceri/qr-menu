@@ -27,12 +27,15 @@ const apiLimiter = rateLimit({
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Update the dotenv config path
-const envPath = process.env.NODE_ENV === 'production' 
-  ? join(__dirname, '../.env')
-  : join(__dirname, '../../.env');
-
-dotenv.config({ path: envPath });
+// Environment variables configuration
+if (process.env.NODE_ENV !== 'production') {
+  // Only load .env file in development
+  const envPath = join(__dirname, '../../.env');
+  dotenv.config({ path: envPath });
+} else {
+  // In production (Render), use environment variables directly
+  dotenv.config();
+}
 
 // Add more detailed environment checking
 const checkRequiredEnvVars = () => {
