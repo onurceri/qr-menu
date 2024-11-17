@@ -16,6 +16,18 @@ interface EditingMenuItem extends MenuItem {
   tempPrice?: string;
 }
 
+// Image URL'in gerçekten çalışıp çalışmadığını kontrol eden fonksiyon
+const checkImageExists = (url: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (!url) resolve(true); // Boş URL'e izin ver
+    
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+};
+
 function MenuEdit() {
   const { user } = useAuth();
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -33,6 +45,7 @@ function MenuEdit() {
   const [isDeletingItem, setIsDeletingItem] = useState<string | null>(null);
   const [isAddingItem, setIsAddingItem] = useState<string | null>(null);
   const [isAddingSection, setIsAddingSection] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   useEffect(() => {
     if (restaurantId) {
@@ -207,6 +220,17 @@ function MenuEdit() {
     if (!restaurant) return;
 
     try {
+      setImageError(null);
+
+      // Sadece image URL'in çalışıp çalışmadığını kontrol et
+      if (updatedItem.imageUrl) {
+        const imageExists = await checkImageExists(updatedItem.imageUrl);
+        if (!imageExists) {
+          setImageError('Unable to load the image. Please check the URL');
+          return;
+        }
+      }
+
       // tempPrice'ı number'a çevir veya 0 kullan
       const finalPrice = updatedItem.tempPrice 
         ? parseFloat(updatedItem.tempPrice) || 0 
@@ -387,19 +411,30 @@ function MenuEdit() {
                         id="imageUrl"
                         type="text"
                         value={editingItem.imageUrl || ''}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          setImageError(null);
                           setEditingItem({
                             ...editingItem,
                             imageUrl: e.target.value,
                           })
-                        }
-                        className="block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                        }}
+                        className={`block w-full text-sm sm:text-base border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 ${
+                          imageError ? 'border-red-300' : ''
+                        }`}
                         placeholder="https://..."
                       />
+                      {imageError && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {imageError}
+                        </p>
+                      )}
                     </div>
                     <div className="flex justify-end space-x-2 pt-2">
                       <button
-                        onClick={() => setEditingItem(null)}
+                        onClick={() => {
+                          setEditingItem(null);
+                          setImageError(null);
+                        }}
                         className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm text-gray-600 hover:text-gray-900"
                       >
                         Cancel
@@ -407,6 +442,7 @@ function MenuEdit() {
                       <button
                         onClick={() => updateMenuItem(sectionId, editingItem)}
                         className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm btn"
+                        disabled={!!imageError}
                       >
                         Save
                       </button>
@@ -472,7 +508,7 @@ function MenuEdit() {
         )}
       </Draggable>
     ),
-    [editingItem, setEditingItem, updateMenuItem, deleteMenuItem, restaurant?.currency]
+    [editingItem, setEditingItem, updateMenuItem, deleteMenuItem, restaurant?.currency, imageError]
   );
 
   // Move addMenuItem here
