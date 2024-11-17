@@ -70,14 +70,34 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://*.firebaseio.com",
+        "https://*.firebase.com",
+        "https://*.googleapis.com"
+      ],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:", "http:"],
-      connectSrc: ["'self'", "https:", "http:"],
+      connectSrc: [
+        "'self'",
+        "https:",
+        "http:",
+        "https://*.firebaseio.com",
+        "https://*.firebase.com",
+        "https://*.googleapis.com",
+        "https://identitytoolkit.googleapis.com",
+        "wss://*.firebaseio.com"
+      ],
       fontSrc: ["'self'", "data:", "https:", "http:"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'self'"],
+      frameSrc: [
+        "'self'",
+        "https://*.firebaseapp.com",
+        "https://*.firebase.com"
+      ],
     },
   },
 }));
