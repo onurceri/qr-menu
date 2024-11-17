@@ -57,6 +57,16 @@ mongoose.connect(process.env.MONGODB_URI!, {
 app.use('/api/restaurant', restaurantRoutes);
 app.use('/api/user', userRoutes);
 
+// Healthcheck endpoint'i - en üstte olmalı
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    uptime: process.uptime()
+  });
+});
+
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Global error:', err);
