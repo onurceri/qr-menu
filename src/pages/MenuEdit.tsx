@@ -5,10 +5,11 @@ import type { MenuItem, MenuSection, Restaurant } from '../types/restaurant';
 import { QRCodeModal } from '../components/QRCodeModal';
 import { useAuth } from '../hooks/useAuth';
 import { restaurantService } from '../services/restaurantService';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Draggable, DropResult, DroppableProvided, DroppableStateSnapshot } from '@hello-pangea/dnd';
 import { v4 as uuidv4 } from 'uuid';
 import { CurrencySelect } from '../components/CurrencySelect';
 import { CURRENCIES, type CurrencyCode } from '../constants/currencies';
+import { StrictModeDroppable } from '../components/StrictModeDroppable';
 
 function MenuEdit() {
   const { user } = useAuth();
@@ -306,85 +307,85 @@ function MenuEdit() {
               snapshot.isDragging ? 'shadow-lg opacity-50 scale-105' : 'hover:shadow-md'
             } transition-all`}
           >
-            {editingItem?.id === item.id ? (
-              // Editing form
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  value={editingItem.name}
-                  onChange={(e) =>
-                    setEditingItem({
-                      ...editingItem,
-                      name: e.target.value,
-                    })
-                  }
-                  className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="Item name"
-                />
-                <input
-                  type="text"
-                  value={editingItem.description || ''}
-                  onChange={(e) =>
-                    setEditingItem({
-                      ...editingItem,
-                      description: e.target.value,
-                    })
-                  }
-                  className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                  placeholder="Description"
-                />
-                <div className="flex items-center space-x-4">
-                  <input
-                    type="number"
-                    value={editingItem.price}
-                    onChange={(e) =>
-                      setEditingItem({
-                        ...editingItem,
-                        price: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    className="block w-32 border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="Price"
-                    step="0.01"
-                  />
-                  <input
-                    type="text"
-                    value={editingItem.imageUrl || ''}
-                    onChange={(e) =>
-                      setEditingItem({
-                        ...editingItem,
-                        imageUrl: e.target.value,
-                      })
-                    }
-                    className="block flex-1 border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="Image URL"
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={() => setEditingItem(null)}
-                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => updateMenuItem(sectionId, editingItem)}
-                    className="btn"
-                  >
-                    Save
-                  </button>
-                </div>
+            <div className="flex items-start">
+              <div
+                {...provided.dragHandleProps}
+                className="touch-manipulation p-2 mr-2 cursor-grab active:cursor-grabbing"
+              >
+                <GripVertical className="h-5 w-5 text-gray-400" />
               </div>
-            ) : (
-              // Display mode
-              <div className="flex items-start">
-                <div
-                  {...provided.dragHandleProps}
-                  className="touch-manipulation p-2 mr-2 cursor-grab active:cursor-grabbing"
-                >
-                  <GripVertical className="h-5 w-5 text-gray-400" />
-                </div>
-                <div className="flex-1">
+              <div className="flex-1">
+                {editingItem?.id === item.id ? (
+                  // Editing form
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      value={editingItem.name}
+                      onChange={(e) =>
+                        setEditingItem({
+                          ...editingItem,
+                          name: e.target.value,
+                        })
+                      }
+                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Item name"
+                    />
+                    <input
+                      type="text"
+                      value={editingItem.description || ''}
+                      onChange={(e) =>
+                        setEditingItem({
+                          ...editingItem,
+                          description: e.target.value,
+                        })
+                      }
+                      className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Description"
+                    />
+                    <div className="flex items-center space-x-4">
+                      <input
+                        type="number"
+                        value={editingItem.price}
+                        onChange={(e) =>
+                          setEditingItem({
+                            ...editingItem,
+                            price: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        className="block w-32 border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="Price"
+                        step="0.01"
+                      />
+                      <input
+                        type="text"
+                        value={editingItem.imageUrl || ''}
+                        onChange={(e) =>
+                          setEditingItem({
+                            ...editingItem,
+                            imageUrl: e.target.value,
+                          })
+                        }
+                        className="block flex-1 border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                        placeholder="Image URL"
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => setEditingItem(null)}
+                        className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => updateMenuItem(sectionId, editingItem)}
+                        className="btn"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  // Display mode
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-zinc-900">{item.name}</h3>
@@ -411,14 +412,14 @@ function MenuEdit() {
                       </button>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         )}
       </Draggable>
     ),
-    [editingItem, setEditingItem, updateMenuItem, deleteMenuItem]
+    [editingItem, setEditingItem, updateMenuItem, deleteMenuItem, restaurant?.currency]
   );
 
   // Move addMenuItem here
@@ -562,11 +563,11 @@ function MenuEdit() {
               </div>
             </div>
 
-            <Droppable 
+            <StrictModeDroppable 
               droppableId={section.id}
               type="item"
             >
-              {(provided, snapshot) => (
+              {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
                 <div
                   {...provided.droppableProps}
                   ref={provided.innerRef}
@@ -580,7 +581,7 @@ function MenuEdit() {
                   {provided.placeholder}
                 </div>
               )}
-            </Droppable>
+            </StrictModeDroppable>
           </div>
         )}
       </Draggable>
@@ -698,8 +699,8 @@ function MenuEdit() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="sections" type="section">
-            {(provided) => (
+          <StrictModeDroppable droppableId="sections" type="section">
+            {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
               <div {...provided.droppableProps} ref={provided.innerRef}>
                 {restaurant.sections.map((section, index) => 
                   renderDraggableSection(section, index)
@@ -707,7 +708,7 @@ function MenuEdit() {
                 {provided.placeholder}
               </div>
             )}
-          </Droppable>
+          </StrictModeDroppable>
         </DragDropContext>
       </main>
 
