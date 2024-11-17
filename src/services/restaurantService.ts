@@ -92,17 +92,31 @@ export const restaurantService = {
 
             const response = await fetch(`${API_URL}/user/${userId}/restaurants`, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
             });
             
-            if (!response.ok) throw new Error('Failed to fetch restaurants');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('API Response:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    errorData
+                });
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const restaurants = await response.json();
             return restaurants;
         } catch (error) {
-            console.error('Failed to fetch restaurants:', error);
-            throw error;
+            console.error('Failed to fetch restaurants:', {
+                error,
+                userId,
+                stack: error instanceof Error ? error.stack : undefined
+            });
+            throw new Error('Failed to fetch restaurants');
         }
     },
 

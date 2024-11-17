@@ -13,15 +13,20 @@ dotenv.config();
 const app = express();
 
 // Güvenlik middleware'leri
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
     ? [
         'https://qr-menu-beta-nine.vercel.app',
+        'https://qr-menu-beta-nine.vercel.app/'
       ]
     : 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  credentials: true
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Request body boyut limiti
@@ -37,6 +42,15 @@ mongoose.connect(process.env.MONGODB_URI!)
 
 app.use('/api/restaurant', restaurantRoutes);
 app.use('/api/user', userRoutes);
+
+// Global error handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Global error:', err);
+  res.status(err.status || 500).json({
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
+  });
+});
 
 const startServer = async () => {
   const PORT = Number(process.env.PORT || 5001);
