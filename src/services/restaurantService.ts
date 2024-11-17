@@ -38,14 +38,10 @@ interface UpdateRestaurantData {
 export const restaurantService = {
     async getRestaurant(restaurantId: string): Promise<Restaurant> {
         try {
-            const token = await getAuthToken();
-            if (!token) throw new Error('Not authenticated');
-
             const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
             });
 

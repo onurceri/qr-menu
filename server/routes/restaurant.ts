@@ -56,7 +56,31 @@ router.get<{ menuId: string }>(
   }
 );
 
-// Protected routes - sadece yetkilendirilmiş kullanıcılar
+// Public route - herkes restoranı görebilir
+router.get<{ restaurantId: string }>(
+  '/:restaurantId',
+  async (req: Request<{ restaurantId: string }>, res: Response): Promise<void> => {
+    try {
+      const restaurant = await Restaurant.findOne({ restaurantId: req.params.restaurantId });
+      if (!restaurant) {
+        res.status(404).json({ error: 'Restaurant not found' });
+        return;
+      }
+
+      res.json(restaurant);
+    } catch (error) {
+      const mongoError = error as Error;
+      console.error('Database operation failed:', {
+        error: mongoError.message,
+        path: req.path,
+        method: req.method
+      });
+      res.status(500).json({ error: 'Failed to fetch restaurant data' });
+    }
+  }
+);
+
+// Protected routes - bundan sonraki route'lar için auth gerekli
 router.use(authMiddleware as express.RequestHandler);
 
 // Protected route - sadece yetkilendirilmiş kullanıcılar görebilir

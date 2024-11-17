@@ -93,11 +93,6 @@ export function RestaurantProfile() {
     const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
 
     useEffect(() => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
-
         async function fetchRestaurant() {
             if (!restaurantId) return;
 
@@ -128,7 +123,7 @@ export function RestaurantProfile() {
         }
 
         fetchRestaurant();
-    }, [restaurantId, t, user, navigate]);
+    }, [restaurantId, t]);
 
     const handleDeleteImage = async () => {
         if (!restaurant?.imageUrl || !restaurantId) return;
@@ -164,6 +159,9 @@ export function RestaurantProfile() {
             setError(t('restaurants.imageDeleteError'));
         }
     };
+
+    // Silme butonu sadece restoran sahibine gösterilsin
+    const showDeleteButton = user && restaurant && user.uid === restaurant.userId;
 
     if (loading) {
         return (
@@ -234,13 +232,15 @@ export function RestaurantProfile() {
                                                 alt={restaurant.name}
                                                 className="w-full h-full object-cover"
                                             />
-                                            <button
-                                                onClick={handleDeleteImage}
-                                                className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 
-                                                         transition-opacity flex items-center justify-center text-white"
-                                            >
-                                                <Trash2 className="w-8 h-8" />
-                                            </button>
+                                            {showDeleteButton && (
+                                                <button
+                                                    onClick={handleDeleteImage}
+                                                    className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 
+                                                             transition-opacity flex items-center justify-center text-white"
+                                                >
+                                                    <Trash2 className="w-8 h-8" />
+                                                </button>
+                                            )}
                                         </>
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center bg-zinc-200">
