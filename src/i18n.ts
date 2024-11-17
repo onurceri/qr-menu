@@ -12,7 +12,7 @@ const resources = {
         register: 'Register',
         logout: 'Logout',
         language: 'Language',
-        myRestaurants: 'My Restaurants'
+        profile: 'Profile'
       },
       restaurants: {
         title: 'Your Restaurants',
@@ -53,7 +53,10 @@ const resources = {
         edit: 'Edit',
         cancel: 'Cancel',
         imageUrl: 'Image URL',
-        newItem: 'New Item'
+        newItem: 'New Item',
+        viewMenu: 'View Menu',
+        qrCode: 'QR Code',
+        newSection: 'New Section'
       }
     }
   },
@@ -66,7 +69,7 @@ const resources = {
         register: 'Kayıt Ol',
         logout: 'Çıkış Yap',
         language: 'Dil',
-        myRestaurants: 'Restoranlarım'
+        profile: 'Profil'
       },
       restaurants: {
         title: 'Restoranlarınız',
@@ -107,7 +110,67 @@ const resources = {
         edit: 'Düzenle',
         cancel: 'İptal',
         imageUrl: 'Görsel URL',
-        newItem: 'Yeni Ürün'
+        newItem: 'Yeni Ürün',
+        viewMenu: 'Menüyü Görüntüle',
+        qrCode: 'QR Kod',
+        newSection: 'Yeni Bölüm'
+      }
+    }
+  },
+  fr: {
+    translation: {
+      common: {
+        loading: 'Chargement...',
+        error: 'Une erreur est survenue',
+        login: 'Connexion',
+        register: 'Inscription',
+        logout: 'Déconnexion',
+        language: 'Langue',
+        profile: 'Profil'
+      },
+      restaurants: {
+        title: 'Vos Restaurants',
+        addNew: 'Ajouter un Restaurant',
+        noRestaurants: 'Aucun Restaurant',
+        noRestaurantsDesc: "Vous n'avez pas encore ajouté de restaurant. Utilisez le formulaire ci-dessus pour créer votre premier restaurant.",
+        tip: '💡 Astuce: Après avoir créé un restaurant, vous pouvez ajouter des sections de menu et des articles pour présenter vos offres.',
+        name: 'Nom du Restaurant',
+        description: 'Description du Restaurant (optionnel)',
+        creating: 'Création...',
+        add: 'Ajouter',
+        view: 'Voir',
+        edit: 'Modifier',
+        delete: 'Supprimer',
+        deleting: 'Suppression...'
+      },
+      validation: {
+        nameRequired: 'Le nom du restaurant est requis',
+        nameTooLong: 'Le nom du restaurant doit faire moins de 100 caractères',
+        descriptionTooLong: 'La description doit faire moins de 500 caractères',
+        invalidCharacters: 'Caractères invalides détectés'
+      },
+      menu: {
+        sections: 'Sections du Menu',
+        addSection: 'Ajouter une Section',
+        sectionName: 'Nom de la Section',
+        addItem: 'Ajouter un Article',
+        itemName: "Nom de l'Article",
+        itemDescription: "Description de l'Article",
+        itemPrice: 'Prix',
+        dragToReorder: 'Glisser pour réorganiser',
+        noSections: 'Aucune section de menu',
+        noItems: 'Aucun article dans cette section',
+        currency: 'Devise',
+        save: 'Enregistrer',
+        saving: 'Enregistrement...',
+        delete: 'Supprimer',
+        edit: 'Modifier',
+        cancel: 'Annuler',
+        imageUrl: 'URL de l\'image',
+        newItem: 'Nouvel Article',
+        viewMenu: 'Voir le Menu',
+        qrCode: 'Code QR',
+        newSection: 'Nouvelle Section'
       }
     }
   }

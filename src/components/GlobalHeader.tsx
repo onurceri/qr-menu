@@ -45,7 +45,7 @@ export function GlobalHeader() {
                            duration-200 space-x-1.5 sm:space-x-2"
                 >
                   <User className="icon-responsive-xs" />
-                  <span>{t('common.myRestaurants')}</span>
+                  <span>{t('common.profile')}</span>
                 </button>
 
                 <button

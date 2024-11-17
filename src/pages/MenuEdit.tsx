@@ -633,7 +633,7 @@ function MenuEdit() {
       setIsAddingSection(true);
       const newSection: MenuSection = {
         id: `section-${uuidv4()}`,
-        title: 'New Section',
+        title: t('menu.newSection'),
         items: [],
       };
 
@@ -842,14 +842,14 @@ function MenuEdit() {
                 className="btn-secondary-sm flex items-center space-x-2 whitespace-nowrap"
               >
                 <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>View Menu</span>
+                <span>{t('menu.viewMenu')}</span>
               </button>
               <button
                 onClick={() => setIsQRModalOpen(true)}
                 className="btn-secondary-sm flex items-center space-x-2 whitespace-nowrap"
               >
                 <QrCode className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>QR Code</span>
+                <span>{t('menu.qrCode')}</span>
               </button>
               <button
                 onClick={addSection}
