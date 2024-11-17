@@ -6,6 +6,34 @@ import type { Restaurant } from '../types/restaurant';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, Edit2, Trash2, Plus } from 'lucide-react';
 
+const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void }) => (
+  <div className="rounded-md bg-red-50 p-4 mb-4">
+    <div className="flex">
+      <div className="flex-shrink-0">
+        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+        </svg>
+      </div>
+      <div className="ml-3">
+        <p className="text-sm font-medium text-red-800">{message}</p>
+      </div>
+      <div className="ml-auto pl-3">
+        <div className="-mx-1.5 -my-1.5">
+          <button
+            onClick={onClose}
+            className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100"
+          >
+            <span className="sr-only">Dismiss</span>
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function RestaurantList() {
     const { user, signOut } = useAuth();
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -14,6 +42,8 @@ export default function RestaurantList() {
     const navigate = useNavigate();
     const [newRestaurantName, setNewRestaurantName] = useState<string>('');
     const [newRestaurantDescription, setNewRestaurantDescription] = useState<string>('');
+    const [isCreating, setIsCreating] = useState(false);
+    const [isDeletingRestaurant, setIsDeletingRestaurant] = useState<string | null>(null);
 
     useEffect(() => {
         if (!user) {
@@ -39,10 +69,14 @@ export default function RestaurantList() {
 
     const handleCreateRestaurant = async () => {
         if (!newRestaurantName.trim()) {
-            setError('Restaurant name cannot be empty');
+            setError('Please enter a restaurant name');
             return;
         }
+        if (isCreating) return;
+        
         try {
+            setError(null);
+            setIsCreating(true);
             const response = await restaurantService.createRestaurant(user!.uid, { 
                 name: newRestaurantName, 
                 description: newRestaurantDescription
@@ -54,19 +88,26 @@ export default function RestaurantList() {
                 setNewRestaurantDescription('');
             }
         } catch (err) {
-            setError('Failed to create restaurant');
+            setError('Failed to create restaurant. Please try again.');
             console.error(err);
+        } finally {
+            setIsCreating(false);
         }
     };
 
     const handleDeleteRestaurant = async (restaurantId: string) => {
+        if (isDeletingRestaurant) return;
+        
         try {
+            setIsDeletingRestaurant(restaurantId);
             await restaurantService.deleteRestaurant(restaurantId);
             const fetchedRestaurants = await restaurantService.getRestaurants(user!.uid);
             setRestaurants(fetchedRestaurants);
         } catch (err) {
             setError('Failed to delete restaurant');
             console.error(err);
+        } finally {
+            setIsDeletingRestaurant(null);
         }
     };
 
@@ -86,29 +127,44 @@ export default function RestaurantList() {
 
             <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-zinc-200">
                 <h2 className="text-lg font-semibold text-zinc-900 mb-4">Add New Restaurant</h2>
+                {error && (
+                    <ErrorAlert 
+                        message={error} 
+                        onClose={() => setError(null)} 
+                    />
+                )}
                 <div className="space-y-4">
                     <input 
                         type="text" 
                         value={newRestaurantName} 
                         onChange={(e) => setNewRestaurantName(e.target.value)} 
                         placeholder="Restaurant Name" 
-                        className="w-full px-3 py-2 border border-zinc-300 rounded-md 
-                        focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent
+                            ${error ? 'border-red-300' : 'border-zinc-300'}`}
                     />
                     <input 
                         type="text" 
                         value={newRestaurantDescription} 
                         onChange={(e) => setNewRestaurantDescription(e.target.value)} 
                         placeholder="Restaurant Description (optional)" 
-                        className="w-full px-3 py-2 border border-zinc-300 rounded-md 
-                        focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
                     />
                     <button 
                         onClick={handleCreateRestaurant} 
+                        disabled={isCreating}
                         className="btn flex items-center space-x-2"
                     >
-                        <Plus className="h-4 w-4" />
-                        <span>Add Restaurant</span>
+                        {isCreating ? (
+                            <span className="flex items-center space-x-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>Creating...</span>
+                            </span>
+                        ) : (
+                            <>
+                                <Plus className="h-4 w-4" />
+                                <span>Add Restaurant</span>
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
@@ -159,11 +215,21 @@ export default function RestaurantList() {
                                         <span>Edit</span>
                                     </button>
                                     <button 
-                                        onClick={() => handleDeleteRestaurant(restaurant.restaurantId)} 
+                                        onClick={() => handleDeleteRestaurant(restaurant.restaurantId)}
+                                        disabled={isDeletingRestaurant === restaurant.restaurantId}
                                         className="btn-sm flex items-center space-x-2"
                                     >
-                                        <Trash2 className="h-4 w-4" />
-                                        <span>Delete</span>
+                                        {isDeletingRestaurant === restaurant.restaurantId ? (
+                                            <span className="flex items-center space-x-2">
+                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                <span>Deleting...</span>
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <Trash2 className="h-4 w-4" />
+                                                <span>Delete</span>
+                                            </>
+                                        )}
                                     </button>
                                 </div>
                             </div>

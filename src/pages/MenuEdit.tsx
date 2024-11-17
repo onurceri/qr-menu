@@ -22,6 +22,11 @@ function MenuEdit() {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [editingRestaurantName, setEditingRestaurantName] = useState<string | null>(null);
   const [editingSectionTitle, setEditingSectionTitle] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeletingSection, setIsDeletingSection] = useState<string | null>(null);
+  const [isDeletingItem, setIsDeletingItem] = useState<string | null>(null);
+  const [isAddingItem, setIsAddingItem] = useState<string | null>(null);
+  const [isAddingSection, setIsAddingSection] = useState(false);
 
   useEffect(() => {
     if (restaurantId) {
@@ -65,9 +70,10 @@ function MenuEdit() {
   };
 
   const saveRestaurantData = async (updatedData: Restaurant) => {
-    if (!user) return;
+    if (!user || isSaving) return;
 
     try {
+      setIsSaving(true);
       setError(null);
       // Create a new reference with normalized IDs
       const validatedData = {
@@ -96,6 +102,8 @@ function MenuEdit() {
     } catch (err) {
       console.error('Failed to save changes:', err);
       setError('Failed to save changes');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -220,9 +228,10 @@ function MenuEdit() {
   };
 
   const deleteMenuItem = async (sectionId: string, itemId: string) => {
-    if (!restaurant) return;
+    if (!restaurant || isDeletingItem) return;
 
     try {
+      setIsDeletingItem(itemId);
       const updatedSections = restaurant.sections.map(section => {
         if (section.id === sectionId) {
           return {
@@ -240,9 +249,8 @@ function MenuEdit() {
 
       await saveRestaurantData(updatedRestaurant);
       setRestaurant(updatedRestaurant);
-    } catch (error) {
-      console.error('Failed to delete menu item:', error);
-      setError('Failed to delete menu item');
+    } finally {
+      setIsDeletingItem(null);
     }
   };
 
@@ -269,16 +277,16 @@ function MenuEdit() {
   };
 
   const deleteSection = async (sectionId: string) => {
-    if (!restaurant) return;
+    if (!restaurant || isDeletingSection) return;
     
     try {
+      setIsDeletingSection(sectionId);
       const updatedSections = restaurant.sections.filter(section => section.id !== sectionId);
       const updatedRestaurant = { ...restaurant, sections: updatedSections };
       await saveRestaurantData(updatedRestaurant);
       setRestaurant(updatedRestaurant);
-    } catch (error) {
-      console.error('Failed to delete section:', error);
-      setError('Failed to delete section');
+    } finally {
+      setIsDeletingSection(null);
     }
   };
 
@@ -414,44 +422,54 @@ function MenuEdit() {
   );
 
   // Move addMenuItem here
-  const addMenuItem = (sectionId: string) => {
-    if (!restaurant) return;
+  const addMenuItem = async (sectionId: string) => {
+    if (!restaurant || isAddingItem) return;
 
-    const newItem: MenuItem = {
-      id: `item-${uuidv4()}`,
-      name: 'New Item',
-      description: '',
-      price: 0,
-      imageUrl: '',
-    };
+    try {
+      setIsAddingItem(sectionId);
+      const newItem: MenuItem = {
+        id: `item-${uuidv4()}`,
+        name: 'New Item',
+        description: '',
+        price: 0,
+        imageUrl: '',
+      };
 
-    const updatedSections = restaurant.sections.map(section =>
-      section.id === sectionId
-        ? { ...section, items: [...section.items, newItem] }
-        : section
-    );
+      const updatedSections = restaurant.sections.map(section =>
+        section.id === sectionId
+          ? { ...section, items: [...section.items, newItem] }
+          : section
+      );
 
-    const updatedRestaurant = { ...restaurant, sections: updatedSections };
-    saveRestaurantData(updatedRestaurant);
-    setRestaurant(updatedRestaurant);
+      const updatedRestaurant = { ...restaurant, sections: updatedSections };
+      saveRestaurantData(updatedRestaurant);
+      setRestaurant(updatedRestaurant);
+    } finally {
+      setIsAddingItem(null);
+    }
   };
 
-  const addSection = () => {
-    if (!restaurant) return;
+  const addSection = async () => {
+    if (!restaurant || isAddingSection) return;
 
-    const newSection: MenuSection = {
-      id: `section-${uuidv4()}`,
-      title: 'New Section',
-      items: [],
-    };
+    try {
+      setIsAddingSection(true);
+      const newSection: MenuSection = {
+        id: `section-${uuidv4()}`,
+        title: 'New Section',
+        items: [],
+      };
 
-    const updatedRestaurant = {
-      ...restaurant,
-      sections: [...restaurant.sections, newSection],
-    };
+      const updatedRestaurant = {
+        ...restaurant,
+        sections: [...restaurant.sections, newSection],
+      };
 
-    saveRestaurantData(updatedRestaurant);
-    setRestaurant(updatedRestaurant);
+      saveRestaurantData(updatedRestaurant);
+      setRestaurant(updatedRestaurant);
+    } finally {
+      setIsAddingSection(false);
+    }
   };
 
   // Then define renderDraggableSection
@@ -515,15 +533,31 @@ function MenuEdit() {
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => addMenuItem(section.id)}
+                  disabled={isAddingItem === section.id}
                   className="btn-secondary-sm"
                 >
-                  Add Item
+                  {isAddingItem === section.id ? (
+                    <span className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin" />
+                      <span>Adding...</span>
+                    </span>
+                  ) : (
+                    <span className="flex items-center space-x-2">
+                      <Plus className="h-4 w-4" />
+                      <span>Add Item</span>
+                    </span>
+                  )}
                 </button>
                 <button
                   onClick={() => deleteSection(section.id)}
-                  className="p-2 text-zinc-400 hover:text-zinc-600"
+                  disabled={isDeletingSection === section.id}
+                  className="p-2 text-zinc-400 hover:text-zinc-600 disabled:opacity-50"
                 >
-                  <Trash2 className="h-5 w-5" />
+                  {isDeletingSection === section.id ? (
+                    <div className="w-5 h-5 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -595,7 +629,7 @@ function MenuEdit() {
           {/* Üst satır - Geri butonu ve restoran adı */}
           <div className="flex items-center mb-4">
             <button
-              onClick={() => navigate(`/${restaurantId}`)}
+              onClick={() => navigate(-1)}
               className="p-2 rounded-md text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -642,10 +676,20 @@ function MenuEdit() {
               </button>
               <button
                 onClick={addSection}
+                disabled={isAddingSection}
                 className="btn-sm flex items-center space-x-2 whitespace-nowrap"
               >
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span>Add Section</span>
+                {isAddingSection ? (
+                  <span className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Adding...</span>
+                  </span>
+                ) : (
+                  <>
+                    <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span>Add Section</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
