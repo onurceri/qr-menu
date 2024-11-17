@@ -1,14 +1,33 @@
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import dotenv from 'dotenv';
+
+// ESM için __dirname alternatifi
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// .env dosyasının yolunu belirt - TÜM IMPORTLARDAN ÖNCE OLMALI
+dotenv.config({ path: join(__dirname, '..', '.env') });
+
+// Environment variables'ları kontrol et
+console.log('Environment Check:', {
+  serviceAccount: {
+    exists: !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON,
+    length: process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.length,
+    firstChars: process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.substring(0, 50)
+  },
+  nodeEnv: process.env.NODE_ENV,
+  port: process.env.PORT
+});
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 import { authLimiter, apiLimiter } from './middleware/rateLimiter.js';
 import restaurantRoutes from './routes/restaurant.js';
 import userRoutes from './routes/user.js';
 import { Restaurant } from './models/Restaurant.js';
-
-dotenv.config();
 
 const app = express();
 
@@ -20,13 +39,14 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
+// CORS ayarları için allowed origins
+const getAllowedOrigins = () => {
+  const origins = process.env.ALLOWED_ORIGINS;
+  return origins ? origins.split(',').map(origin => origin.trim()) : ['http://localhost:5173'];
+};
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [
-        'https://qr-menu-beta-nine.vercel.app',
-        'https://qr-menu-beta-nine.vercel.app/'
-      ]
-    : 'http://localhost:5173',
+  origin: getAllowedOrigins(),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']

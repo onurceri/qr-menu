@@ -49,6 +49,51 @@
     rounded-md shadow-sm text-zinc-900 bg-white hover:bg-zinc-50 
     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-500;
   }
+
+  /* Yeni responsive text ve icon class'ları */
+  .text-responsive-xs {
+    @apply text-[10px] sm:text-xs;
+  }
+
+  .text-responsive-sm {
+    @apply text-[11px] sm:text-sm;
+  }
+
+  .text-responsive-base {
+    @apply text-[13px] sm:text-base;
+  }
+
+  .text-responsive-lg {
+    @apply text-[15px] sm:text-lg;
+  }
+
+  .text-responsive-xl {
+    @apply text-[17px] sm:text-xl;
+  }
+
+  .text-responsive-2xl {
+    @apply text-[19px] sm:text-2xl;
+  }
+
+  .icon-responsive-xs {
+    @apply h-3 w-3 sm:h-4 sm:w-4;
+  }
+
+  .icon-responsive-sm {
+    @apply h-4 w-4 sm:h-5 sm:w-5;
+  }
+
+  .icon-responsive-base {
+    @apply h-5 w-5 sm:h-6 sm:w-6;
+  }
+
+  .icon-responsive-lg {
+    @apply h-6 w-6 sm:h-7 sm:w-7;
+  }
+
+  .icon-responsive-xl {
+    @apply h-7 w-7 sm:h-8 sm:w-8;
+  }
 }
 
 @layer utilities {
