@@ -5,6 +5,8 @@ import type { Restaurant } from '../types/restaurant';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { MapPin, Image, Clock, Trash2 } from 'lucide-react';
+import { SearchableDropdown } from '../components/SearchableDropdown';
+import { locationService } from '../services/locationService';
 
 // Dosya tipi ve boyut kontrolleri için yardımcı fonksiyonlar
 const IMAGE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB
@@ -278,6 +280,43 @@ export function RestaurantEdit() {
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
                                 <label className="block text-sm font-medium text-zinc-700">
+                                    {t('restaurants.country')}
+                                </label>
+                                <SearchableDropdown
+                                    value={formData.address.country}
+                                    onChange={(value) => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            address: { 
+                                                ...prev.address, 
+                                                country: value,
+                                                city: '' // Ülke değiştiğinde şehri sıfırla
+                                            }
+                                        }));
+                                    }}
+                                    onSearch={locationService.searchCountries}
+                                    placeholder={t('restaurants.selectCountry')}
+                                    label={t('restaurants.country')}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-zinc-700">
+                                    {t('restaurants.city')}
+                                </label>
+                                <SearchableDropdown
+                                    value={formData.address.city}
+                                    onChange={(value) => setFormData(prev => ({
+                                        ...prev,
+                                        address: { ...prev.address, city: value }
+                                    }))}
+                                    onSearch={(query) => locationService.getCities(formData.address.country, query)}
+                                    placeholder={t('restaurants.selectCity')}
+                                    label={t('restaurants.city')}
+                                    minSearchLength={3}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-zinc-700">
                                     {t('restaurants.street')}
                                 </label>
                                 <input
@@ -286,34 +325,6 @@ export function RestaurantEdit() {
                                     onChange={e => setFormData(prev => ({
                                         ...prev,
                                         address: { ...prev.address, street: e.target.value }
-                                    }))}
-                                    className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700">
-                                    {t('restaurants.city')}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.address.city}
-                                    onChange={e => setFormData(prev => ({
-                                        ...prev,
-                                        address: { ...prev.address, city: e.target.value }
-                                    }))}
-                                    className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-zinc-700">
-                                    {t('restaurants.country')}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.address.country}
-                                    onChange={e => setFormData(prev => ({
-                                        ...prev,
-                                        address: { ...prev.address, country: e.target.value }
                                     }))}
                                     className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2"
                                 />

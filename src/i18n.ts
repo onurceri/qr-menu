@@ -17,7 +17,10 @@ const resources = {
         edit: 'Edit',
         delete: 'Delete',
         back: 'Back',
-        save: 'Save'
+        save: 'Save',
+        clear: 'Clear',
+        noResults: 'No results found',
+        enterMinChars: 'Enter at least {{count}} characters'
       },
       restaurants: {
         title: 'Your Restaurants',
@@ -67,7 +70,9 @@ const resources = {
         closeTime: 'Closing Time',
         closed: 'Closed',
         noHours: 'No opening hours set',
-        noLocation: 'Location not available'
+        noLocation: 'Location not available',
+        selectCountry: 'Select a country',
+        selectCity: 'Select a city'
       },
       validation: {
         nameRequired: 'Restaurant name is required',
@@ -126,7 +131,10 @@ const resources = {
         edit: 'Düzenle',
         delete: 'Sil',
         back: 'Geri',
-        save: 'Kaydet'
+        save: 'Kaydet',
+        clear: 'Temizle',
+        noResults: 'Sonuç bulunamadı',
+        enterMinChars: 'En az {{count}} karakter girin'
       },
       restaurants: {
         title: 'Restoranlarınız',
@@ -176,7 +184,9 @@ const resources = {
         closeTime: 'Kapanış Saati',
         closed: 'Kapalı',
         noHours: 'Çalışma saatleri belirtilmemiş',
-        noLocation: 'Konum bilgisi mevcut değil'
+        noLocation: 'Konum bilgisi mevcut değil',
+        selectCountry: 'Ülke seçin',
+        selectCity: 'Şehir seçin'
       },
       validation: {
         nameRequired: 'Restoran adı zorunludur',
@@ -235,7 +245,10 @@ const resources = {
         edit: 'Modifier',
         delete: 'Supprimer',
         back: 'Retour',
-        save: 'Enregistrer'
+        save: 'Enregistrer',
+        clear: 'Effacer',
+        noResults: 'Aucun résultat trouvé',
+        enterMinChars: 'Entrez au moins {{count}} caractères'
       },
       restaurants: {
         title: 'Vos Restaurants',
@@ -285,7 +298,9 @@ const resources = {
         closeTime: 'Heure de fermeture',
         closed: 'Fermé',
         noHours: 'Heures d\'ouverture non définies',
-        noLocation: 'Emplacement non disponible'
+        noLocation: 'Emplacement non disponible',
+        selectCountry: 'Sélectionnez un pays',
+        selectCity: 'Sélectionnez une ville'
       },
       validation: {
         nameRequired: 'Le nom du restaurant est requis',
@@ -344,7 +359,10 @@ const resources = {
         edit: 'تعديل',
         delete: 'حذف',
         back: 'رجوع',
-        save: 'حفظ'
+        save: 'حفظ',
+        clear: 'مسح',
+        noResults: 'لم يتم العثور على نتائج',
+        enterMinChars: 'أدخل على الأقل {{count}} حرف'
       },
       restaurants: {
         title: 'مطاعمك',
@@ -394,7 +412,9 @@ const resources = {
         closeTime: 'موعد الإغلاق',
         closed: 'مغلق',
         noHours: 'لم يتم تحديد ساعات العمل',
-        noLocation: 'الموقع غير متوفر'
+        noLocation: 'الموقع غير متوفر',
+        selectCountry: 'اختر الدولة',
+        selectCity: 'اختر المدينة'
       },
       validation: {
         nameRequired: 'اسم المطعم مطلوب',
@@ -453,7 +473,10 @@ const resources = {
         edit: 'Bewerken',
         delete: 'Verwijderen',
         back: 'Terug',
-        save: 'Opslaan'
+        save: 'Opslaan',
+        clear: 'Wissen',
+        noResults: 'Geen resultaten gevonden',
+        enterMinChars: 'Voer minstens {{count}} tekens in'
       },
       restaurants: {
         title: 'Uw Restaurants',
@@ -503,7 +526,9 @@ const resources = {
         closeTime: 'Closing Time',
         closed: 'Gesloten',
         noHours: 'Geen openingstijden ingesteld',
-        noLocation: 'Locatie niet beschikbaar'
+        noLocation: 'Locatie niet beschikbaar',
+        selectCountry: 'Selecteer een land',
+        selectCity: 'Selecteer een stad'
       },
       validation: {
         nameRequired: 'Restaurantnaam is verplicht',
