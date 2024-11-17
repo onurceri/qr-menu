@@ -2,9 +2,16 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "outDir": "dist/server",
-    "noEmit": false
+    "noEmit": false,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["*", "server/*"]
+    }
   },
-  "include": ["server"]
+  "include": ["server/**/*"],
+  "exclude": ["node_modules"]
 } 
