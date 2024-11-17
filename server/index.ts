@@ -1,6 +1,27 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import dotenv from 'dotenv';
+import express from 'express';
+import path from 'path';
+import helmet from 'helmet';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import { rateLimit } from 'express-rate-limit';
+
+// Import routes
+import restaurantRoutes from './routes/restaurant';
+import userRoutes from './routes/user';
+
+// Rate limiter configurations
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5 // limit each IP to 5 requests per windowMs for auth routes
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs for other routes
+});
 
 // ESM için __dirname alternatifi
 const __filename = fileURLToPath(import.meta.url);
@@ -20,16 +41,11 @@ console.log('Environment Check:', {
   port: process.env.PORT
 });
 
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import mongoose from 'mongoose';
-import { authLimiter, apiLimiter } from './middleware/rateLimiter.js';
-import restaurantRoutes from './routes/restaurant.js';
-import userRoutes from './routes/user.js';
-import { Restaurant } from './models/Restaurant.js';
-
 const app = express();
+const PORT = process.env.PORT || 5001;
+
+// Serve static files from the dist directory
+app.use(express.static(path.join(__dirname, '../../dist')));
 
 // Proxy ayarı - Vercel için gerekli
 app.set('trust proxy', 1);
@@ -96,22 +112,13 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-const startServer = async () => {
-  const PORT = Number(process.env.PORT || 5001);
+// Serve index.html for all routes (SPA fallback)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../dist/index.html'));
+});
 
-  try {
-    await new Promise((resolve, reject) => {
-      const server = app.listen(PORT, () => {
-        console.log(`✅ Server running on port ${PORT}`);
-        resolve(server);
-      }).on('error', reject);
-    });
-  } catch (error: unknown) {
-    console.error('❌ Failed to start server:', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 export default app;
