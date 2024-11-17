@@ -78,14 +78,6 @@ export default function RestaurantList() {
         );
     }
 
-    if (error) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-red-600">{error}</div>
-            </div>
-        );
-    }
-
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex justify-between items-center mb-8">
@@ -121,46 +113,64 @@ export default function RestaurantList() {
                 </div>
             </div>
 
-            <div className="space-y-4">
-                {restaurants.map((restaurant) => (
-                    <div 
-                        key={restaurant.restaurantId} 
-                        className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200"
-                    >
-                        <div className="flex justify-between items-start">
-                            <div>
-                                <h2 className="text-xl font-semibold text-zinc-900">{restaurant.name}</h2>
-                                {restaurant.description && (
-                                    <p className="mt-1 text-zinc-600">{restaurant.description}</p>
-                                )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button 
-                                    onClick={() => navigate(`/${restaurant.restaurantId}`)} 
-                                    className="btn-secondary-sm flex items-center space-x-2"
-                                >
-                                    <Eye className="h-4 w-4" />
-                                    <span>View</span>
-                                </button>
-                                <button 
-                                    onClick={() => navigate(`/edit/${restaurant.restaurantId}`)} 
-                                    className="btn-secondary-sm flex items-center space-x-2"
-                                >
-                                    <Edit2 className="h-4 w-4" />
-                                    <span>Edit</span>
-                                </button>
-                                <button 
-                                    onClick={() => handleDeleteRestaurant(restaurant.restaurantId)} 
-                                    className="btn-sm flex items-center space-x-2"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                    <span>Delete</span>
-                                </button>
-                            </div>
+            {restaurants.length === 0 ? (
+                <div className="bg-white p-8 rounded-lg shadow-sm border border-zinc-200 text-center">
+                    <div className="max-w-md mx-auto">
+                        <h3 className="text-lg font-medium text-zinc-900 mb-2">
+                            No Restaurants Yet
+                        </h3>
+                        <p className="text-zinc-600 mb-4">
+                            You haven't added any restaurants yet. Create your first restaurant using the form above to get started.
+                        </p>
+                        <div className="p-4 bg-zinc-50 rounded-lg border border-zinc-100">
+                            <p className="text-sm text-zinc-500">
+                                💡 Tip: After creating a restaurant, you can add menu sections and items to showcase your offerings.
+                            </p>
                         </div>
                     </div>
-                ))}
-            </div>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {restaurants.map((restaurant) => (
+                        <div 
+                            key={restaurant.restaurantId} 
+                            className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200"
+                        >
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-zinc-900">{restaurant.name}</h2>
+                                    {restaurant.description && (
+                                        <p className="mt-1 text-zinc-600">{restaurant.description}</p>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button 
+                                        onClick={() => navigate(`/${restaurant.restaurantId}`)} 
+                                        className="btn-secondary-sm flex items-center space-x-2"
+                                    >
+                                        <Eye className="h-4 w-4" />
+                                        <span>View</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => navigate(`/edit/${restaurant.restaurantId}`)} 
+                                        className="btn-secondary-sm flex items-center space-x-2"
+                                    >
+                                        <Edit2 className="h-4 w-4" />
+                                        <span>Edit</span>
+                                    </button>
+                                    <button 
+                                        onClick={() => handleDeleteRestaurant(restaurant.restaurantId)} 
+                                        className="btn-sm flex items-center space-x-2"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                        <span>Delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

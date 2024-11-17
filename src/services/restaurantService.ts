@@ -8,16 +8,16 @@ const normalizeId = (id: string | number, prefix: string): string => {
     return stringId.startsWith(prefix) ? stringId : `${prefix}-${stringId}`;
 };
 
-// Token alma yardımcı fonksiyonu
 const getAuthToken = async (): Promise<string | null> => {
     const auth = getAuth();
     return auth.currentUser?.getIdToken() || null;
 };
 
-// Hata yakalama ve loglama ekleyelim
-const handleApiError = (error: any, message: string) => {
-  console.error(`API Error (${message}):`, error);
-  throw error;
+// Sadece development ortamında log basacak
+const logError = (message: string, error?: any) => {
+    if (process.env.NODE_ENV === 'development') {
+        console.error(message, error);
+    }
 };
 
 export const restaurantService = {
@@ -26,14 +26,13 @@ export const restaurantService = {
             const response = await fetch(`${API_URL}/restaurant/${restaurantId}`);
             
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error('Failed to fetch restaurant');
             }
             
-            const data = await response.json();
-            return data;
+            return await response.json();
         } catch (error) {
-            handleApiError(error, 'Failed to fetch restaurant data');
-            throw error;
+            logError('getRestaurant error:', error);
+            throw new Error('Failed to fetch restaurant');
         }
     },
 
@@ -63,25 +62,12 @@ export const restaurantService = {
                 body: JSON.stringify(normalizedData),
             });
             
-            if (!response.ok) throw new Error('Failed to update restaurant data');
+            if (!response.ok) throw new Error('Failed to update restaurant');
             
-            const updatedData = await response.json();
-            
-            if (updatedData.sections) {
-                updatedData.sections = updatedData.sections.map((section: MenuSection) => ({
-                    ...section,
-                    id: normalizeId(section.id, 'section'),
-                    items: section.items.map((item: MenuItem) => ({
-                        ...item,
-                        id: normalizeId(item.id, 'item')
-                    }))
-                }));
-            }
-            
-            return updatedData;
+            return await response.json();
         } catch (error) {
-            console.error('API Error:', error);
-            throw error;
+            logError('updateRestaurant error:', error);
+            throw new Error('Failed to update restaurant');
         }
     },
 
@@ -100,23 +86,17 @@ export const restaurantService = {
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('API Response:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    errorData
+                logError('getRestaurants response error:', { 
+                    status: response.status, 
+                    error: errorData 
                 });
-                throw new Error(`HTTP error! status: ${response.status}`);
+                return [];
             }
             
-            const restaurants = await response.json();
-            return restaurants;
+            return await response.json();
         } catch (error) {
-            console.error('Failed to fetch restaurants:', {
-                error,
-                userId,
-                stack: error instanceof Error ? error.stack : undefined
-            });
-            throw new Error('Failed to fetch restaurants');
+            logError('getRestaurants error:', error);
+            return [];
         }
     },
 
@@ -137,8 +117,8 @@ export const restaurantService = {
             if (!response.ok) throw new Error('Failed to create restaurant');
             return response;
         } catch (error) {
-            console.error('Failed to create restaurant:', error);
-            throw error;
+            logError('createRestaurant error:', error);
+            throw new Error('Failed to create restaurant');
         }
     },
 
@@ -157,8 +137,8 @@ export const restaurantService = {
             if (!response.ok) throw new Error('Failed to delete restaurant');
             return response;
         } catch (error) {
-            console.error('Failed to delete restaurant:', error);
-            throw error;
+            logError('deleteRestaurant error:', error);
+            throw new Error('Failed to delete restaurant');
         }
     },
 };
