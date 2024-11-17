@@ -105,7 +105,66 @@ const RestaurantSchema = new mongoose.Schema({
         maxlength: 500,
         default: ''
     },
-    menus: [MenuSchema]
+    imageUrl: {
+        type: String,
+        maxlength: 1000,
+        default: ''
+    },
+    menus: [MenuSchema],
+    profileImage: {
+        type: String,
+        maxlength: 1000,
+        default: ''
+    },
+    address: {
+        street: {
+            type: String,
+            maxlength: 200,
+            default: ''
+        },
+        city: {
+            type: String,
+            maxlength: 100,
+            default: ''
+        },
+        country: {
+            type: String,
+            maxlength: 100,
+            default: ''
+        },
+        postalCode: {
+            type: String,
+            maxlength: 20,
+            default: ''
+        }
+    },
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            default: undefined
+        },
+        isManuallySet: {
+            type: Boolean,
+            default: false
+        }
+    },
+    defaultMenuId: {
+        type: String,
+        default: null
+    },
+    openingHours: {
+        type: String,
+        maxlength: 1000,
+        default: ''
+    }
 }, { timestamps: true });
+
+// Add geospatial index
+RestaurantSchema.index({ location: '2dsphere' });
 
 export const Restaurant = mongoose.model('Restaurant', RestaurantSchema);

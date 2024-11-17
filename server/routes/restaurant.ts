@@ -5,8 +5,17 @@ import type { Error } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { restaurantValidators } from '../middleware/validators.js';
 import { validationResult } from 'express-validator';
+import multer from 'multer';
+import cloudinaryService from '../services/cloudinaryService';
 
 const router: Router = express.Router();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  }
+});
 
 // ID'leri normalize eden fonksiyon
 const normalizeId = (id: string | number, type: 'section' | 'item'): string => {
@@ -97,52 +106,46 @@ router.put<{ restaurantId: string }>(
   '/:restaurantId',
   restaurantValidators.update,
   validate,
-  async (req: AuthRequest<{ restaurantId: string }>, res: Response) => {
+  async (req: AuthRequest<{ restaurantId: string }>, res: Response): Promise<void> => {
     try {
-      const { restaurantId } = req.params;
-      const updatedData = req.body;
+      const { name, description, address, openingHours, imageUrl } = req.body;
 
-      // Restoran sahibi kontrolü
-      const restaurant = await Restaurant.findOne({ restaurantId });
+      const restaurant = await Restaurant.findOne({ restaurantId: req.params.restaurantId });
       if (!restaurant) {
-        console.warn(`Auth: Restaurant not found - restaurantId: ${restaurantId}`);
         res.status(404).json({ error: 'Restaurant not found' });
         return;
       }
 
+      // Yetki kontrolü
       if (restaurant.userId !== req.user?.uid) {
-        console.warn(`Auth: Unauthorized update attempt - userId: ${req.user?.uid}, restaurantId: ${restaurantId}`);
         res.status(403).json({ error: 'Not authorized to update this restaurant' });
         return;
       }
 
-      // Normalize sections and items IDs
-      if (updatedData.sections) {
-        updatedData.sections = updatedData.sections.map((section: any) => ({
-          ...section,
-          id: normalizeId(section.id, 'section'),
-          items: section.items.map((item: any) => ({
-            ...item,
-            id: normalizeId(item.id, 'item')
-          }))
-        }));
+      // Güncelleme işlemi
+      const updatedRestaurant = await Restaurant.findOneAndUpdate(
+        { restaurantId: req.params.restaurantId },
+        {
+          $set: {
+            name,
+            description,
+            address,
+            openingHours,
+            imageUrl
+          }
+        },
+        { new: true }
+      );
+
+      if (!updatedRestaurant) {
+        res.status(404).json({ error: 'Restaurant not found' });
+        return;
       }
 
-      const updatedRestaurant = await Restaurant.findOneAndUpdate(
-        { restaurantId },
-        { ...updatedData, restaurantId },
-        { new: true, upsert: true }
-      );
       res.json(updatedRestaurant);
     } catch (error) {
-      const mongoError = error as Error;
-      console.error('Database operation failed:', {
-        error: mongoError.message,
-        userId: req.user?.uid,
-        path: req.path,
-        method: req.method
-      });
-      res.status(500).json({ error: 'Failed to update restaurant data' });
+      console.error('Update restaurant error:', error);
+      res.status(500).json({ error: 'Failed to update restaurant' });
     }
   }
 );
@@ -251,7 +254,7 @@ router.put<{ menuId: string }>(
         }));
       }
 
-      // Menüyü güncelle - pozisyonal operatör yerine arrayFilters kullan
+      // Menüyü güncelle - pozisyonal operatr yerine arrayFilters kullan
       const updatedRestaurant = await Restaurant.findOneAndUpdate(
         { 'menus.id': menuId },
         {
@@ -294,5 +297,68 @@ router.put<{ menuId: string }>(
     }
   }
 );
+
+interface MulterAuthRequest extends AuthRequest {
+  file?: Express.Multer.File;
+}
+
+// Image upload endpoint
+router.post('/upload', authMiddleware, upload.single('image'), async (req: AuthRequest, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        // restaurantId'yi request body'den al
+        const { restaurantId } = req.body;
+        if (!restaurantId) {
+            return res.status(400).json({ error: 'Restaurant ID is required' });
+        }
+
+        // Restoranı bul ve yetki kontrolü yap
+        const restaurant = await Restaurant.findOne({ restaurantId });
+        if (!restaurant) {
+            return res.status(404).json({ error: 'Restaurant not found' });
+        }
+
+        if (restaurant.userId !== req.user?.uid) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        const imageUrl = await cloudinaryService.uploadImage(req.file, restaurantId);
+        res.json({ url: imageUrl });
+    } catch (error) {
+        console.error('File upload failed:', error);
+        res.status(500).json({ error: 'Failed to upload image' });
+    }
+});
+
+// Image delete endpoint
+router.post('/delete-image', authMiddleware as express.RequestHandler, async (req: AuthRequest, res: Response) => {
+    try {
+        const { restaurantId } = req.body;
+        if (!restaurantId) {
+            return res.status(400).json({ error: 'Restaurant ID is required' });
+        }
+
+        // Restoranı bul ve yetki kontrolü yap
+        const restaurant = await Restaurant.findOne({ restaurantId });
+        if (!restaurant) {
+            return res.status(404).json({ error: 'Restaurant not found' });
+        }
+
+        if (restaurant.userId !== req.user?.uid) {
+            return res.status(403).json({ error: 'Not authorized' });
+        }
+
+        // Cloudinary'den sil
+        await cloudinaryService.deleteImage(restaurantId);
+        
+        return res.status(200).json({ message: 'Image deleted successfully' });
+    } catch (error) {
+        console.error('Image deletion failed:', error);
+        return res.status(500).json({ error: 'Failed to delete image' });
+    }
+});
 
 export default router;

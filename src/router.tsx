@@ -9,6 +9,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import RestaurantList from './pages/RestaurantList';
 import LandingPage from './pages/LandingPage';
 import { GlobalHeader } from './components/GlobalHeader';
+import { RestaurantProfile } from './pages/RestaurantProfile';
+import { RestaurantEdit } from './pages/RestaurantEdit';
 
 export function AppRouter() {
   return (
@@ -29,6 +31,12 @@ export function AppRouter() {
               <Route path="/edit/menu/:menuId" element={
                 <ProtectedRoute>
                   <MenuEdit />
+                </ProtectedRoute>
+              } />
+              <Route path="/restaurant/:restaurantId" element={<RestaurantProfile />} />
+              <Route path="/restaurant/:restaurantId/edit" element={
+                <ProtectedRoute>
+                  <RestaurantEdit />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

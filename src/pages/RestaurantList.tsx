@@ -330,7 +330,25 @@ const RestaurantList = () => {
                         <div key={restaurant.restaurantId} className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-zinc-900">{restaurant.name}</h2>
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-xl font-semibold text-zinc-900">{restaurant.name}</h2>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => navigate(`/restaurant/${restaurant.restaurantId}`)}
+                                                className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                                                title={t('restaurants.view')}
+                                            >
+                                                <Eye className="w-5 h-5 text-zinc-600" />
+                                            </button>
+                                            <button
+                                                onClick={() => navigate(`/restaurant/${restaurant.restaurantId}/edit`)}
+                                                className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                                                title={t('restaurants.edit')}
+                                            >
+                                                <Edit2 className="w-5 h-5 text-zinc-600" />
+                                            </button>
+                                        </div>
+                                    </div>
                                     {restaurant.description && (
                                         <p className="mt-1 text-zinc-600">{restaurant.description}</p>
                                     )}
@@ -339,18 +357,13 @@ const RestaurantList = () => {
                                     <button 
                                         onClick={() => handleDeleteRestaurant(restaurant.restaurantId)}
                                         disabled={isDeletingRestaurant === restaurant.restaurantId}
-                                        className="btn-sm flex items-center space-x-2"
+                                        className="p-2 hover:bg-red-100 rounded-full transition-colors"
+                                        title={t('restaurants.delete')}
                                     >
                                         {isDeletingRestaurant === restaurant.restaurantId ? (
-                                            <span className="flex items-center space-x-2">
-                                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                                <span>{t('restaurants.deleting')}</span>
-                                            </span>
+                                            <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                                         ) : (
-                                            <>
-                                                <Trash2 className="h-4 w-4" />
-                                                <span>{t('restaurants.delete')}</span>
-                                            </>
+                                            <Trash2 className="w-5 h-5 text-red-600" />
                                         )}
                                     </button>
                                 </div>
@@ -432,32 +445,28 @@ const RestaurantList = () => {
                                                     <div className="flex gap-2">
                                                         <button 
                                                             onClick={() => navigate(`/menu/${menu.id}`)}
-                                                            className="btn-secondary-sm"
+                                                            className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                                                            title={t('common.view')}
                                                         >
-                                                            <Eye className="w-4 h-4 mr-1" />
-                                                            {t('common.view')}
+                                                            <Eye className="w-5 h-5 text-zinc-600" />
                                                         </button>
                                                         <button 
                                                             onClick={() => navigate(`/edit/menu/${menu.id}`)}
-                                                            className="btn-secondary-sm"
+                                                            className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                                                            title={t('common.edit')}
                                                         >
-                                                            <Edit2 className="w-4 h-4 mr-1" />
-                                                            {t('common.edit')}
+                                                            <Edit2 className="w-5 h-5 text-zinc-600" />
                                                         </button>
                                                         <button 
                                                             onClick={() => handleDeleteMenu(restaurant.restaurantId, menu.id)}
                                                             disabled={isDeletingMenu === menu.id}
-                                                            className="btn-secondary-sm text-red-600 hover:text-red-700 
-                                                                     hover:border-red-300 hover:bg-red-50"
+                                                            className="p-2 hover:bg-red-100 rounded-full transition-colors"
+                                                            title={t('common.delete')}
                                                         >
                                                             {isDeletingMenu === menu.id ? (
-                                                                <div className="w-4 h-4 border-2 border-red-600 border-t-transparent 
-                                                                      rounded-full animate-spin" />
+                                                                <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
                                                             ) : (
-                                                                <>
-                                                                    <Trash2 className="w-4 h-4 mr-1" />
-                                                                    {t('common.delete')}
-                                                                </>
+                                                                <Trash2 className="w-5 h-5 text-red-600" />
                                                             )}
                                                         </button>
                                                     </div>

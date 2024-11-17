@@ -28,13 +28,21 @@ export interface Menu {
 }
 
 export interface Restaurant {
-  _id?: string;
-  userId: string;
   restaurantId: string;
   name: string;
   description?: string;
+  imageUrl?: string;
+  address?: {
+    street: string;
+    city: string;
+    country: string;
+    postalCode: string;
+  };
+  openingHours?: string;
   menus: Menu[];
-  createdAt?: Date;
-  updatedAt?: Date;
-  __v?: number;
+  location?: {
+    type: string;
+    coordinates: number[];
+    isManuallySet: boolean;
+  };
 }

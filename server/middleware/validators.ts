@@ -28,5 +28,10 @@ export const restaurantValidators = {
     body('menus.*.sections.*.title').optional().trim().notEmpty().withMessage('Section title is required'),
     body('menus.*.sections.*.items.*.name').optional().trim().notEmpty().withMessage('Item name is required'),
     body('menus.*.sections.*.items.*.price').optional().isFloat({ min: 0 }).withMessage('Invalid price'),
+    body('openingHours')
+      .optional()
+      .isString()
+      .isLength({ max: 1000 })
+      .withMessage('Opening hours must be a string with maximum length of 1000 characters'),
   ]
 }; 

@@ -16,7 +16,8 @@ const resources = {
         view: 'View',
         edit: 'Edit',
         delete: 'Delete',
-        back: 'Back'
+        back: 'Back',
+        save: 'Save'
       },
       restaurants: {
         title: 'Your Restaurants',
@@ -37,7 +38,36 @@ const resources = {
         noMenus: 'No menus added yet',
         selectLanguage: 'Select Language',
         menuExists: 'Menu in this language already exists',
-        menuInLanguage: '{{language}} Menu'
+        menuInLanguage: '{{language}} Menu',
+        profile: 'Restaurant Profile',
+        uploadImage: 'Upload Image',
+        imageRequirements: 'Maximum 5MB, JPG or PNG format',
+        address: 'Address',
+        street: 'Street',
+        city: 'City',
+        country: 'Country',
+        postalCode: 'Postal Code',
+        defaultMenu: 'Default Menu',
+        imageUploadError: 'Failed to upload image',
+        loadError: 'Failed to load restaurant',
+        updateError: 'Failed to update restaurant',
+        locationNotFound: 'Location not found',
+        clickMapToSetLocation: 'Click on the map to set location manually',
+        location: 'Location',
+        hours: 'Opening Hours',
+        languages: 'Available Languages',
+        availableMenus: 'Available Menus',
+        fetchError: 'Failed to fetch restaurant details',
+        notFound: 'Restaurant not found',
+        uploadingImage: 'Uploading image...',
+        imageValidationError: 'Image validation error: {{error}}',
+        allowedFileTypes: 'Allowed file types: {{types}}',
+        isOpen: 'Open',
+        openTime: 'Opening Time',
+        closeTime: 'Closing Time',
+        closed: 'Closed',
+        noHours: 'No opening hours set',
+        noLocation: 'Location not available'
       },
       validation: {
         nameRequired: 'Restaurant name is required',
@@ -70,6 +100,15 @@ const resources = {
         newSection: 'New Section',
         expandAll: 'Expand All',
         collapseAll: 'Collapse All'
+      },
+      days: {
+        monday: 'Monday',
+        tuesday: 'Tuesday',
+        wednesday: 'Wednesday',
+        thursday: 'Thursday',
+        friday: 'Friday',
+        saturday: 'Saturday',
+        sunday: 'Sunday'
       }
     }
   },
@@ -86,7 +125,8 @@ const resources = {
         view: 'Görüntüle',
         edit: 'Düzenle',
         delete: 'Sil',
-        back: 'Geri'
+        back: 'Geri',
+        save: 'Kaydet'
       },
       restaurants: {
         title: 'Restoranlarınız',
@@ -107,7 +147,36 @@ const resources = {
         noMenus: 'Henüz menü eklenmemiş',
         selectLanguage: 'Dil Seçin',
         menuExists: 'Bu dilde menü zaten mevcut',
-        menuInLanguage: '{{language}} Menü'
+        menuInLanguage: '{{language}} Menü',
+        profile: 'Restoran Profil',
+        uploadImage: 'Resim Yükle',
+        imageRequirements: 'Maximum 5MB, JPG veya PNG formatında',
+        address: 'Adres',
+        street: 'Sokak',
+        city: 'Şehir',
+        country: 'Ülke',
+        postalCode: 'Posta Kodu',
+        defaultMenu: 'Varsayılan Menü',
+        imageUploadError: 'Resim yükleme hatası',
+        loadError: 'Restoran yükleme hatası',
+        updateError: 'Restoran güncelleme hatası',
+        locationNotFound: 'Konum bulunamadı',
+        clickMapToSetLocation: 'Haritada konum manuel olarak ayarlama',
+        location: 'Konum',
+        hours: 'Çalışma Saatleri',
+        languages: 'Mevcut Diller',
+        availableMenus: 'Mevcut Menüler',
+        fetchError: 'Restoran bilgileri alınamadı',
+        notFound: 'Restoran bulunamadı',
+        uploadingImage: 'Resim yükleniyor...',
+        imageValidationError: 'Resim doğrulama hatası: {{error}}',
+        allowedFileTypes: 'İzin verilen dosya türleri: {{types}}',
+        isOpen: 'Açık',
+        openTime: 'Açılış Saati',
+        closeTime: 'Kapanış Saati',
+        closed: 'Kapalı',
+        noHours: 'Çalışma saatleri belirtilmemiş',
+        noLocation: 'Konum bilgisi mevcut değil'
       },
       validation: {
         nameRequired: 'Restoran adı zorunludur',
@@ -140,6 +209,15 @@ const resources = {
         newSection: 'Yeni Bölüm',
         expandAll: 'Tümünü Genişlet',
         collapseAll: 'Tümünü Daralt'
+      },
+      days: {
+        monday: 'Pazartesi',
+        tuesday: 'Salı',
+        wednesday: 'Çarşamba',
+        thursday: 'Perşembe',
+        friday: 'Cuma',
+        saturday: 'Cumartesi',
+        sunday: 'Pazar'
       }
     }
   },
@@ -156,7 +234,8 @@ const resources = {
         view: 'Voir',
         edit: 'Modifier',
         delete: 'Supprimer',
-        back: 'Retour'
+        back: 'Retour',
+        save: 'Enregistrer'
       },
       restaurants: {
         title: 'Vos Restaurants',
@@ -177,7 +256,36 @@ const resources = {
         noMenus: 'Aucun menu ajouté',
         selectLanguage: 'Sélectionner la Langue',
         menuExists: 'Le menu dans cette langue existe déjà',
-        menuInLanguage: 'Menu {{language}}'
+        menuInLanguage: 'Menu {{language}}',
+        profile: 'Profil du Restaurant',
+        uploadImage: 'Télécharger une Image',
+        imageRequirements: 'Maximum 5MB, format JPG ou PNG',
+        address: 'Adresse',
+        street: 'Rue',
+        city: 'Ville',
+        country: 'Pays',
+        postalCode: 'Code Postal',
+        defaultMenu: 'Menu par Défaut',
+        imageUploadError: 'Erreur de téléchargement de l\'image',
+        loadError: 'Erreur de chargement du restaurant',
+        updateError: 'Erreur de mise à jour du restaurant',
+        locationNotFound: 'Emplacement non trouvé',
+        clickMapToSetLocation: 'Cliquez sur la carte pour définir l\'emplacement manuellement',
+        location: 'Emplacement',
+        hours: 'Heures d\'ouverture',
+        languages: 'Langues disponibles',
+        availableMenus: 'Menus disponibles',
+        fetchError: 'Impossible de récupérer les détails du restaurant',
+        notFound: 'Restaurant non trouvé',
+        uploadingImage: 'Chargement de l\'image...',
+        imageValidationError: 'Erreur de validation de l\'image: {{error}}',
+        allowedFileTypes: 'Types de fichiers autorisés: {{types}}',
+        isOpen: 'Ouvert',
+        openTime: 'Heure d\'ouverture',
+        closeTime: 'Heure de fermeture',
+        closed: 'Fermé',
+        noHours: 'Heures d\'ouverture non définies',
+        noLocation: 'Emplacement non disponible'
       },
       validation: {
         nameRequired: 'Le nom du restaurant est requis',
@@ -210,6 +318,15 @@ const resources = {
         newSection: 'Nouvelle Section',
         expandAll: 'Tout développer',
         collapseAll: 'Tout réduire'
+      },
+      days: {
+        monday: 'Lundi',
+        tuesday: 'Mardi',
+        wednesday: 'Mercredi',
+        thursday: 'Jeudi',
+        friday: 'Vendredi',
+        saturday: 'Samedi',
+        sunday: 'Dimanche'
       }
     }
   },
@@ -226,7 +343,8 @@ const resources = {
         view: 'عرض',
         edit: 'تعديل',
         delete: 'حذف',
-        back: 'رجوع'
+        back: 'رجوع',
+        save: 'حفظ'
       },
       restaurants: {
         title: 'مطاعمك',
@@ -247,7 +365,36 @@ const resources = {
         noMenus: 'لم تتم إضافة قوائم بعد',
         selectLanguage: 'اختر اللغة',
         menuExists: 'القائمة موجودة بالفعل بهذه اللغة',
-        menuInLanguage: 'قائمة {{language}}'
+        menuInLanguage: 'قائمة {{language}}',
+        profile: 'ملف المطعم',
+        uploadImage: 'تحميل الصورة',
+        imageRequirements: 'أقصى 5MB، بصيغة JPG أو PNG',
+        address: 'العنوان',
+        street: 'الشارع',
+        city: 'المدينة',
+        country: 'البلد',
+        postalCode: 'رمز البريد',
+        defaultMenu: 'القائمة الافتراضية',
+        imageUploadError: 'فشل تحميل الصورة',
+        loadError: 'فشل تحميل المطعم',
+        updateError: 'فشل تحديث المطعم',
+        locationNotFound: 'الموقع غير موجود',
+        clickMapToSetLocation: 'اضغط على الخريطة لتحديد الموقع يدويا',
+        location: 'الموقع',
+        hours: 'ساعات التشغيل',
+        languages: 'اللغات المتاحة',
+        availableMenus: 'القوائم المتاحة',
+        fetchError: 'فشل في جلب تفاصيل المطعم',
+        notFound: 'مطعم غير موجود',
+        uploadingImage: 'جاري تحميل الصورة...',
+        imageValidationError: 'خطأ تحقق الصورة: {{error}}',
+        allowedFileTypes: 'الأنواع المسموحة: {{types}}',
+        isOpen: 'مفتوح',
+        openTime: 'موعد الافتتاح',
+        closeTime: 'موعد الإغلاق',
+        closed: 'مغلق',
+        noHours: 'لم يتم تحديد ساعات العمل',
+        noLocation: 'الموقع غير متوفر'
       },
       validation: {
         nameRequired: 'اسم المطعم مطلوب',
@@ -257,7 +404,7 @@ const resources = {
         invalidImageUrl: 'رابط الصورة غير صالح'
       },
       menu: {
-        sections: 'أقسام القائمة',
+        sections: 'أقسام اقائمة',
         addSection: 'إضافة قسم',
         sectionName: 'اسم القسم',
         addItem: 'إضافة عنصر',
@@ -276,10 +423,19 @@ const resources = {
         imageUrl: 'رابط الصورة',
         newItem: 'عنصر جديد',
         viewMenu: 'عرض القائمة',
-        qrCode: 'رمز QR',
+        qrCode: 'مز QR',
         newSection: 'قسم جديد',
         expandAll: 'توسيع الكل',
         collapseAll: 'طي الكل'
+      },
+      days: {
+        monday: 'الاثنين',
+        tuesday: 'الثلاثاء',
+        wednesday: 'الأربعاء',
+        thursday: 'الخميس',
+        friday: 'السبت',
+        saturday: 'الأحد',
+        sunday: 'الأثنين'
       }
     }
   },
@@ -296,7 +452,8 @@ const resources = {
         view: 'Bekijken',
         edit: 'Bewerken',
         delete: 'Verwijderen',
-        back: 'Terug'
+        back: 'Terug',
+        save: 'Opslaan'
       },
       restaurants: {
         title: 'Uw Restaurants',
@@ -317,7 +474,36 @@ const resources = {
         noMenus: "Nog geen menu's toegevoegd",
         selectLanguage: 'Selecteer Taal',
         menuExists: 'Menu in deze taal bestaat al',
-        menuInLanguage: '{{language}} Menu'
+        menuInLanguage: '{{language}} Menu',
+        profile: 'Restaurant Profiel',
+        uploadImage: 'Afbeelding Uploaden',
+        imageRequirements: 'Maximum 5MB, JPG of PNG formaat',
+        address: 'Adres',
+        street: 'Straat',
+        city: 'Stad',
+        country: 'Land',
+        postalCode: 'Postcode',
+        defaultMenu: 'Standaard Menu',
+        imageUploadError: 'Afbeelding uploaden mislukt',
+        loadError: 'Restaurant laden mislukt',
+        updateError: 'Restaurant bijwerken mislukt',
+        locationNotFound: 'Locatie niet gevonden',
+        clickMapToSetLocation: 'Klik op de kaart om de locatie handmatig in te stellen',
+        location: 'Locatie',
+        hours: 'Opening Hours',
+        languages: 'Beschikbare Talen',
+        availableMenus: 'Beschikbare Menus',
+        fetchError: 'Restaurantdetails konnten nicht abgerufen werden',
+        notFound: 'Restaurant niet gevonden',
+        uploadingImage: 'Afbeelding uploaden...',
+        imageValidationError: 'Afbeelding validatie fout: {{error}}',
+        allowedFileTypes: 'Toegestane bestandstypes: {{types}}',
+        isOpen: 'Open',
+        openTime: 'Opening Time',
+        closeTime: 'Closing Time',
+        closed: 'Gesloten',
+        noHours: 'Geen openingstijden ingesteld',
+        noLocation: 'Locatie niet beschikbaar'
       },
       validation: {
         nameRequired: 'Restaurantnaam is verplicht',
@@ -350,6 +536,15 @@ const resources = {
         newSection: 'Nieuwe Sectie',
         expandAll: 'Alles Uitvouwen',
         collapseAll: 'Alles Invouwen'
+      },
+      days: {
+        monday: 'Maandag',
+        tuesday: 'Dinsdag',
+        wednesday: 'Woensdag',
+        thursday: 'Donderdag',
+        friday: 'Vrijdag',
+        saturday: 'Zaterdag',
+        sunday: 'Zondag'
       }
     }
   }
@@ -363,9 +558,6 @@ i18n
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false
-    },
-    language: {
-      ar: { dir: 'rtl' }
     }
   });
 

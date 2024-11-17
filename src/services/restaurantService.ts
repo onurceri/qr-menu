@@ -22,43 +22,48 @@ const logError = (message: string, error?: any) => {
     }
 };
 
+interface UpdateRestaurantData {
+    name: string;
+    description: string;
+    address: {
+        street: string;
+        city: string;
+        country: string;
+        postalCode: string;
+    };
+    openingHours: string;
+    imageUrl: string;
+}
+
 export const restaurantService = {
-    async getRestaurant(restaurantId: string): Promise<Restaurant | null> {
+    async getRestaurant(restaurantId: string): Promise<Restaurant> {
         try {
-            const response = await fetch(`${API_URL}/restaurant/${restaurantId}`);
-            
+            const token = await getAuthToken();
+            if (!token) throw new Error('Not authenticated');
+
+            const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+            });
+
             if (!response.ok) {
                 throw new Error('Failed to fetch restaurant');
             }
-            
-            return await response.json();
+
+            return response.json();
         } catch (error) {
             logError('getRestaurant error:', error);
             throw new Error('Failed to fetch restaurant');
         }
     },
 
-    async updateRestaurant(restaurantId: string, data: Partial<Restaurant> | Partial<Menu>): Promise<Restaurant> {
+    async updateRestaurant(restaurantId: string, data: UpdateRestaurantData): Promise<Restaurant> {
         try {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
-
-            const normalizedData = { ...data };
-            
-            // Menu güncellemesi ise
-            if ('sections' in normalizedData) {
-                const menuData = normalizedData as Partial<Menu>;
-                if (menuData.sections) {
-                    menuData.sections = menuData.sections.map((section: MenuSection) => ({
-                        ...section,
-                        id: normalizeId(section.id, 'section'),
-                        items: section.items.map((item: MenuItem) => ({
-                            ...item,
-                            id: normalizeId(item.id, 'item')
-                        }))
-                    }));
-                }
-            }
 
             const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
                 method: 'PUT',
@@ -66,14 +71,23 @@ export const restaurantService = {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(normalizedData),
+                body: JSON.stringify({
+                    name: data.name,
+                    description: data.description,
+                    address: data.address,
+                    openingHours: data.openingHours,
+                    imageUrl: data.imageUrl
+                }),
             });
             
-            if (!response.ok) throw new Error('Failed to update restaurant');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Failed to update restaurant');
+            }
             
             return await response.json();
         } catch (error) {
-            logError('updateRestaurant error:', error);
+            console.error('updateRestaurant error:', error);
             throw new Error('Failed to update restaurant');
         }
     },
@@ -186,4 +200,72 @@ export const restaurantService = {
             throw new Error('Failed to update menu');
         }
     },
+
+    async uploadImage(file: File, restaurantId: string): Promise<string> {
+        try {
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('restaurantId', restaurantId);
+
+            const token = await getAuthToken();
+            if (!token) throw new Error('Not authenticated');
+
+            const response = await fetch(`${API_URL}/restaurant/upload`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            if (!response.ok) throw new Error('Failed to upload image');
+            const data = await response.json();
+            return data.url;
+        } catch (error) {
+            logError('uploadImage error:', error);
+            throw new Error('Failed to upload image');
+        }
+    },
+
+    async geocodeAddress(address: string): Promise<[number, number] | null> {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+                    address
+                )}`
+            );
+
+            if (!response.ok) throw new Error('Geocoding failed');
+
+            const data = await response.json();
+            if (data && data[0]) {
+                return [parseFloat(data[0].lon), parseFloat(data[0].lat)];
+            }
+            return null;
+        } catch (error) {
+            logError('geocodeAddress error:', error);
+            return null;
+        }
+    },
+
+    async deleteImage(restaurantId: string): Promise<void> {
+        try {
+            const token = await getAuthToken();
+            if (!token) throw new Error('Not authenticated');
+
+            const response = await fetch(`${API_URL}/restaurant/delete-image`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ restaurantId })
+            });
+
+            if (!response.ok) throw new Error('Failed to delete image');
+        } catch (error) {
+            logError('deleteImage error:', error);
+            throw new Error('Failed to delete image');
+        }
+    }
 };
