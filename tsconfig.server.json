@@ -3,15 +3,17 @@
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "target": "ES2022",
     "outDir": "dist/server",
     "noEmit": false,
     "allowJs": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
+    "rootDir": ".",
     "paths": {
       "*": ["*", "server/*"]
     }
   },
   "include": ["server/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist"]
 } 

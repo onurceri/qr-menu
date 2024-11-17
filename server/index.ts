@@ -9,8 +9,8 @@ import mongoose from 'mongoose';
 import { rateLimit } from 'express-rate-limit';
 
 // Import routes
-import restaurantRoutes from './routes/restaurant';
-import userRoutes from './routes/user';
+import restaurantRouter from './routes/restaurant.js';
+import userRouter from './routes/user.js';
 
 // Rate limiter configurations
 const authLimiter = rateLimit({
@@ -27,25 +27,36 @@ const apiLimiter = rateLimit({
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// .env dosyasının yolunu belirt - TÜM IMPORTLARDAN ÖNCE OLMALI
-dotenv.config({ path: join(__dirname, '..', '.env') });
+// Update the dotenv config path
+const envPath = process.env.NODE_ENV === 'production' 
+  ? join(__dirname, '../.env')
+  : join(__dirname, '../../.env');
 
-// Environment variables'ları kontrol et
-console.log('Environment Check:', {
-  serviceAccount: {
-    exists: !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON,
-    length: process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.length,
-    firstChars: process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.substring(0, 50)
-  },
-  nodeEnv: process.env.NODE_ENV,
-  port: process.env.PORT
-});
+dotenv.config({ path: envPath });
+
+// Add more detailed environment checking
+const checkRequiredEnvVars = () => {
+  const required = [
+    'MONGODB_URI',
+    'FIREBASE_SERVICE_ACCOUNT_JSON',
+    'NODE_ENV'
+  ];
+  
+  const missing = required.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    console.error('❌ Missing required environment variables:', missing);
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+};
+
+checkRequiredEnvVars();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
 // Serve static files from the dist directory
-app.use(express.static(path.join(__dirname, '../../dist')));
+app.use(express.static(path.join(__dirname, '../../../dist')));
 
 // Proxy ayarı - Vercel için gerekli
 app.set('trust proxy', 1);
@@ -90,8 +101,8 @@ mongoose.connect(process.env.MONGODB_URI!, {
   console.error('Connection string:', process.env.MONGODB_URI?.replace(/\/\/.*@/, '//<credentials>@'));
 });
 
-app.use('/api/restaurant', restaurantRoutes);
-app.use('/api/user', userRoutes);
+app.use('/api/restaurant', restaurantRouter);
+app.use('/api/user', userRouter);
 
 // Healthcheck endpoint'i - en üstte olmalı
 app.get('/api/health', (req, res) => {
@@ -114,7 +125,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 // Serve index.html for all routes (SPA fallback)
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../../dist/index.html'));
+  res.sendFile(path.join(__dirname, '../../../dist/index.html'));
 });
 
 app.listen(PORT, () => {

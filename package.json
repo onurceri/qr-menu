@@ -7,10 +7,10 @@
     "dev:server": "cross-env NODE_ENV=development tsx watch server/index.ts",
     "dev:client": "vite",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "build": "npm run build:client && npm run build:server",
+    "build": "rm -rf dist && npm run build:client && npm run build:server",
     "build:client": "vite build",
-    "build:server": "tsc -p tsconfig.server.json",
-    "start": "node dist/server/index.js",
+    "build:server": "tsc -p tsconfig.server.json && cp -r server/models dist/server/server/models && cp .env dist/server/",
+    "start": "cross-env NODE_ENV=production node dist/server/server/index.js",
     "lint": "eslint .",
     "preview": "vite preview"
   },
