@@ -28,6 +28,57 @@ const checkImageExists = (url: string): Promise<boolean> => {
   });
 };
 
+// Input validation fonksiyonlarını ekleyelim
+const validateInput = {
+  name: (value: string) => {
+    // İsim alanı için validasyon
+    if (!value.trim()) return 'Name is required';
+    if (value.length > 100) return 'Name must be less than 100 characters';
+    // XSS koruması için özel karakterleri kontrol et
+    if (/[<>{}]/g.test(value)) return 'Invalid characters detected';
+    return null;
+  },
+  
+  description: (value: string) => {
+    // Açıklama alanı için validasyon
+    if (value.length > 500) return 'Description must be less than 500 characters';
+    // XSS koruması için özel karakterleri kontrol et
+    if (/[<>{}]/g.test(value)) return 'Invalid characters detected';
+    return null;
+  },
+
+  price: (value: string) => {
+    // Fiyat alanı için validasyon
+    if (!value) return 'Price is required';
+    const price = parseFloat(value);
+    if (isNaN(price)) return 'Price must be a number';
+    if (price < 0) return 'Price cannot be negative';
+    if (price > 999999.99) return 'Price is too high';
+    return null;
+  },
+
+  imageUrl: (value: string) => {
+    // Resim URL'i için validasyon
+    if (!value) return null; // Opsiyonel alan
+    if (value.length > 2048) return 'URL is too long';
+    try {
+      const url = new URL(value);
+      if (!['http:', 'https:'].includes(url.protocol)) return 'Invalid URL protocol';
+    } catch {
+      return 'Invalid URL format';
+    }
+    return null;
+  },
+
+  sectionTitle: (value: string) => {
+    // Bölüm başlığı için validasyon
+    if (!value.trim()) return 'Section title is required';
+    if (value.length > 100) return 'Section title must be less than 100 characters';
+    if (/[<>{}]/g.test(value)) return 'Invalid characters detected';
+    return null;
+  }
+};
+
 function MenuEdit() {
   const { user } = useAuth();
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -221,6 +272,22 @@ function MenuEdit() {
 
     try {
       setImageError(null);
+      setError(null);
+
+      // Tüm alanları validate et
+      const nameError = validateInput.name(updatedItem.name);
+      const descriptionError = validateInput.description(updatedItem.description || '');
+      const priceError = validateInput.price(updatedItem.tempPrice || '0');
+      const imageUrlError = validateInput.imageUrl(updatedItem.imageUrl || '');
+
+      // Hataları topla
+      const errors = [nameError, descriptionError, priceError, imageUrlError]
+        .filter(Boolean);
+
+      if (errors.length > 0) {
+        setError(errors[0]);
+        return;
+      }
 
       // Sadece image URL'in çalışıp çalışmadığını kontrol et
       if (updatedItem.imageUrl) {
@@ -236,8 +303,11 @@ function MenuEdit() {
         ? parseFloat(updatedItem.tempPrice) || 0 
         : updatedItem.price;
 
-      const itemToSave: MenuItem = {
+      // XSS koruması için HTML escape işlemi
+      const sanitizedItem: MenuItem = {
         ...updatedItem,
+        name: updatedItem.name.replace(/[<>]/g, ''),
+        description: updatedItem.description?.replace(/[<>]/g, '') || '',
         price: finalPrice,
       };
 
@@ -246,7 +316,7 @@ function MenuEdit() {
           return {
             ...section,
             items: section.items.map(item => 
-              item.id === itemToSave.id ? itemToSave : item
+              item.id === sanitizedItem.id ? sanitizedItem : item
             )
           };
         }
@@ -299,9 +369,18 @@ function MenuEdit() {
     if (!restaurant) return;
 
     try {
+      const titleError = validateInput.sectionTitle(newTitle);
+      if (titleError) {
+        setError(titleError);
+        return;
+      }
+
+      // XSS koruması için HTML escape işlemi
+      const sanitizedTitle = newTitle.replace(/[<>]/g, '');
+
       const updatedSections = restaurant.sections.map(section => {
         if (section.id === sectionId) {
-          return { ...section, title: newTitle };
+          return { ...section, title: sanitizedTitle };
         }
         return section;
       });

@@ -34,6 +34,24 @@ const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void
   </div>
 );
 
+// Input validation fonksiyonlarını ekleyelim
+const validateInput = {
+  restaurantName: (value: string) => {
+    if (!value.trim()) return 'Restaurant name is required';
+    if (value.length > 100) return 'Restaurant name must be less than 100 characters';
+    // XSS koruması için özel karakterleri kontrol et
+    if (/[<>{}]/g.test(value)) return 'Invalid characters detected';
+    return null;
+  },
+
+  description: (value: string) => {
+    if (value.length > 500) return 'Description must be less than 500 characters';
+    // XSS koruması için özel karakterleri kontrol et
+    if (/[<>{}]/g.test(value)) return 'Invalid characters detected';
+    return null;
+  }
+};
+
 export default function RestaurantList() {
     const { user, signOut } = useAuth();
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -68,19 +86,35 @@ export default function RestaurantList() {
     }, [user, navigate]);
 
     const handleCreateRestaurant = async () => {
-        if (!newRestaurantName.trim()) {
-            setError('Please enter a restaurant name');
-            return;
-        }
         if (isCreating) return;
-        
+
         try {
+            // Input validasyonu
+            const nameError = validateInput.restaurantName(newRestaurantName);
+            const descriptionError = validateInput.description(newRestaurantDescription);
+
+            if (nameError) {
+                setError(nameError);
+                return;
+            }
+
+            if (descriptionError) {
+                setError(descriptionError);
+                return;
+            }
+
             setError(null);
             setIsCreating(true);
+
+            // XSS koruması için HTML escape işlemi
+            const sanitizedName = newRestaurantName.replace(/[<>]/g, '');
+            const sanitizedDescription = newRestaurantDescription.replace(/[<>]/g, '');
+
             const response = await restaurantService.createRestaurant(user!.uid, { 
-                name: newRestaurantName, 
-                description: newRestaurantDescription
+                name: sanitizedName, 
+                description: sanitizedDescription
             });
+
             if (response.status === 201) {
                 const fetchedRestaurants = await restaurantService.getRestaurants(user!.uid);
                 setRestaurants(Array.isArray(fetchedRestaurants) ? fetchedRestaurants : []);
@@ -137,7 +171,14 @@ export default function RestaurantList() {
                     <input 
                         type="text" 
                         value={newRestaurantName} 
-                        onChange={(e) => setNewRestaurantName(e.target.value)} 
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setNewRestaurantName(value);
+                            const error = validateInput.restaurantName(value);
+                            if (error) setError(error);
+                            else setError(null);
+                        }}
+                        maxLength={100}
                         placeholder="Restaurant Name" 
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent
                             ${error ? 'border-red-300' : 'border-zinc-300'}`}
@@ -145,7 +186,14 @@ export default function RestaurantList() {
                     <input 
                         type="text" 
                         value={newRestaurantDescription} 
-                        onChange={(e) => setNewRestaurantDescription(e.target.value)} 
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            setNewRestaurantDescription(value);
+                            const error = validateInput.description(value);
+                            if (error) setError(error);
+                            else setError(null);
+                        }}
+                        maxLength={500}
                         placeholder="Restaurant Description (optional)" 
                         className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
                     />
