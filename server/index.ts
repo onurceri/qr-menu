@@ -12,6 +12,9 @@ dotenv.config();
 
 const app = express();
 
+// Proxy ayarı - Vercel için gerekli
+app.set('trust proxy', 1);
+
 // Güvenlik middleware'leri
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
@@ -80,3 +83,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+export default app;
