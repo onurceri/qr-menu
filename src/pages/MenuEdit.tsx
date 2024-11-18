@@ -572,62 +572,60 @@ function MenuEdit() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-6">
+      {/* Header bölümü - Mobil için yeniden düzenlendi */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <button
           onClick={() => navigate(-1)}
-          className="btn-secondary flex items-center space-x-2"
+          className="inline-flex items-center space-x-2 text-zinc-600 hover:text-zinc-900 h-10"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-5 w-5" />
           <span>{t('common.back')}</span>
         </button>
 
-        <div className="flex items-center space-x-4">
+        <div className="grid grid-cols-3 sm:flex items-stretch gap-2 w-full sm:w-auto">
           <button
             onClick={handleAddSection}
-            className="btn-secondary flex items-center space-x-2"
+            className="btn-secondary h-10 flex items-center justify-center space-x-2"
           >
             <Plus className="h-4 w-4" />
             <span>{t('menu.addSection')}</span>
           </button>
-          <a
-            href={`/menu/${menuId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-secondary flex items-center space-x-2"
+          <button
+            onClick={() => window.open(`/menu/${menuId}`, '_blank')}
+            className="btn-secondary h-10 flex items-center justify-center space-x-2"
           >
             <Eye className="h-4 w-4" />
-            <span>{t('menu.viewMenu')}</span>
-          </a>
+            <span className="hidden sm:inline">{t('menu.viewMenu')}</span>
+            <span className="sm:hidden">{t('common.view')}</span>
+          </button>
           <button
             onClick={() => setIsQrModalOpen(true)}
-            className="btn-secondary flex items-center space-x-2"
+            className="btn-secondary h-10 flex items-center justify-center space-x-2"
           >
             <QrCode className="h-4 w-4" />
-            <span>{t('menu.qrCode')}</span>
+            <span className="hidden sm:inline">{t('menu.qrCode')}</span>
+            <span className="sm:hidden">QR</span>
           </button>
-          {isSaving && (
-            <span className="text-sm text-zinc-500 flex items-center">
-              <div className="w-4 h-4 border-2 border-zinc-500 border-t-transparent rounded-full animate-spin mr-2" />
-              {t('menu.saving')}
-            </span>
-          )}
         </div>
       </div>
 
       {/* Currency Selection and Expand/Collapse Controls */}
       {menu && menu.sections.length > 0 && (
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center">
-            <span className="text-zinc-700 font-medium mr-2">{t('menu.currency')}:</span>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div className="flex items-center w-full sm:w-auto">
+            <span className="text-zinc-700 font-medium mr-2 whitespace-nowrap">
+              {t('menu.currency')}:
+            </span>
             <CurrencySelect
               value={menu?.currency || 'TRY'}
               onChange={handleCurrencyChange}
+              className="h-10"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
             <button
               onClick={() => handleExpandAll(true)}
-              className="btn-secondary-sm flex items-center space-x-2"
+              className="btn-secondary-sm h-10 flex items-center justify-center space-x-2"
               disabled={allExpanded}
             >
               <ChevronDown className="h-4 w-4" />
@@ -635,7 +633,7 @@ function MenuEdit() {
             </button>
             <button
               onClick={() => handleExpandAll(false)}
-              className="btn-secondary-sm flex items-center space-x-2"
+              className="btn-secondary-sm h-10 flex items-center justify-center space-x-2"
               disabled={!allExpanded && expandedSections.size === 0}
             >
               <ChevronRight className="h-4 w-4" />
@@ -669,29 +667,31 @@ function MenuEdit() {
                         }`}
                       >
                         {/* Section header */}
-                        <div className="p-4 border-b border-zinc-200 flex items-center bg-zinc-50 rounded-t-lg">
-                          <div {...provided.dragHandleProps} className="p-2 hover:bg-zinc-100 rounded cursor-grab active:cursor-grabbing">
-                            <GripVertical className="h-5 w-5 text-zinc-400" />
+                        <div className="p-4 border-b border-zinc-200 flex flex-wrap sm:flex-nowrap items-center gap-2 bg-zinc-50 rounded-t-lg">
+                          <div className="flex items-center flex-1 min-w-0">
+                            <div {...provided.dragHandleProps} className="p-2 hover:bg-zinc-100 rounded cursor-grab active:cursor-grabbing">
+                              <GripVertical className="h-5 w-5 text-zinc-400" />
+                            </div>
+                            <button
+                              onClick={() => toggleSection(section.id)}
+                              className="p-2 hover:bg-zinc-100 rounded-md mr-2"
+                            >
+                              {expandedSections.has(section.id) ? (
+                                <ChevronDown className="h-5 w-5 text-zinc-500" />
+                              ) : (
+                                <ChevronRight className="h-5 w-5 text-zinc-500" />
+                              )}
+                            </button>
+                            <input
+                              type="text"
+                              value={section.title}
+                              onChange={(e) => handleSectionTitleChange(section.id, e.target.value)}
+                              className="flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 focus:border-none min-w-0"
+                              placeholder={t('menu.sectionName')}
+                            />
                           </div>
-                          <button
-                            onClick={() => toggleSection(section.id)}
-                            className="p-2 hover:bg-zinc-100 rounded-md mr-2"
-                          >
-                            {expandedSections.has(section.id) ? (
-                              <ChevronDown className="h-5 w-5 text-zinc-500" />
-                            ) : (
-                              <ChevronRight className="h-5 w-5 text-zinc-500" />
-                            )}
-                          </button>
-                          <input
-                            type="text"
-                            value={section.title}
-                            onChange={(e) => handleSectionTitleChange(section.id, e.target.value)}
-                            className="flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 focus:border-none"
-                            placeholder={t('menu.sectionName')}
-                          />
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-zinc-500">
+                          <div className="flex items-center gap-2 ml-auto">
+                            <span className="text-sm text-zinc-500 whitespace-nowrap">
                               {section.items.length} {section.items.length === 1 ? 'item' : 'items'}
                             </span>
                             <button

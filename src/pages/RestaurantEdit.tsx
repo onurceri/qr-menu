@@ -4,7 +4,7 @@ import { restaurantService } from '../services/restaurantService';
 import type { Restaurant } from '../types/restaurant';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { MapPin, Image, Clock, Trash2 } from 'lucide-react';
+import { MapPin, Image, Clock, Trash2, ArrowLeft } from 'lucide-react';
 import { SearchableDropdown } from '../components/SearchableDropdown';
 import { locationService } from '../services/locationService';
 import { useFormValidation } from '../hooks/useFormValidation';
@@ -285,11 +285,22 @@ export function RestaurantEdit() {
 
     return (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="bg-white shadow-sm rounded-lg p-6 border border-zinc-200">
-                <h1 className="text-2xl font-bold text-zinc-900 mb-6">
-                    {t('restaurants.profile')}
-                </h1>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                    <button
+                        onClick={() => navigate(`/restaurant/${restaurantId}`)}
+                        className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                        aria-label={t('common.back')}
+                    >
+                        <ArrowLeft className="w-5 h-5 text-zinc-600" />
+                    </button>
+                    <h1 className="text-2xl font-bold text-zinc-900">
+                        {t('restaurants.profile')}
+                    </h1>
+                </div>
+            </div>
 
+            <div className="bg-white shadow-sm rounded-lg p-6 border border-zinc-200">
                 {error && (
                     <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-md">
                         {error}
@@ -427,48 +438,50 @@ export function RestaurantEdit() {
                         <div className="space-y-4">
                             {Object.entries(schedule).map(([day, daySchedule]) => (
                                 <div key={day} className="flex flex-col space-y-2">
-                                    <div className="flex items-center space-x-4">
-                                        <div className="w-28">
-                                            <span className="text-sm font-medium text-zinc-700 capitalize">
-                                                {t(`days.${day}`)}
-                                            </span>
+                                    <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                                        <div className="flex items-center justify-between sm:w-auto">
+                                            <div className="w-28">
+                                                <span className="text-sm font-medium text-zinc-700 capitalize">
+                                                    {t(`days.${day}`)}
+                                                </span>
+                                            </div>
+                                            <label className="flex items-center sm:ml-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={daySchedule.isOpen}
+                                                    onChange={(e) => handleScheduleChange(day, 'isOpen', e.target.checked)}
+                                                    className="rounded border-zinc-300 text-zinc-600 focus:ring-zinc-500"
+                                                />
+                                                <span className="ml-2 text-sm text-zinc-600">
+                                                    {t('restaurants.isOpen')}
+                                                </span>
+                                            </label>
                                         </div>
-                                        <label className="flex items-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={daySchedule.isOpen}
-                                                onChange={(e) => handleScheduleChange(day, 'isOpen', e.target.checked)}
-                                                className="rounded border-zinc-300 text-zinc-600 focus:ring-zinc-500"
-                                            />
-                                            <span className="ml-2 text-sm text-zinc-600">
-                                                {t('restaurants.isOpen')}
-                                            </span>
-                                        </label>
                                         {daySchedule.isOpen && (
-                                            <>
+                                            <div className="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-start">
                                                 <input
                                                     type="time"
                                                     value={formatTimeForInput(daySchedule.openTime)}
                                                     onChange={(e) => handleScheduleChange(day, 'openTime', e.target.value)}
-                                                    className={`block rounded-md shadow-sm focus:border-zinc-500 
-                                                             focus:ring-zinc-500 sm:text-sm
-                                                             ${errors[day] ? 'border-red-300 bg-red-50' : 'border-zinc-300'}`}
+                                                    className={`block w-[120px] rounded-md shadow-sm focus:border-zinc-500 
+                                                            focus:ring-zinc-500 sm:text-sm
+                                                            ${errors[day] ? 'border-red-300 bg-red-50' : 'border-zinc-300'}`}
                                                 />
                                                 <span className="text-zinc-500">-</span>
                                                 <input
                                                     type="time"
                                                     value={formatTimeForInput(daySchedule.closeTime)}
                                                     onChange={(e) => handleScheduleChange(day, 'closeTime', e.target.value)}
-                                                    className={`block rounded-md shadow-sm focus:border-zinc-500 
-                                                             focus:ring-zinc-500 sm:text-sm
-                                                             ${errors[day] ? 'border-red-300 bg-red-50' : 'border-zinc-300'}`}
+                                                    className={`block w-[120px] rounded-md shadow-sm focus:border-zinc-500 
+                                                            focus:ring-zinc-500 sm:text-sm
+                                                            ${errors[day] ? 'border-red-300 bg-red-50' : 'border-zinc-300'}`}
                                                 />
-                                            </>
+                                            </div>
                                         )}
                                     </div>
-                                    {/* Hata mesajını göster */}
+                                    {/* Hata mesajı */}
                                     {errors[day] && (
-                                        <div className="text-sm text-red-600 ml-32 flex items-center">
+                                        <div className="text-sm text-red-600 ml-0 sm:ml-32 flex items-center">
                                             <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                             </svg>
@@ -489,7 +502,7 @@ export function RestaurantEdit() {
                         <div className="mt-1 flex flex-col space-y-4">
                             {/* Mevcut resmi göster */}
                             {formData.imageUrl && (
-                                <div className="relative w-48 h-48 group">
+                                <div className="relative w-full sm:w-48 h-48 group">
                                     <img 
                                         src={formData.imageUrl} 
                                         alt="Restaurant" 
@@ -498,8 +511,8 @@ export function RestaurantEdit() {
                                     <button
                                         onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
                                         disabled={isUploadingImage}
-                                        className={`absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full 
-                                                 opacity-0 group-hover:opacity-100 transition-opacity
+                                        className={`absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full 
+                                                 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity
                                                  ${isUploadingImage ? 'cursor-not-allowed opacity-50' : ''}`}
                                         title={t('common.delete')}
                                     >
@@ -541,13 +554,14 @@ export function RestaurantEdit() {
                         </div>
                     </div>
 
-                    {/* Submit Button */}
-                    <div className="border-t border-zinc-200 pt-6">
+                    {/* Submit Button - Mobil için daha iyi görünüm */}
+                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-zinc-200 p-4 sm:relative sm:bg-transparent sm:border-t-0 sm:p-0 sm:mt-6">
                         <button
                             type="submit"
                             disabled={saving || isUploadingImage}
                             className={`w-full btn flex items-center justify-center space-x-2
-                                ${(saving || isUploadingImage) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                ${(saving || isUploadingImage) ? 'opacity-50 cursor-not-allowed' : ''}
+                                shadow-lg sm:shadow-none`}
                         >
                             {saving ? (
                                 <span className="flex items-center space-x-2">

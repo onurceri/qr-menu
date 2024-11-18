@@ -29,7 +29,8 @@ const resources = {
         required: 'Required field',
         charactersRemaining: '{{count}} characters remaining',
         showMore: 'Show more',
-        showLess: 'Show less'
+        showLess: 'Show less',
+        creating: 'Creating...'
       },
       restaurants: {
         title: 'Your Restaurants',
@@ -156,17 +157,8 @@ const resources = {
         required: 'Zorunlu alan',
         charactersRemaining: '{{count}} karakter kaldı',
         showMore: 'Devamını gör',
-        showLess: 'Daha az göster'
-      },
-      validation: {
-        nameRequired: 'İsim alanı zorunludur',
-        nameTooLong: 'İsim çok uzun',
-        descriptionTooLong: 'Açıklama çok uzun',
-        invalidCharacters: 'Geçersiz karakterler',
-        invalidTimeRange: 'Geçersiz saat aralığı',
-        invalidPostalCode: 'Geçersiz posta kodu',
-        invalidTimeFormat: 'Geçersiz saat formatı',
-        invalidImageUrl: 'Geçersiz görsel URL\'si'
+        showLess: 'Daha az göster',
+        creating: 'Oluşturuluyor...'
       },
       restaurants: {
         title: 'Restoranlarınız',
@@ -276,7 +268,8 @@ const resources = {
         save: 'Enregistrer',
         clear: 'Effacer',
         noResults: 'Aucun résultat trouvé',
-        enterMinChars: 'Entrez au moins {{count}} caractères'
+        enterMinChars: 'Entrez au moins {{count}} caractères',
+        creating: 'Création en cours...'
       },
       restaurants: {
         title: 'Vos Restaurants',
@@ -390,7 +383,8 @@ const resources = {
         save: 'حفظ',
         clear: 'مسح',
         noResults: 'لم يتم العثور على نتائج',
-        enterMinChars: 'أدخل على الأقل {{count}} حرف'
+        enterMinChars: 'أدخل على الأقل {{count}} حرف',
+        creating: 'جاري الإنشاء...'
       },
       restaurants: {
         title: 'مطاعمك',
@@ -504,7 +498,8 @@ const resources = {
         save: 'Opslaan',
         clear: 'Wissen',
         noResults: 'Geen resultaten gevonden',
-        enterMinChars: 'Voer minstens {{count}} tekens in'
+        enterMinChars: 'Voer minstens {{count}} tekens in',
+        creating: 'Maken...'
       },
       restaurants: {
         title: 'Uw Restaurants',

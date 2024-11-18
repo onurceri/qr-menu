@@ -169,6 +169,7 @@ const RestaurantList = () => {
     const { t } = useTranslation();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [formError, setFormError] = useState<string | null>(null);
+    const [loadingLanguage, setLoadingLanguage] = useState<string | null>(null);
 
     const validateInput = {
         restaurantName: (value: string) => {
@@ -275,8 +276,8 @@ const RestaurantList = () => {
     };
 
     const handleLanguageSelect = async (restaurantId: string, language: string) => {
-        console.log('Language selected:', language, 'for restaurant:', restaurantId);
         try {
+            setLoadingLanguage(language);
             setIsAddingMenu(restaurantId);
             const restaurant = restaurants.find(r => r.restaurantId === restaurantId);
             if (!restaurant) {
@@ -284,13 +285,11 @@ const RestaurantList = () => {
                 return;
             }
 
-            // Eğer bu dilde zaten bir menü varsa, oluşturma
             if (restaurant.menus.some(menu => menu.language === language)) {
                 setError(t('restaurants.menuExists'));
                 return;
             }
 
-            console.log('Creating menu...');
             const response = await restaurantService.createMenu(restaurantId, {
                 language,
                 name: restaurant.name || 'New Menu',
@@ -299,12 +298,9 @@ const RestaurantList = () => {
                 currency: 'TRY'
             });
 
-            console.log('Menu creation response:', response);
-
             if (response.ok) {
                 const fetchedRestaurants = await restaurantService.getRestaurants(user!.uid);
                 setRestaurants(fetchedRestaurants);
-                setIsAddingMenu(null);
             } else {
                 throw new Error('Failed to create menu');
             }
@@ -312,6 +308,7 @@ const RestaurantList = () => {
             console.error('Menu creation error:', err);
             setError(t('restaurants.menuCreateError'));
         } finally {
+            setLoadingLanguage(null);
             setIsAddingMenu(null);
         }
     };
@@ -526,22 +523,34 @@ const RestaurantList = () => {
                                                 const hasMenu = restaurant.menus.some(
                                                     menu => menu.language === lang.code
                                                 );
+                                                const isLoading = loadingLanguage === lang.code;
+                                                
                                                 return (
                                                     <button
                                                         key={lang.code}
                                                         onClick={() => {
-                                                            console.log('Language button clicked:', lang.code);
                                                             handleLanguageSelect(restaurant.restaurantId, lang.code);
                                                         }}
-                                                        disabled={hasMenu}
-                                                        className={`flex items-center p-2 rounded ${
-                                                            hasMenu 
+                                                        disabled={hasMenu || isLoading}
+                                                        className={`flex items-center justify-center p-2 rounded w-full
+                                                            ${hasMenu 
                                                                 ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' 
+                                                                : isLoading
+                                                                ? 'bg-zinc-50 cursor-not-allowed'
                                                                 : 'bg-white hover:bg-zinc-50 text-zinc-700'
-                                                        }`}
+                                                            }`}
                                                     >
-                                                        <span className="mr-2">{lang.flag}</span>
-                                                        <span>{lang.name}</span>
+                                                        {isLoading ? (
+                                                            <div className="flex items-center space-x-2">
+                                                                <div className="w-4 h-4 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin" />
+                                                                <span className="text-zinc-600">{t('common.creating')}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <span className="mr-2">{lang.flag}</span>
+                                                                <span>{lang.name}</span>
+                                                            </>
+                                                        )}
                                                     </button>
                                                 );
                                             })}
