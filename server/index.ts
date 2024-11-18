@@ -131,7 +131,18 @@ mongoose.connect(process.env.MONGODB_URI!, {
   maxPoolSize: 10,
   minPoolSize: 5
 })
-.then(() => console.log('✅ Connected to MongoDB'))
+.then(async () => {
+  console.log('✅ Connected to MongoDB');
+  
+  // Drop the problematic index if it exists
+  try {
+    await mongoose.connection.collection('restaurants').dropIndex('menus.id_1');
+    console.log('✅ Dropped menus.id index');
+  } catch (error) {
+    // Index might not exist, which is fine
+    console.log('ℹ️ No menus.id index to drop');
+  }
+})
 .catch(err => {
   console.error('❌ MongoDB connection error:', err);
   console.error('Connection string:', process.env.MONGODB_URI?.replace(/\/\/.*@/, '//<credentials>@'));
