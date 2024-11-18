@@ -7,6 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { MapPin, Image, Clock, Trash2 } from 'lucide-react';
 import { SearchableDropdown } from '../components/SearchableDropdown';
 import { locationService } from '../services/locationService';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { validateSchedule } from '../utils/scheduleValidation';
 
 // Dosya tipi ve boyut kontrolleri için yardımcı fonksiyonlar
 const IMAGE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB
@@ -60,6 +62,9 @@ const stringifyOpeningHours = (schedule: WeekSchedule): string => {
     return JSON.stringify(schedule);
 };
 
+// Sabit değişken tanımı
+const MAX_DESCRIPTION_LENGTH = 500;
+
 export function RestaurantEdit() {
     const { restaurantId } = useParams();
     const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -88,6 +93,12 @@ export function RestaurantEdit() {
         const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         return days.reduce((acc, day) => ({ ...acc, [day]: defaultSchedule }), {});
     });
+
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const { validateForm } = useFormValidation(formData);
+
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
 
     // formData değiştiğinde schedule'ı güncelle
     useEffect(() => {
@@ -153,41 +164,77 @@ export function RestaurantEdit() {
         fetchRestaurant();
     }, [restaurantId, t]);
 
+    // Sayfa değişikliğinde uyarı göster
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!restaurant || saving) return;
+        console.log('Form submitted');
 
+        if (!restaurant || saving) {
+            console.log('Submit blocked: ', { restaurant: !!restaurant, saving });
+            return;
+        }
+
+        // Form validasyonu
+        const formErrors = validateForm();
+        const scheduleErrors = validateSchedule(schedule);
+        
+        // Posta kodu validasyonunu kaldır veya opsiyonel yap
+        if (Object.keys(formErrors).length > 0 && formErrors.postalCode) {
+            delete formErrors.postalCode; // Posta kodu hatasını yoksay
+        }
+        
+        if (Object.keys(formErrors).length > 0 || Object.keys(scheduleErrors).length > 0) {
+            console.log('Validation errors:', { formErrors, scheduleErrors });
+            setErrors({ ...formErrors, ...scheduleErrors });
+            return;
+        }
+
+        const previousData = { ...restaurant };
+        
         try {
             setSaving(true);
-            const hasImageChanged = restaurant.imageUrl !== formData.imageUrl;
+            setError(null);
 
             // schedule'ı string'e çevir
             const openingHoursString = stringifyOpeningHours(schedule);
-
-            // Önce restaurant'ı güncelle
+            
+            // Güncellenecek veriyi hazırla
             const updatedData = {
                 name: formData.name,
                 description: formData.description,
                 address: formData.address,
-                openingHours: openingHoursString, // schedule'dan gelen string
+                openingHours: openingHoursString,
                 imageUrl: formData.imageUrl
             };
 
+            console.log('Sending update request with data:', updatedData);
+
+            // Restoranı güncelle
             const updatedRestaurant = await restaurantService.updateRestaurant(restaurantId!, updatedData);
-
-            // Eğer resim silinmişse ve güncelleme başarılıysa, eski resmi Cloudinary'den sil
-            if (hasImageChanged && restaurant.imageUrl && !formData.imageUrl) {
-                try {
-                    await restaurantService.deleteImage(restaurantId!);
-                } catch (error) {
-                    console.error('Failed to delete old image:', error);
-                }
+            
+            if (updatedRestaurant) {
+                console.log('Restaurant updated successfully:', updatedRestaurant);
+                setHasUnsavedChanges(false);
+                navigate(`/restaurant/${restaurantId}`);
+            } else {
+                throw new Error('Failed to update restaurant');
             }
-
-            navigate(`/restaurant/${restaurantId}`);
         } catch (err) {
-            setError(t('restaurants.updateError'));
             console.error('Update error:', err);
+            setRestaurant(previousData);
+            setError(t('restaurants.updateError'));
         } finally {
             setSaving(false);
         }
@@ -207,20 +254,25 @@ export function RestaurantEdit() {
         }
 
         try {
-            // Loading state ekleyelim
-            const loadingMessage = t('restaurants.uploadingImage');
-            setError(loadingMessage);
+            setIsUploadingImage(true);
+            setError(null);
 
             const imageUrl = await restaurantService.uploadImage(file, restaurantId);
             setFormData(prev => ({ ...prev, imageUrl }));
-            setError(null);
         } catch (err) {
             setError(t('restaurants.imageUploadError'));
             console.error(err);
         } finally {
+            setIsUploadingImage(false);
             // Input'u temizle
             e.target.value = '';
         }
+    };
+
+    // Form değişikliklerini takip et
+    const handleFormChange = (field: string, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setHasUnsavedChanges(true);
     };
 
     if (loading) {
@@ -263,12 +315,32 @@ export function RestaurantEdit() {
                         <label className="block text-sm font-medium text-zinc-700">
                             {t('restaurants.description')}
                         </label>
-                        <textarea
-                            value={formData.description}
-                            onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                            className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2"
-                            rows={3}
-                        />
+                        <div className="relative">
+                            <textarea
+                                value={formData.description}
+                                onChange={e => {
+                                    const value = e.target.value;
+                                    if (value.length <= MAX_DESCRIPTION_LENGTH) {
+                                        setFormData(prev => ({ ...prev, description: value }));
+                                    }
+                                }}
+                                maxLength={MAX_DESCRIPTION_LENGTH}
+                                className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 resize-none"
+                                rows={3}
+                            />
+                            <div className="absolute bottom-2 right-2 text-xs text-zinc-500">
+                                {formData.description.length}/{MAX_DESCRIPTION_LENGTH}
+                            </div>
+                        </div>
+                        {/* Karakter sayısı uyarısı */}
+                        <div className="mt-1 text-xs text-zinc-500 flex justify-between items-center">
+                            <span>{t('restaurants.descriptionHint')}</span>
+                            <span className={formData.description.length > MAX_DESCRIPTION_LENGTH * 0.9 ? 'text-amber-600' : ''}>
+                                {t('common.charactersRemaining', { 
+                                    count: MAX_DESCRIPTION_LENGTH - formData.description.length 
+                                })}
+                            </span>
+                        </div>
                     </div>
 
                     {/* Adres Bilgileri */}
@@ -354,41 +426,54 @@ export function RestaurantEdit() {
                         </h2>
                         <div className="space-y-4">
                             {Object.entries(schedule).map(([day, daySchedule]) => (
-                                <div key={day} className="flex items-center space-x-4">
-                                    <div className="w-28">
-                                        <span className="text-sm font-medium text-zinc-700 capitalize">
-                                            {t(`days.${day}`)}
-                                        </span>
+                                <div key={day} className="flex flex-col space-y-2">
+                                    <div className="flex items-center space-x-4">
+                                        <div className="w-28">
+                                            <span className="text-sm font-medium text-zinc-700 capitalize">
+                                                {t(`days.${day}`)}
+                                            </span>
+                                        </div>
+                                        <label className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={daySchedule.isOpen}
+                                                onChange={(e) => handleScheduleChange(day, 'isOpen', e.target.checked)}
+                                                className="rounded border-zinc-300 text-zinc-600 focus:ring-zinc-500"
+                                            />
+                                            <span className="ml-2 text-sm text-zinc-600">
+                                                {t('restaurants.isOpen')}
+                                            </span>
+                                        </label>
+                                        {daySchedule.isOpen && (
+                                            <>
+                                                <input
+                                                    type="time"
+                                                    value={formatTimeForInput(daySchedule.openTime)}
+                                                    onChange={(e) => handleScheduleChange(day, 'openTime', e.target.value)}
+                                                    className={`block rounded-md shadow-sm focus:border-zinc-500 
+                                                             focus:ring-zinc-500 sm:text-sm
+                                                             ${errors[day] ? 'border-red-300 bg-red-50' : 'border-zinc-300'}`}
+                                                />
+                                                <span className="text-zinc-500">-</span>
+                                                <input
+                                                    type="time"
+                                                    value={formatTimeForInput(daySchedule.closeTime)}
+                                                    onChange={(e) => handleScheduleChange(day, 'closeTime', e.target.value)}
+                                                    className={`block rounded-md shadow-sm focus:border-zinc-500 
+                                                             focus:ring-zinc-500 sm:text-sm
+                                                             ${errors[day] ? 'border-red-300 bg-red-50' : 'border-zinc-300'}`}
+                                                />
+                                            </>
+                                        )}
                                     </div>
-                                    <label className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            checked={daySchedule.isOpen}
-                                            onChange={(e) => handleScheduleChange(day, 'isOpen', e.target.checked)}
-                                            className="rounded border-zinc-300 text-zinc-600 focus:ring-zinc-500"
-                                        />
-                                        <span className="ml-2 text-sm text-zinc-600">
-                                            {t('restaurants.isOpen')}
-                                        </span>
-                                    </label>
-                                    {daySchedule.isOpen && (
-                                        <>
-                                            <input
-                                                type="time"
-                                                value={formatTimeForInput(daySchedule.openTime)}
-                                                onChange={(e) => handleScheduleChange(day, 'openTime', e.target.value)}
-                                                className="block rounded-md border-zinc-300 shadow-sm focus:border-zinc-500 
-                                                         focus:ring-zinc-500 sm:text-sm"
-                                            />
-                                            <span className="text-zinc-500">-</span>
-                                            <input
-                                                type="time"
-                                                value={formatTimeForInput(daySchedule.closeTime)}
-                                                onChange={(e) => handleScheduleChange(day, 'closeTime', e.target.value)}
-                                                className="block rounded-md border-zinc-300 shadow-sm focus:border-zinc-500 
-                                                         focus:ring-zinc-500 sm:text-sm"
-                                            />
-                                        </>
+                                    {/* Hata mesajını göster */}
+                                    {errors[day] && (
+                                        <div className="text-sm text-red-600 ml-32 flex items-center">
+                                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                            </svg>
+                                            {t(errors[day])}
+                                        </div>
                                     )}
                                 </div>
                             ))}
@@ -412,8 +497,10 @@ export function RestaurantEdit() {
                                     />
                                     <button
                                         onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
-                                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full 
-                                                 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        disabled={isUploadingImage}
+                                        className={`absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full 
+                                                 opacity-0 group-hover:opacity-100 transition-opacity
+                                                 ${isUploadingImage ? 'cursor-not-allowed opacity-50' : ''}`}
                                         title={t('common.delete')}
                                     >
                                         <Trash2 className="w-4 h-4" />
@@ -423,17 +510,29 @@ export function RestaurantEdit() {
                             
                             {/* Dosya yükleme input'u */}
                             <div className="flex flex-col space-y-2">
-                                <input
-                                    type="file"
-                                    onChange={handleImageUpload}
-                                    accept={ALLOWED_FILE_TYPES.join(',')}
-                                    className="block w-full text-sm text-zinc-500
-                                             file:mr-4 file:py-2 file:px-4
-                                             file:rounded-md file:border-0
-                                             file:text-sm file:font-medium
-                                             file:bg-zinc-50 file:text-zinc-700
-                                             hover:file:bg-zinc-100"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        onChange={handleImageUpload}
+                                        accept={ALLOWED_FILE_TYPES.join(',')}
+                                        disabled={isUploadingImage}
+                                        className={`block w-full text-sm text-zinc-500
+                                                 file:mr-4 file:py-2 file:px-4
+                                                 file:rounded-md file:border-0
+                                                 file:text-sm file:font-medium
+                                                 file:bg-zinc-50 file:text-zinc-700
+                                                 hover:file:bg-zinc-100
+                                                 ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    />
+                                    {isUploadingImage && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80">
+                                            <div className="flex items-center space-x-2">
+                                                <div className="w-4 h-4 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin" />
+                                                <span className="text-sm text-zinc-600">{t('restaurants.uploadingImage')}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="text-sm text-zinc-500 space-y-1">
                                     <p>{t('restaurants.imageRequirements')}</p>
                                     <p>{t('restaurants.allowedFileTypes', { types: 'JPG, JPEG, PNG' })}</p>
@@ -446,10 +545,23 @@ export function RestaurantEdit() {
                     <div className="border-t border-zinc-200 pt-6">
                         <button
                             type="submit"
-                            disabled={saving}
-                            className="w-full btn"
+                            disabled={saving || isUploadingImage}
+                            className={`w-full btn flex items-center justify-center space-x-2
+                                ${(saving || isUploadingImage) ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            {saving ? t('common.saving') : t('common.save')}
+                            {saving ? (
+                                <span className="flex items-center space-x-2">
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span>{t('common.saving')}</span>
+                                </span>
+                            ) : isUploadingImage ? (
+                                <span className="flex items-center space-x-2">
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span>{t('restaurants.uploadingImage')}</span>
+                                </span>
+                            ) : (
+                                <span>{t('common.save')}</span>
+                            )}
                         </button>
                     </div>
                 </form>

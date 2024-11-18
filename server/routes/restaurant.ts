@@ -181,37 +181,13 @@ router.post(
   validate,
   async (req: AuthRequest, res: Response) => {
     try {
-      const restaurantId = uuidv4();
       const { name, description } = req.body;
-      const defaultMenuId = uuidv4();
-      const userLanguage = req.user?.preferredLanguage || 'en';
-
+      
       const newRestaurant = new Restaurant({ 
         name,
         description,
-        restaurantId,
-        userId: req.user?.uid,
-        menus: [{
-          id: defaultMenuId,
-          name: 'Default Menu',
-          language: userLanguage,
-          sections: [],
-          currency: 'EUR'
-        }],
-        // Default location ve address bilgileri
-        location: {
-          type: 'Point',
-          coordinates: [0, 0], // Default coordinates
-          isManuallySet: false
-        },
-        address: {
-          street: '',
-          city: '',
-          country: '',
-          postalCode: ''
-        },
-        imageUrl: '',
-        openingHours: ''
+        restaurantId: uuidv4(),
+        userId: req.user?.uid
       });
 
       const savedRestaurant = await newRestaurant.save();
@@ -330,10 +306,6 @@ router.put<{ menuId: string }>(
   }
 );
 
-interface MulterAuthRequest extends AuthRequest {
-  file?: Express.Multer.File;
-}
-
 // Image upload endpoint
 router.post('/upload', 
     authMiddleware as express.RequestHandler,
@@ -400,6 +372,116 @@ router.post('/delete-image',
             res.status(500).json({ error: 'Failed to delete image' });
         }
     }
+);
+
+// Menu oluşturma endpoint'i
+router.post<{ restaurantId: string }>(
+  '/:restaurantId/menus',
+  authMiddleware as express.RequestHandler,
+  async (req: AuthRequest<{ restaurantId: string }>, res: Response): Promise<void> => {
+    try {
+      const { restaurantId } = req.params;
+      const menuData = req.body;
+
+      // Gerekli alanların kontrolü
+      if (!menuData.language || !menuData.name) {
+        res.status(400).json({ error: 'Language and name are required' });
+        return;
+      }
+
+      // Restoranı bul
+      const restaurant = await Restaurant.findOne({ restaurantId });
+      if (!restaurant) {
+        res.status(404).json({ error: 'Restaurant not found' });
+        return;
+      }
+
+      // Yetki kontrolü
+      if (restaurant.userId !== req.user?.uid) {
+        console.warn(`Auth: Unauthorized menu creation attempt - userId: ${req.user?.uid}, restaurantId: ${restaurantId}`);
+        res.status(403).json({ error: 'Not authorized to create menu for this restaurant' });
+        return;
+      }
+
+      // Aynı dilde menü var mı kontrolü
+      if (restaurant.menus.some(menu => menu.language === menuData.language)) {
+        res.status(400).json({ error: 'Menu in this language already exists' });
+        return;
+      }
+
+      // Yeni menü objesi oluştur
+      const newMenu = {
+        id: uuidv4(),
+        language: menuData.language,
+        name: menuData.name,
+        description: menuData.description || '',
+        sections: [],
+        currency: menuData.currency || 'TRY'
+      };
+
+      // Menüyü ekle ve restoranı güncelle
+      const updatedRestaurant = await Restaurant.findOneAndUpdate(
+        { restaurantId },
+        { 
+          $push: { menus: newMenu }
+        },
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedRestaurant) {
+        res.status(404).json({ error: 'Restaurant not found' });
+        return;
+      }
+
+      // Yeni eklenen menüyü bul ve response olarak gönder
+      const createdMenu = updatedRestaurant.menus.find(menu => menu.id === newMenu.id);
+      res.status(201).json(createdMenu);
+    } catch (error) {
+      console.error('Menu creation failed:', error);
+      res.status(500).json({ error: 'Failed to create menu' });
+    }
+  }
+);
+
+// Menü silme endpoint'i
+router.delete<{ restaurantId: string; menuId: string }>(
+  '/:restaurantId/menu/:menuId',
+  authMiddleware as express.RequestHandler,
+  async (req: AuthRequest<{ restaurantId: string; menuId: string }>, res: Response): Promise<void> => {
+    try {
+      const { restaurantId, menuId } = req.params;
+
+      // Restoranı bul
+      const restaurant = await Restaurant.findOne({ restaurantId });
+      if (!restaurant) {
+        res.status(404).json({ error: 'Restaurant not found' });
+        return;
+      }
+
+      // Yetki kontrolü
+      if (restaurant.userId !== req.user?.uid) {
+        console.warn(`Auth: Unauthorized menu deletion attempt - userId: ${req.user?.uid}, restaurantId: ${restaurantId}`);
+        res.status(403).json({ error: 'Not authorized to delete menu from this restaurant' });
+        return;
+      }
+
+      // Menünün var olduğunu kontrol et
+      const menuExists = restaurant.menus.some(menu => menu.id === menuId);
+      if (!menuExists) {
+        res.status(404).json({ error: 'Menu not found' });
+        return;
+      }
+
+      // Menüyü sil - $pull yerine filter kullanarak güncelleme yap
+      restaurant.menus = restaurant.menus.filter(menu => menu.id !== menuId);
+      await restaurant.save();
+
+      res.status(200).json({ message: 'Menu deleted successfully' });
+    } catch (error) {
+      console.error('Menu deletion failed:', error);
+      res.status(500).json({ error: 'Failed to delete menu' });
+    }
+  }
 );
 
 export default router;

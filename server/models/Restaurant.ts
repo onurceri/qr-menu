@@ -1,7 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 // Interface tanımlamaları
-interface IMenuItem extends Document {
+interface IMenuItem {
     id: string;
     name: string;
     description: string;
@@ -9,13 +10,24 @@ interface IMenuItem extends Document {
     imageUrl: string;
 }
 
-interface IMenuSection extends Document {
+interface IMenuSection {
     id: string;
     title: string;
     items: IMenuItem[];
 }
 
-interface IMenu extends Document {
+// Menu interface'i
+interface IMenuBase {
+    id: string;
+    language: string;
+    name: string;
+    description: string;
+    sections: IMenuSection[];
+    currency: string;
+}
+
+// Mongoose document interface'i
+interface IMenuDocument extends Document {
     id: string;
     language: string;
     name: string;
@@ -30,7 +42,7 @@ interface IRestaurant extends Document {
     name: string;
     description: string;
     imageUrl: string;
-    menus: IMenu[];
+    menus: IMenuBase[];
     address: {
         street: string;
         city: string;
@@ -60,24 +72,17 @@ const MenuSectionSchema = new Schema<IMenuSection>({
     items: [MenuItemSchema]
 }, { _id: false });
 
-const MenuSchema = new Schema<IMenu>({
-    id: { 
-        type: String,
-        required: true,
-        unique: true,
-        validate: {
-            validator: function(v: string): boolean {
-                return Boolean(v && v.length > 0);
-            },
-            message: 'Menu ID cannot be empty'
-        }
-    },
+const MenuSubSchema = new Schema({
+    id: { type: String, required: true },
     language: { type: String, required: true },
-    name: { type: String, required: true, trim: true },
+    name: { type: String, required: true },
     description: { type: String, default: '' },
-    sections: [MenuSectionSchema],
-    currency: { type: String, default: 'TRY' }
-}, { timestamps: true });
+    sections: {
+        type: [MenuSectionSchema],
+        default: []
+    },
+    currency: { type: String, default: 'EUR' }
+}, { _id: false });
 
 const RestaurantSchema = new Schema<IRestaurant>({
     userId: { type: String, required: true },
@@ -85,24 +90,21 @@ const RestaurantSchema = new Schema<IRestaurant>({
     name: { type: String, required: true, trim: true },
     description: { type: String, default: '' },
     imageUrl: { type: String, default: '' },
-    menus: {
-        type: [MenuSchema],
-        default: [],
-        validate: [
-            {
-                validator: function(menus: IMenu[]): boolean {
-                    const ids = menus.map(menu => menu.id);
-                    return new Set(ids).size === ids.length;
-                },
-                message: 'Duplicate menu IDs are not allowed'
-            },
-            {
-                validator: function(menus: IMenu[]): boolean {
-                    return menus.every(menu => Boolean(menu.id && menu.id.length > 0));
-                },
-                message: 'All menus must have valid IDs'
-            }
-        ]
+    menus: [MenuSubSchema],
+    location: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number],
+            default: [0, 0]
+        },
+        isManuallySet: {
+            type: Boolean,
+            default: false
+        }
     },
     address: {
         street: { type: String, default: '' },
@@ -110,13 +112,12 @@ const RestaurantSchema = new Schema<IRestaurant>({
         country: { type: String, default: '' },
         postalCode: { type: String, default: '' }
     },
-    location: {
-        type: { type: String, enum: ['Point'], default: 'Point' },
-        coordinates: { type: [Number], default: undefined },
-        isManuallySet: { type: Boolean, default: false }
-    },
     openingHours: { type: String, default: '' }
-}, { timestamps: true });
+}, { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+});
 
 // Geospatial index
 RestaurantSchema.index({ location: '2dsphere' });

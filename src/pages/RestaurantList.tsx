@@ -37,6 +37,122 @@ const ErrorAlert = ({ message, onClose }: { message: string; onClose: () => void
   </div>
 );
 
+// Hata alert komponenti
+const FormErrorAlert = ({ message }: { message: string }) => (
+    <div className="text-sm text-red-600 mt-1">
+        <span className="flex items-center">
+            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {message}
+        </span>
+    </div>
+);
+
+// Form komponenti için props interface'i
+interface RestaurantFormProps {
+    newRestaurantName: string;
+    setNewRestaurantName: (value: string) => void;
+    newRestaurantDescription: string;
+    setNewRestaurantDescription: (value: string) => void;
+    handleCreateRestaurant: () => void;
+    isCreating: boolean;
+    error: string | null;
+    setError: (error: string | null) => void;
+    validateInput: {
+        restaurantName: (value: string) => string | null;
+        description: (value: string) => string | null;
+    };
+    t: (key: string) => string;
+}
+
+const MAX_DESCRIPTION_LENGTH = 500;
+
+// Form komponenti
+const RestaurantForm: React.FC<RestaurantFormProps> = ({
+    newRestaurantName,
+    setNewRestaurantName,
+    newRestaurantDescription,
+    setNewRestaurantDescription,
+    handleCreateRestaurant,
+    isCreating,
+    error,
+    setError,
+    validateInput,
+    t
+}) => (
+    <div className="space-y-4">
+        <div>
+            <input 
+                type="text" 
+                value={newRestaurantName} 
+                onChange={(e) => {
+                    const value = e.target.value;
+                    setNewRestaurantName(value);
+                    const error = validateInput.restaurantName(value);
+                    if (error) setError(error);
+                    else setError(null);
+                }}
+                maxLength={100}
+                placeholder={t('restaurants.name')}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent
+                    ${error ? 'border-red-300 bg-red-50' : 'border-zinc-300'}`}
+            />
+            {error && <FormErrorAlert message={error} />}
+        </div>
+        <div>
+            <div className="relative">
+                <textarea 
+                    value={newRestaurantDescription} 
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        if (value.length <= MAX_DESCRIPTION_LENGTH) {
+                            setNewRestaurantDescription(value);
+                            const error = validateInput.description(value);
+                            if (error) setError(error);
+                            else setError(null);
+                        }
+                    }}
+                    maxLength={MAX_DESCRIPTION_LENGTH}
+                    placeholder={t('restaurants.description')}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent resize-none"
+                />
+                <div className="absolute bottom-2 right-2 text-xs text-zinc-500">
+                    {newRestaurantDescription.length}/{MAX_DESCRIPTION_LENGTH}
+                </div>
+            </div>
+            {/* Karakter sayısı uyarısı */}
+            <div className="mt-1 text-xs text-zinc-500 flex justify-between items-center">
+                <span>{t('restaurants.descriptionHint')}</span>
+                <span className={newRestaurantDescription.length > MAX_DESCRIPTION_LENGTH * 0.9 ? 'text-amber-600' : ''}>
+                    {t('common.charactersRemaining', { 
+                        count: MAX_DESCRIPTION_LENGTH - newRestaurantDescription.length 
+                    })}
+                </span>
+            </div>
+        </div>
+        <button 
+            onClick={handleCreateRestaurant} 
+            disabled={isCreating || !!error}
+            className={`btn flex items-center space-x-2 w-full justify-center
+                ${(isCreating || !!error) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+            {isCreating ? (
+                <span className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>{t('restaurants.creating')}</span>
+                </span>
+            ) : (
+                <>
+                    <Plus className="h-4 w-4" />
+                    <span>{t('restaurants.add')}</span>
+                </>
+            )}
+        </button>
+    </div>
+);
+
 // Input validation fonksiyonlarını ekleyelim
 const RestaurantList = () => {
     const { user, signOut } = useAuth();
@@ -52,6 +168,7 @@ const RestaurantList = () => {
     const [isDeletingMenu, setIsDeletingMenu] = useState<string | null>(null);
     const { t } = useTranslation();
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [formError, setFormError] = useState<string | null>(null);
 
     const validateInput = {
         restaurantName: (value: string) => {
@@ -76,48 +193,55 @@ const RestaurantList = () => {
 
         const fetchRestaurants = async () => {
             try {
+                setLoading(true);
+                setError(null);
                 const fetchedRestaurants = await restaurantService.getRestaurants(user.uid);
-                setRestaurants(Array.isArray(fetchedRestaurants) ? fetchedRestaurants : []);
+                setRestaurants(fetchedRestaurants);
             } catch (err) {
-                setError('Failed to fetch restaurants');
-                console.error(err);
-                setRestaurants([]);
+                console.error('Failed to fetch restaurants:', err);
+                setError(t('restaurants.loadError'));
             } finally {
                 setLoading(false);
             }
         };
 
         fetchRestaurants();
-    }, [user, navigate]);
+    }, [user, navigate, t]);
 
     const handleCreateRestaurant = async () => {
         if (isCreating) return;
 
         try {
+            // Boş isim kontrolü
+            if (!newRestaurantName.trim()) {
+                setFormError(t('validation.nameRequired'));
+                return;
+            }
+
             // Input validasyonu
             const nameError = validateInput.restaurantName(newRestaurantName);
-            const descriptionError = validateInput.description(newRestaurantDescription);
+            const descriptionError = validateInput.description(newRestaurantDescription || '');
 
             if (nameError) {
-                setError(nameError);
+                setFormError(nameError);
                 return;
             }
 
             if (descriptionError) {
-                setError(descriptionError);
+                setFormError(descriptionError);
                 return;
             }
 
-            setError(null);
+            setFormError(null);
             setIsCreating(true);
 
             // XSS koruması için HTML escape işlemi
-            const sanitizedName = newRestaurantName.replace(/[<>]/g, '');
-            const sanitizedDescription = newRestaurantDescription.replace(/[<>]/g, '');
+            const sanitizedName = newRestaurantName.trim().replace(/[<>]/g, '');
+            const sanitizedDescription = (newRestaurantDescription || '').trim().replace(/[<>]/g, '');
 
             const response = await restaurantService.createRestaurant(user!.uid, { 
                 name: sanitizedName, 
-                description: sanitizedDescription
+                description: sanitizedDescription // Boş string olabilir
             });
 
             if (response.status === 201) {
@@ -127,8 +251,8 @@ const RestaurantList = () => {
                 setNewRestaurantDescription('');
             }
         } catch (err) {
-            setError('Failed to create restaurant. Please try again.');
-            console.error(err);
+            setFormError(t('restaurants.createError'));
+            console.error('Restaurant creation error:', err);
         } finally {
             setIsCreating(false);
         }
@@ -150,10 +274,15 @@ const RestaurantList = () => {
         }
     };
 
-    const handleCreateMenu = async (restaurantId: string, language: string) => {
+    const handleLanguageSelect = async (restaurantId: string, language: string) => {
+        console.log('Language selected:', language, 'for restaurant:', restaurantId);
         try {
+            setIsAddingMenu(restaurantId);
             const restaurant = restaurants.find(r => r.restaurantId === restaurantId);
-            if (!restaurant) return;
+            if (!restaurant) {
+                console.error('Restaurant not found:', restaurantId);
+                return;
+            }
 
             // Eğer bu dilde zaten bir menü varsa, oluşturma
             if (restaurant.menus.some(menu => menu.language === language)) {
@@ -161,26 +290,27 @@ const RestaurantList = () => {
                 return;
             }
 
-            const menuData = {
-                id: uuidv4(),
+            console.log('Creating menu...');
+            const response = await restaurantService.createMenu(restaurantId, {
                 language,
-                name: restaurant.name,
-                description: restaurant.description,
+                name: restaurant.name || 'New Menu',
+                description: restaurant.description || '',
                 sections: [],
-                currency: 'TRY' as const
-            };
-
-            const updatedRestaurant = await restaurantService.updateRestaurant(restaurantId, {
-                menus: [...restaurant.menus, menuData]
+                currency: 'TRY'
             });
 
-            // Restoran listesini güncelle
-            setRestaurants(restaurants.map(r => 
-                r.restaurantId === restaurantId ? updatedRestaurant : r
-            ));
+            console.log('Menu creation response:', response);
+
+            if (response.ok) {
+                const fetchedRestaurants = await restaurantService.getRestaurants(user!.uid);
+                setRestaurants(fetchedRestaurants);
+                setIsAddingMenu(null);
+            } else {
+                throw new Error('Failed to create menu');
+            }
         } catch (err) {
-            setError('Failed to create menu');
-            console.error(err);
+            console.error('Menu creation error:', err);
+            setError(t('restaurants.menuCreateError'));
         } finally {
             setIsAddingMenu(null);
         }
@@ -193,18 +323,12 @@ const RestaurantList = () => {
 
             setIsDeletingMenu(menuId);
             
-            // Menüyü filtrele
-            const updatedMenus = restaurant.menus.filter(menu => menu.id !== menuId);
+            // Menü silme isteği at
+            await restaurantService.deleteMenu(restaurantId, menuId);
             
-            // Restoranı güncelle
-            const updatedRestaurant = await restaurantService.updateRestaurant(restaurantId, {
-                menus: updatedMenus
-            });
-
-            // Restoran listesini güncelle
-            setRestaurants(restaurants.map(r => 
-                r.restaurantId === restaurantId ? updatedRestaurant : r
-            ));
+            // Güncel restoran listesini getir
+            const fetchedRestaurants = await restaurantService.getRestaurants(user!.uid);
+            setRestaurants(fetchedRestaurants);
         } catch (err) {
             setError('Failed to delete menu');
             console.error(err);
@@ -232,16 +356,70 @@ const RestaurantList = () => {
         };
     }, []);
 
+    // Form render'ı
+    const renderRestaurantForm = () => (
+        <RestaurantForm
+            newRestaurantName={newRestaurantName}
+            setNewRestaurantName={setNewRestaurantName}
+            newRestaurantDescription={newRestaurantDescription}
+            setNewRestaurantDescription={setNewRestaurantDescription}
+            handleCreateRestaurant={handleCreateRestaurant}
+            isCreating={isCreating}
+            error={formError}
+            setError={setFormError}
+            validateInput={validateInput}
+            t={t}
+        />
+    );
+
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900"></div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="flex items-center justify-center min-h-[60vh]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900"></div>
+                </div>
             </div>
         );
     }
 
     if (error) {
-        return <div>{t('common.error')}</div>;
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200">
+                    <div className="text-center">
+                        <h2 className="text-xl font-semibold text-zinc-900 mb-2">
+                            {t('common.error')}
+                        </h2>
+                        <p className="text-zinc-600 mb-4">{error}</p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="btn-secondary"
+                        >
+                            {t('common.tryAgain')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (restaurants.length === 0) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-2xl font-bold text-zinc-900">{t('restaurants.title')}</h1>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200">
+                    <h2 className="text-lg font-semibold text-zinc-900 mb-4">{t('restaurants.addNew')}</h2>
+                    {renderRestaurantForm()}
+                </div>
+
+                <div className="mt-8 text-center">
+                    <p className="text-zinc-600">{t('restaurants.noRestaurants')}</p>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -252,60 +430,7 @@ const RestaurantList = () => {
 
             <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-zinc-200">
                 <h2 className="text-lg font-semibold text-zinc-900 mb-4">{t('restaurants.addNew')}</h2>
-                {error && (
-                    <ErrorAlert 
-                        message={error} 
-                        onClose={() => setError(null)} 
-                    />
-                )}
-                <div className="space-y-4">
-                    <input 
-                        type="text" 
-                        value={newRestaurantName} 
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            setNewRestaurantName(value);
-                            const error = validateInput.restaurantName(value);
-                            if (error) setError(error);
-                            else setError(null);
-                        }}
-                        maxLength={100}
-                        placeholder={t('restaurants.name')}
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent
-                            ${error ? 'border-red-300' : 'border-zinc-300'}`}
-                    />
-                    <input 
-                        type="text" 
-                        value={newRestaurantDescription} 
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            setNewRestaurantDescription(value);
-                            const error = validateInput.description(value);
-                            if (error) setError(error);
-                            else setError(null);
-                        }}
-                        maxLength={500}
-                        placeholder={t('restaurants.description')}
-                        className="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:border-transparent"
-                    />
-                    <button 
-                        onClick={handleCreateRestaurant} 
-                        disabled={isCreating}
-                        className="btn flex items-center space-x-2"
-                    >
-                        {isCreating ? (
-                            <span className="flex items-center space-x-2">
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                <span>{t('restaurants.creating')}</span>
-                            </span>
-                        ) : (
-                            <>
-                                <Plus className="h-4 w-4" />
-                                <span>{t('restaurants.add')}</span>
-                            </>
-                        )}
-                    </button>
-                </div>
+                {renderRestaurantForm()}
             </div>
 
             {restaurants.length === 0 ? (
@@ -404,7 +529,10 @@ const RestaurantList = () => {
                                                 return (
                                                     <button
                                                         key={lang.code}
-                                                        onClick={() => handleCreateMenu(restaurant.restaurantId, lang.code)}
+                                                        onClick={() => {
+                                                            console.log('Language button clicked:', lang.code);
+                                                            handleLanguageSelect(restaurant.restaurantId, lang.code);
+                                                        }}
                                                         disabled={hasMenu}
                                                         className={`flex items-center p-2 rounded ${
                                                             hasMenu 

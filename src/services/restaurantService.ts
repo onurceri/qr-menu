@@ -35,6 +35,14 @@ interface UpdateRestaurantData {
     imageUrl: string;
 }
 
+interface CreateMenuRequest {
+    language: string;
+    name: string;
+    description: string;
+    sections: any[];
+    currency: 'TRY';
+}
+
 export const restaurantService = {
     async getRestaurant(restaurantId: string): Promise<Restaurant> {
         try {
@@ -61,30 +69,29 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
+            console.log('Sending update request with data:', data); // Debug için log
+
             const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({
-                    name: data.name,
-                    description: data.description,
-                    address: data.address,
-                    openingHours: data.openingHours,
-                    imageUrl: data.imageUrl
-                }),
+                body: JSON.stringify(data),
             });
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
+                console.error('Update restaurant error response:', errorData);
                 throw new Error(errorData.message || 'Failed to update restaurant');
             }
             
-            return await response.json();
+            const updatedRestaurant = await response.json();
+            console.log('Update successful, received:', updatedRestaurant); // Debug için log
+            return updatedRestaurant;
         } catch (error) {
             console.error('updateRestaurant error:', error);
-            throw new Error('Failed to update restaurant');
+            throw error;
         }
     },
 
@@ -263,5 +270,58 @@ export const restaurantService = {
             logError('deleteImage error:', error);
             throw new Error('Failed to delete image');
         }
-    }
+    },
+
+    createMenu: async (restaurantId: string, menuData: CreateMenuRequest) => {
+        try {
+            const token = await getAuthToken();
+            if (!token) throw new Error('Not authenticated');
+
+            const response = await fetch(`${API_URL}/restaurant/${restaurantId}/menus`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(menuData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Create menu error:', errorData);
+                throw new Error('Failed to create menu');
+            }
+
+            return response;
+        } catch (error) {
+            logError('createMenu error:', error);
+            throw new Error('Failed to create menu');
+        }
+    },
+
+    deleteMenu: async (restaurantId: string, menuId: string) => {
+        try {
+            const token = await getAuthToken();
+            if (!token) throw new Error('Not authenticated');
+
+            const response = await fetch(`${API_URL}/restaurant/${restaurantId}/menu/${menuId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('Delete menu error:', errorData);
+                throw new Error('Failed to delete menu');
+            }
+
+            return response;
+        } catch (error) {
+            logError('deleteMenu error:', error);
+            throw new Error('Failed to delete menu');
+        }
+    },
 };
