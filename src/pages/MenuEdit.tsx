@@ -1,4 +1,4 @@
-import React, { useState, useEffect, startTransition, useCallback } from 'react';
+import React, { useState, useEffect, startTransition, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode, GripVertical, Eye, ChevronDown, ChevronRight } from 'lucide-react';
 import type { MenuItem, MenuSection, Menu } from '../types/restaurant';
@@ -98,6 +98,11 @@ const ItemForm = ({
   const [isImageValid, setIsImageValid] = useState<boolean | null>(null);
   const [isCheckingImage, setIsCheckingImage] = useState(false);
   const [tempPrice, setTempPrice] = useState(item.price.toString());
+  // Validation error states
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
+  const [priceError, setPriceError] = useState<string | null>(null);
+  const [imageUrlError, setImageUrlError] = useState<string | null>(null);
 
   const handleImageUrlChange = async (url: string) => {
     onUpdate({ imageUrl: url });
@@ -160,6 +165,23 @@ const ItemForm = ({
     setTempPrice(item.price.toString());
   }, [item.price]);
 
+  // Name validation
+  const handleNameChange = (value: string) => {
+    const error = validateInput.name(value);
+    setNameError(error);
+    // Her zaman state'i güncelle, validation hatası olsa bile
+    onUpdate({ name: value });
+  };
+
+  // Description validation
+  const handleDescriptionChange = (value: string) => {
+    const error = validateInput.description(value);
+    setDescriptionError(error);
+    if (!error) {
+      onUpdate({ description: value });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3 bg-white p-4 rounded-lg border border-zinc-200 hover:border-zinc-300 transition-colors">
       {/* Header - Name and Actions */}
@@ -168,13 +190,20 @@ const ItemForm = ({
           <GripVertical className="h-5 w-5 text-zinc-400" />
         </div>
         <div className="flex-1">
-          <input
-            type="text"
-            value={item.name}
-            onChange={(e) => onUpdate({ name: e.target.value })}
-            className="w-full border-0 border-b border-transparent hover:border-zinc-200 focus:border-zinc-300 rounded-none focus:ring-0 px-0 text-base font-medium"
-            placeholder={t('menu.itemName')}
-          />
+          <div className="relative">
+            <input
+              type="text"
+              value={item.name}
+              onChange={(e) => handleNameChange(e.target.value)}
+              className={`w-full border-0 border-b border-transparent hover:border-zinc-200 
+                focus:border-zinc-300 rounded-none focus:ring-0 px-0 text-base font-medium
+                ${nameError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`}
+              placeholder={t('menu.itemName')}
+            />
+            {nameError && (
+              <p className="absolute text-xs text-red-500 mt-1">{t(nameError)}</p>
+            )}
+          </div>
         </div>
         <button
           onClick={onDelete}
@@ -190,10 +219,14 @@ const ItemForm = ({
         <div className="relative">
           <textarea
             value={item.description || ''}
-            onChange={(e) => onUpdate({ description: e.target.value })}
-            className="w-full border-0 bg-zinc-50 rounded-md h-20 resize-none focus:ring-1 focus:ring-zinc-300 text-sm"
+            onChange={(e) => handleDescriptionChange(e.target.value)}
+            className={`w-full border-0 bg-zinc-50 rounded-md h-20 resize-none focus:ring-1 
+              ${descriptionError ? 'border-red-300 focus:ring-red-500' : 'focus:ring-zinc-300'} text-sm`}
             placeholder={t('menu.itemDescription')}
           />
+          {descriptionError && (
+            <p className="absolute text-xs text-red-500 mt-1">{t(descriptionError)}</p>
+          )}
           <div className="absolute bottom-2 right-2 text-xs text-zinc-400">
             {(item.description?.length || 0)}/500
           </div>
@@ -228,7 +261,7 @@ const ItemForm = ({
           )}
         </div>
 
-        {/* Price input - Currency symbol'ü güncellendi */}
+        {/* Price input */}
         <div className="relative">
           <div className="relative">
             <input
@@ -237,13 +270,17 @@ const ItemForm = ({
               value={tempPrice}
               onChange={handlePriceChange}
               onBlur={handlePriceBlur}
-              className="w-full border-0 bg-zinc-50 rounded-md pl-8 focus:ring-1 focus:ring-zinc-300 text-sm"
+              className={`w-full border-0 bg-zinc-50 rounded-md pl-8 focus:ring-1 
+                ${priceError ? 'border-red-300 focus:ring-red-500' : 'focus:ring-zinc-300'} text-sm`}
               placeholder="0.00"
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <span className="text-zinc-500">{CURRENCIES[currency].symbol}</span>
             </div>
           </div>
+          {priceError && (
+            <p className="text-xs text-red-500 mt-1">{t(priceError)}</p>
+          )}
         </div>
       </div>
     </div>
@@ -265,29 +302,63 @@ function MenuEdit() {
   const [previousMenu, setPreviousMenu] = useState<string>(''); // Menu'nun önceki halini tutmak için
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [allExpanded, setAllExpanded] = useState(false);
+  const [sectionErrors, setSectionErrors] = useState<Record<string, string>>({});
+  const timeoutIdRef = useRef<NodeJS.Timeout>();
 
-  // Debounced save fonksiyonu
+  // Debounced save fonksiyonunu düzenleyelim
   const debouncedSave = useCallback(
-    (() => {
-      let timeoutId: NodeJS.Timeout;
-      return (menuData: Menu) => {
-        if (timeoutId) clearTimeout(timeoutId);
-        setIsSaving(true);
-        timeoutId = setTimeout(async () => {
-          try {
-            await restaurantService.updateMenu(menuId!, menuData);
-            setHasChanges(false);
-          } catch (err) {
-            console.error('Failed to save changes:', err);
-            setError('Failed to save changes');
-          } finally {
-            setIsSaving(false);
+    (menuData: Menu) => {
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+      }
+      setIsSaving(true);
+
+      timeoutIdRef.current = setTimeout(async () => {
+        try {
+          // API çağrısı öncesi validasyon kontrolü
+          const hasValidationErrors = menuData.sections.some(section => {
+            // Section başlığı validasyonu
+            if (validateInput.sectionTitle(section.title)) {
+              return true;
+            }
+            
+            // Section içindeki itemların validasyonu
+            return section.items.some(item => {
+              return (
+                validateInput.name(item.name) ||
+                validateInput.description(item.description || '') ||
+                validateInput.price(item.price.toString()) ||
+                (item.imageUrl && validateInput.imageUrl(item.imageUrl))
+              );
+            });
+          });
+
+          if (hasValidationErrors) {
+            console.log('Validation errors exist, skipping API call');
+            return;
           }
-        }, 1000);
-      };
-    })(),
+
+          await restaurantService.updateMenu(menuId!, menuData);
+          setHasChanges(false);
+        } catch (err) {
+          console.error('Failed to save changes:', err);
+          setError('Failed to save changes');
+        } finally {
+          setIsSaving(false);
+        }
+      }, 1000);
+    },
     [menuId]
   );
+
+  // Component unmount olduğunda timeout'u temizleyelim
+  useEffect(() => {
+    return () => {
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+      }
+    };
+  }, []);
 
   // Menu değişikliklerini takip et ve otomatik kaydet
   useEffect(() => {
@@ -394,6 +465,16 @@ function MenuEdit() {
   const handleSave = async () => {
     if (!menu || isSaving) return;
 
+    // Tüm ürünlerin name alanını kontrol et
+    const hasInvalidItems = menu.sections.some(section => 
+      section.items.some(item => !item.name?.trim())
+    );
+
+    if (hasInvalidItems) {
+      setError(t('validation.allItemNameRequired'));
+      return;
+    }
+
     try {
       setIsSaving(true);
       setError(null);
@@ -405,15 +486,13 @@ function MenuEdit() {
           ...section,
           items: section.items.map((item: MenuItem) => ({
             ...item,
+            name: item.name.trim(), // Boşlukları temizle
             price: Number(item.price)
           }))
         }))
       };
 
-      // Save the normalized data
       await restaurantService.updateMenu(menuId!, validatedData);
-      
-      // Update state with the same normalized data
       setMenu(validatedData);
     } catch (err) {
       console.error('Failed to save changes:', err);
@@ -454,13 +533,13 @@ function MenuEdit() {
 
     const newItem: MenuItem = {
       id: `item-${uuidv4()}`,
-      name: t('menu.newItem'),
+      name: t('menu.newItem'), // Boş string yerine varsayılan değer
       description: '',
       price: 0,
       imageUrl: ''
     };
 
-    setMenu({
+    updateMenu({
       ...menu,
       sections: menu.sections.map(section => 
         section.id === sectionId 
@@ -478,6 +557,13 @@ function MenuEdit() {
   const handleSectionTitleChange = (sectionId: string, newTitle: string) => {
     if (!menu) return;
 
+    const error = validateInput.sectionTitle(newTitle);
+    setSectionErrors(prev => ({
+      ...prev,
+      [sectionId]: error ? t(error) : ''
+    }));
+
+    // Her zaman state'i güncelle
     updateMenu({
       ...menu,
       sections: menu.sections.map(section =>
@@ -498,6 +584,7 @@ function MenuEdit() {
   const handleItemUpdate = (sectionId: string, itemId: string, updates: Partial<MenuItem>) => {
     if (!menu) return;
 
+    // Her zaman state'i güncelle
     updateMenu({
       ...menu,
       sections: menu.sections.map(section =>
@@ -505,7 +592,9 @@ function MenuEdit() {
           ? {
               ...section,
               items: section.items.map(item =>
-                item.id === itemId ? { ...item, ...updates } : item
+                item.id === itemId 
+                  ? { ...item, ...updates }
+                  : item
               )
             }
           : section
@@ -682,13 +771,21 @@ function MenuEdit() {
                                 <ChevronRight className="h-5 w-5 text-zinc-500" />
                               )}
                             </button>
-                            <input
-                              type="text"
-                              value={section.title}
-                              onChange={(e) => handleSectionTitleChange(section.id, e.target.value)}
-                              className="flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 focus:border-none min-w-0"
-                              placeholder={t('menu.sectionName')}
-                            />
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={section.title}
+                                onChange={(e) => handleSectionTitleChange(section.id, e.target.value)}
+                                className={`flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 
+                                  focus:border-none min-w-0 ${sectionErrors[section.id] ? 'text-red-500' : ''}`}
+                                placeholder={t('menu.sectionName')}
+                              />
+                              {sectionErrors[section.id] && (
+                                <p className="absolute text-xs text-red-500 mt-1">
+                                  {sectionErrors[section.id]}
+                                </p>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center gap-2 ml-auto">
                             <span className="text-sm text-zinc-500 whitespace-nowrap">

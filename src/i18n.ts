@@ -93,7 +93,8 @@ const resources = {
         invalidCharacters: 'Invalid characters detected',
         invalidImageUrl: 'Invalid image URL',
         invalidTimeRange: 'Closing time must be after opening time',
-        invalidTimeFormat: 'Invalid time format'
+        invalidTimeFormat: 'Invalid time format',
+        allItemNameRequired: 'All item names must be filled out'
       },
       menu: {
         sections: 'Menu Sections',
@@ -213,7 +214,8 @@ const resources = {
         menuCreateError: 'Menü oluşturma hatası',
         menuDeleteError: 'Menü silme hatası',
         imageDeleteError: 'Resim silme hatası',
-        descriptionHint: 'Restoranınızın kısa bir açıklaması'
+        descriptionHint: 'Restoranınızın kısa bir açıklaması',
+        allItemNameRequired: 'Tüm ürünlerin ismi doldurulmalıdır'
       },
       menu: {
         sections: 'Menü Bölümleri',
@@ -321,14 +323,16 @@ const resources = {
         noHours: 'Heures d\'ouverture non définies',
         noLocation: 'Emplacement non disponible',
         selectCountry: 'Sélectionnez un pays',
-        selectCity: 'Sélectionnez une ville'
+        selectCity: 'Sélectionnez une ville',
+        allItemNameRequired: 'Tous les noms d\'article doivent être remplis'
       },
       validation: {
         nameRequired: 'Le nom du restaurant est requis',
         nameTooLong: 'Le nom du restaurant doit faire moins de 100 caractères',
         descriptionTooLong: 'La description doit faire moins de 500 caractères',
         invalidCharacters: 'Caractères invalides détectés',
-        invalidImageUrl: 'URL d\'image invalide'
+        invalidImageUrl: 'URL d\'image invalide',
+        allItemNameRequired: 'Tous les noms d\'article doivent être remplis'
       },
       menu: {
         sections: 'Sections du Menu',
@@ -436,14 +440,16 @@ const resources = {
         noHours: 'لم يتم تحديد ساعات العمل',
         noLocation: 'الموقع غير متوفر',
         selectCountry: 'اختر الدولة',
-        selectCity: 'اختر المدينة'
+        selectCity: 'اختر المدينة',
+        allItemNameRequired: 'يجب أن يكون اسم كل عنصر ملء'
       },
       validation: {
         nameRequired: 'اسم المطعم مطلوب',
         nameTooLong: 'يجب أن يكون اسم المطعم أقل من 100 حرف',
         descriptionTooLong: 'يجب أن يكون الوصف أقل من 500 حرف',
         invalidCharacters: 'تم اكتشاف أحرف غير صالحة',
-        invalidImageUrl: 'رابط الصورة غير صالح'
+        invalidImageUrl: 'رابط الصورة غير صالح',
+        allItemNameRequired: 'يجب أن يكون اسم كل عنصر ملء'
       },
       menu: {
         sections: 'أقسام اقائمة',
@@ -468,7 +474,8 @@ const resources = {
         qrCode: 'مز QR',
         newSection: 'قسم جديد',
         expandAll: 'توسيع الكل',
-        collapseAll: 'طي الكل'
+        collapseAll: 'طي الكل',
+        allItemNameRequired: 'يجب أن يكون اسم كل عنصر ملء'
       },
       days: {
         monday: 'الاثنين',
@@ -551,14 +558,16 @@ const resources = {
         noHours: 'Geen openingstijden ingesteld',
         noLocation: 'Locatie niet beschikbaar',
         selectCountry: 'Selecteer een land',
-        selectCity: 'Selecteer een stad'
+        selectCity: 'Selecteer een stad',
+        allItemNameRequired: 'Alle artikelnamen moeten worden ingevuld'
       },
       validation: {
         nameRequired: 'Restaurantnaam is verplicht',
         nameTooLong: 'Restaurantnaam moet korter zijn dan 100 tekens',
         descriptionTooLong: 'Beschrijving moet korter zijn dan 500 tekens',
         invalidCharacters: 'Ongeldige tekens gedetecteerd',
-        invalidImageUrl: 'Ongeldige afbeeldings-URL'
+        invalidImageUrl: 'Ongeldige afbeeldings-URL',
+        allItemNameRequired: 'Alle artikelnamen moeten worden ingevuld'
       },
       menu: {
         sections: 'Menusecties',
@@ -583,7 +592,8 @@ const resources = {
         qrCode: 'QR Code',
         newSection: 'Nieuwe Sectie',
         expandAll: 'Alles Uitvouwen',
-        collapseAll: 'Alles Invouwen'
+        collapseAll: 'Alles Invouwen',
+        allItemNameRequired: 'Alle artikelnamen moeten worden ingevuld'
       },
       days: {
         monday: 'Maandag',
