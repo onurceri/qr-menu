@@ -219,8 +219,6 @@ export function RestaurantEdit() {
                 imageUrl: formData.imageUrl
             };
 
-            console.log('Sending update request with data:', updatedData);
-
             // Restoranı güncelle
             const updatedRestaurant = await restaurantService.updateRestaurant(restaurantId!, updatedData);
             

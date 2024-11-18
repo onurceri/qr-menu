@@ -11,6 +11,8 @@ import { rateLimit } from 'express-rate-limit';
 // Import routes
 import restaurantRouter from './routes/restaurant.js';
 import userRouter from './routes/user.js';
+import menuRoutes from './routes/menu.js';
+import imageRoutes from './routes/image.js';
 
 // Rate limiter configurations
 const authLimiter = rateLimit({
@@ -150,6 +152,8 @@ mongoose.connect(process.env.MONGODB_URI!, {
 
 app.use('/api/restaurant', restaurantRouter);
 app.use('/api/user', userRouter);
+app.use('/api/menu', menuRoutes);
+app.use('/api/image', imageRoutes);
 
 // Healthcheck endpoint'i - en üstte olmalı
 app.get('/api/health', (req, res) => {
