@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import type { UploadApiOptions, UploadApiResponse } from 'cloudinary';
+import type { UploadApiResponse } from 'cloudinary';
 import dotenv from 'dotenv';
 
 // Load .env file

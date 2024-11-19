@@ -77,7 +77,8 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader?.startsWith('Bearer ')) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
         }
 
         const token = authHeader.split('Bearer ')[1];

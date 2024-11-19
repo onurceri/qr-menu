@@ -209,7 +209,7 @@ router.delete<{ restaurantId: string }>(
         return;
       }
 
-      const deletedRestaurant = await Restaurant.findOneAndDelete({ restaurantId });
+      await Restaurant.findOneAndDelete({ restaurantId });
       res.json({ message: 'Restaurant deleted successfully' });
     } catch (error) {
       const mongoError = error as Error;

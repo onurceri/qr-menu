@@ -1,4 +1,4 @@
-import express, { Response, Router, Request } from 'express';
+import express, { Response, Router } from 'express';
 import { Restaurant } from '../models/Restaurant.js';
 import { adminAuthMiddleware, AuthRequest } from '../middleware/adminAuth.js';
 import OpenAI from 'openai';
@@ -258,7 +258,7 @@ const upload = multer({
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (_req, file, cb) => {
     if (!file.mimetype.match(/^image\/(jpeg|png|jpg)$/)) {
       cb(new Error('Only JPG, JPEG and PNG files are allowed'));
       return;

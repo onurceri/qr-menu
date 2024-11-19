@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
 
 // Interface tanımlamaları
 interface IMenuItem {
@@ -18,16 +17,6 @@ interface IMenuSection {
 
 // Menu interface'i
 interface IMenuBase {
-    id: string;
-    language: string;
-    name: string;
-    description: string;
-    sections: IMenuSection[];
-    currency: string;
-}
-
-// Mongoose document interface'i
-interface IMenuDocument extends Document {
     id: string;
     language: string;
     name: string;

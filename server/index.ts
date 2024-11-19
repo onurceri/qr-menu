@@ -158,7 +158,7 @@ app.use('/api/image', imageRoutes);
 app.use('/api/admin', adminRouter);
 
 // Healthcheck endpoint'i - en üstte olmalı
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.status(200).json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -168,7 +168,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Global error handler
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Global error:', err);
   res.status(err.status || 500).json({
     error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
@@ -177,7 +177,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 // Serve index.html for all routes (SPA fallback)
-app.get('*', (req, res) => {
+app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, '../../../dist/index.html'));
 });
 

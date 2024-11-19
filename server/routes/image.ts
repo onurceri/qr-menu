@@ -12,7 +12,7 @@ const upload = multer({
     limits: {
         fileSize: 5 * 1024 * 1024, // 5MB limit
     },
-    fileFilter: (req, file, cb) => {
+    fileFilter: (_req, file, cb) => {
         // Check file type
         if (!file.mimetype.match(/^image\/(jpeg|png|jpg)$/)) {
             cb(new Error('Only JPG, JPEG and PNG files are allowed'));
@@ -39,7 +39,7 @@ const handleUpload = (req: AuthRequest, res: Response, next: NextFunction) => {
 };
 
 // All routes require authentication
-router.use(authMiddleware as express.RequestHandler);
+router.use(authMiddleware as unknown as express.RequestHandler);
 
 // Image upload endpoint
 router.post('/upload', 
