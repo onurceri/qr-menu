@@ -228,9 +228,7 @@ export const restaurantService = {
     async geocodeAddress(address: string): Promise<[number, number] | null> {
         try {
             const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-                    address
-                )}`
+                `${API_URL}/api/location/nominatim?q=${encodeURIComponent(address)}`
             );
 
             if (!response.ok) throw new Error('Geocoding failed');
