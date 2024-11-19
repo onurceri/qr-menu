@@ -16,12 +16,15 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks(id) {
-                    // React ve ilgili paketler
+                    // React ve ilgili paketler (i18n dahil)
                     if (id.includes('node_modules/react/') ||
                         id.includes('node_modules/react-dom/') ||
                         id.includes('node_modules/react-router-dom/') ||
                         id.includes('node_modules/@tanstack/react-query/') ||
-                        id.includes('node_modules/@tanstack/react-router/')) {
+                        id.includes('node_modules/@tanstack/react-router/') ||
+                        id.includes('node_modules/i18next/') ||
+                        id.includes('node_modules/react-i18next/') ||
+                        id.includes('node_modules/i18next-browser-languagedetector/')) {
                         return 'vendor-react';
                     }
 
@@ -42,13 +45,6 @@ export default defineConfig({
                     if (id.includes('node_modules/leaflet/') ||
                         id.includes('node_modules/react-leaflet/')) {
                         return 'vendor-map';
-                    }
-
-                    // i18n
-                    if (id.includes('node_modules/i18next/') ||
-                        id.includes('node_modules/react-i18next/') ||
-                        id.includes('node_modules/i18next-browser-languagedetector/')) {
-                        return 'vendor-i18n';
                     }
                 },
                 assetFileNames: 'assets/[name]-[hash][extname]',
