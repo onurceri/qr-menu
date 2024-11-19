@@ -2,6 +2,7 @@ import express, { Response, Router } from 'express';
 import { Restaurant } from '../models/Restaurant.js';
 import { adminAuthMiddleware, AuthRequest } from '../middleware/adminAuth.js';
 import OpenAI from 'openai';
+import fileUpload from 'express-fileupload';
 
 const router: Router = express.Router();
 
@@ -248,6 +249,255 @@ router.post('/generate-images/:menuId', async (req: AuthRequest, res: Response) 
   } catch (error) {
     console.error('Generate images failed:', error);
     res.status(500).json({ error: 'Failed to generate images' });
+  }
+});
+
+// AuthRequest interface'ini güncelle
+interface ExtendedAuthRequest extends AuthRequest {
+  files?: fileUpload.FileArray;
+}
+
+// Menu OCR endpoint
+router.post('/extract-menu', async (req: ExtendedAuthRequest, res: Response) => {
+  try {
+    console.log('Request body:', req.body);
+    console.log('Request files:', req.files);
+    
+    const { restaurantId, language } = req.body;
+    
+    if (!req.files) {
+      return res.status(400).json({ 
+        error: 'No files were uploaded',
+        body: req.body
+      });
+    }
+
+    if (!req.files.images) {
+      return res.status(400).json({ 
+        error: 'Menu images are required',
+        filesReceived: req.files,
+        body: req.body
+      });
+    }
+
+    // Birden fazla fotoğraf için array oluştur
+    const menuImages = Array.isArray(req.files.images) 
+      ? req.files.images 
+      : [req.files.images];
+
+    console.log('Number of images received:', menuImages.length); // Debug için
+
+    // Tüm fotoğraflardan menu datası çıkar
+    const allMenuData = [];
+    for (const menuImage of menuImages) {
+      // Dosya tipini kontrol et
+      if (!menuImage.mimetype.match(/^image\/(jpeg|png|jpg)$/)) {
+        return res.status(400).json({ 
+          error: `Invalid file type for ${menuImage.name}. Only JPEG, PNG and JPG are allowed` 
+        });
+      }
+
+      // Base64'e çevir
+      const base64Image = menuImage.data.toString('base64');
+
+      // OpenAI'ye gönder
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { 
+                type: "text", 
+                text: `Extract menu items from this menu image and return in JSON format:
+                {
+                  "name": "Menu Name",
+                  "sections": [
+                    {
+                      "title": "Section Title",
+                      "items": [
+                        {
+                          "name": "Item Name",
+                          "description": "Item Description",
+                          "price": number
+                        }
+                      ]
+                    }
+                  ]
+                }
+                
+                Guidelines:
+                - Keep original item names in ${language} language
+                - Create clear, concise descriptions
+                - Extract exact prices if visible
+                - Group similar items into logical sections
+                - If price is not visible, use 0
+                - If description is not available, use empty string
+                - Convert prices to numbers (remove currency symbols)
+                - Create appropriate section titles based on item types` 
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:${menuImage.mimetype};base64,${base64Image}`
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 4096,
+        temperature: 0.2,
+        response_format: { type: "json_object" }
+      });
+
+      let menuData;
+      try {
+        menuData = JSON.parse(response.choices[0].message.content || '{}');
+        console.log('Parsed menu data:', menuData);
+        allMenuData.push(menuData);
+      } catch (parseError) {
+        console.error('Failed to parse OpenAI response:', parseError);
+        console.log('Raw response:', response.choices[0].message.content);
+        return res.status(500).json({ error: 'Failed to parse menu data' });
+      }
+    }
+
+    // Restaurant'ı bul
+    const restaurant = await Restaurant.findOne({ restaurantId });
+    if (!restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    // Mevcut menüyü bul
+    const existingMenuIndex = restaurant.menus.findIndex(m => m.language === language);
+    let newMenu;
+
+    if (existingMenuIndex !== -1) {
+      // Mevcut menü varsa, yeni verileri mevcut menü ile birleştir
+      const existingMenu = restaurant.menus[existingMenuIndex];
+      
+      // Tüm yeni menu datalarını birleştir
+      const mergedSections = [...existingMenu.sections];
+      
+      for (const menuData of allMenuData) {
+        for (const newSection of menuData.sections) {
+          // Aynı başlığa sahip section'ı bul
+          const existingSectionIndex = mergedSections.findIndex(
+            s => s.title.toLowerCase() === newSection.title.toLowerCase()
+          );
+
+          if (existingSectionIndex !== -1) {
+            // Section varsa, yeni itemları ekle
+            const existingSection = mergedSections[existingSectionIndex];
+            for (const newItem of newSection.items) {
+              // Aynı isimli item var mı kontrol et
+              const existingItemIndex = existingSection.items.findIndex(
+                i => i.name.toLowerCase() === newItem.name.toLowerCase()
+              );
+
+              if (existingItemIndex === -1) {
+                // Item yoksa ekle
+                existingSection.items.push({
+                  id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  name: newItem.name,
+                  description: newItem.description || '',
+                  price: newItem.price || 0,
+                  imageUrl: ''
+                });
+              }
+            }
+          } else {
+            // Section yoksa yeni section olarak ekle
+            mergedSections.push({
+              id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              title: newSection.title,
+              items: newSection.items.map(item => ({
+                id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                name: item.name,
+                description: item.description || '',
+                price: item.price || 0,
+                imageUrl: ''
+              }))
+            });
+          }
+        }
+      }
+
+      // Mevcut menüyü güncelle
+      newMenu = {
+        ...existingMenu,
+        sections: mergedSections
+      };
+    } else {
+      // Mevcut menü yoksa, tüm menu datalarını birleştirerek yeni menü oluştur
+      const mergedSections = [];
+      
+      for (const menuData of allMenuData) {
+        for (const section of menuData.sections) {
+          const existingSectionIndex = mergedSections.findIndex(
+            s => s.title.toLowerCase() === section.title.toLowerCase()
+          );
+
+          if (existingSectionIndex === -1) {
+            mergedSections.push({
+              id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              title: section.title,
+              items: section.items.map(item => ({
+                id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                name: item.name,
+                description: item.description || '',
+                price: item.price || 0,
+                imageUrl: ''
+              }))
+            });
+          } else {
+            // Section varsa, yeni itemları ekle
+            for (const item of section.items) {
+              const existingItemIndex = mergedSections[existingSectionIndex].items.findIndex(
+                i => i.name.toLowerCase() === item.name.toLowerCase()
+              );
+
+              if (existingItemIndex === -1) {
+                mergedSections[existingSectionIndex].items.push({
+                  id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  name: item.name,
+                  description: item.description || '',
+                  price: item.price || 0,
+                  imageUrl: ''
+                });
+              }
+            }
+          }
+        }
+      }
+
+      newMenu = {
+        id: `menu-${Date.now()}`,
+        language,
+        name: allMenuData[0]?.name || 'Menu',
+        description: '',
+        currency: 'TRY',
+        sections: mergedSections
+      };
+    }
+
+    // Menüyü kaydet
+    if (existingMenuIndex !== -1) {
+      restaurant.menus[existingMenuIndex] = newMenu;
+    } else {
+      restaurant.menus.push(newMenu);
+    }
+
+    await restaurant.save();
+
+    res.json({
+      message: 'Menu extracted and saved successfully',
+      menu: newMenu
+    });
+
+  } catch (error) {
+    console.error('Menu extraction failed:', error);
+    res.status(500).json({ error: 'Failed to extract menu' });
   }
 });
 
