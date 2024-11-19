@@ -51,5 +51,6 @@ export default {
   selectCountry: 'Selecteer een land',
   selectCity: 'Selecteer een stad',
   descriptionHint: 'Een korte beschrijving van uw restaurant',
-  mapInteractionHint: 'Klik en sleep om de kaart te verplaatsen, gebruik zoomknoppen om in/uit te zoomen'
+  mapInteractionHint: 'Klik en sleep om de kaart te verplaatsen, gebruik zoomknoppen om in/uit te zoomen',
+  menuDescription: "Bekijk en beheer de menu's van uw restaurant in verschillende talen."
 } as const;

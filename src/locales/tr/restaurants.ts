@@ -51,5 +51,6 @@ export default {
   selectCountry: 'Ülke seçin',
   selectCity: 'Şehir seçin',
   descriptionHint: 'Restoranınızın kısa bir açıklaması',
-  mapInteractionHint: 'Haritayı hareket ettirmek için tıklayıp sürükleyin, yakınlaştırmak için zoom kontrollerini kullanın'
+  mapInteractionHint: 'Haritayı hareket ettirmek için tıklayıp sürükleyin, yakınlaştırmak için zoom kontrollerini kullanın',
+  menuDescription: 'Restoranınızın farklı dillerdeki menülerini görüntüleyin ve yönetin.'
 } as const;

@@ -51,5 +51,6 @@ export default {
   selectCountry: 'Select a country',
   selectCity: 'Select a city',
   descriptionHint: 'A brief description of your restaurant',
-  mapInteractionHint: 'Click and drag to move the map, use zoom controls to zoom in/out'
+  mapInteractionHint: 'Click and drag to move the map, use zoom controls to zoom in/out',
+  menuDescription: 'View and manage your restaurant menus in different languages.'
 } as const;

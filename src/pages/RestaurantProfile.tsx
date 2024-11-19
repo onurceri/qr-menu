@@ -4,11 +4,13 @@ import { restaurantService } from '../services/restaurantService';
 import type { Restaurant } from '../types/restaurant';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { MapPin, Clock, Globe, ChevronRight, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { MapPin, Clock, ChevronRight, Trash2, ChevronDown, ChevronUp, Info, MenuIcon } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../constants/languages';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { divIcon } from 'leaflet';
+import { RestaurantReservation } from '../components/RestaurantReservation';
+import { parseOpeningHours } from '../utils/dateUtils';
 
 // Özel marker icon oluşturma
 const createCustomIcon = (color: string = '#18181B') => {
@@ -44,16 +46,16 @@ if (!document.getElementById('marker-style')) {
 
 // Address formatter helper function
 const formatAddress = (
-    address: { 
-        street: string; 
-        city: string; 
-        country: string; 
-        postalCode: string; 
+    address: {
+        street: string;
+        city: string;
+        country: string;
+        postalCode: string;
     },
     t: (key: string) => string
 ): string => {
     const parts = [];
-    
+
     if (address.street) parts.push(address.street);
     if (address.postalCode || address.city) {
         const cityPart = [address.postalCode, address.city].filter(Boolean).join(' ');
@@ -64,31 +66,6 @@ const formatAddress = (
     return parts.join(', ') || t('restaurants.noLocation');
 };
 
-// Schedule tiplerini ekleyelim
-interface DaySchedule {
-    isOpen: boolean;
-    openTime: string;
-    closeTime: string;
-}
-
-interface WeekSchedule {
-    [key: string]: DaySchedule;
-}
-
-// Schedule parse fonksiyonu
-const parseOpeningHours = (hoursString?: string): WeekSchedule | null => {
-    if (!hoursString) return null;
-    try {
-        return JSON.parse(hoursString);
-    } catch {
-        return null;
-    }
-};
-
-// Konum URL'i oluşturan helper fonksiyon
-const createLocationUrl = (coordinates: [number, number]) => {
-    return `https://www.openstreetmap.org/?mlat=${coordinates[0]}&mlon=${coordinates[1]}#map=16/${coordinates[0]}/${coordinates[1]}`;
-};
 
 export function RestaurantProfile() {
     const { restaurantId } = useParams();
@@ -107,11 +84,11 @@ export function RestaurantProfile() {
             try {
                 const data = await restaurantService.getRestaurant(restaurantId);
                 setRestaurant(data);
-                
-                // Sadece geçerli konum bilgisi varsa koordinatları ayarla
-                if (data.location?.coordinates && 
-                    data.location.coordinates.length === 2 && 
-                    data.location.coordinates[0] !== 0 && 
+
+                // Sadece geçerli konum bilgisi varsa koordinatlar ayarla
+                if (data.location?.coordinates &&
+                    data.location.coordinates.length === 2 &&
+                    data.location.coordinates[0] !== 0 &&
                     data.location.coordinates[1] !== 0) {
                     setCoordinates([data.location.coordinates[1], data.location.coordinates[0]]);
                 } else if (data.address?.street && data.address?.city && data.address?.country) {
@@ -152,7 +129,7 @@ export function RestaurantProfile() {
             };
 
             const updatedRestaurant = await restaurantService.updateRestaurant(restaurantId, updatedData);
-            
+
             // Restaurant güncelleme başarılı olduysa, Cloudinary'den resmi sil
             if (updatedRestaurant) {
                 try {
@@ -203,8 +180,8 @@ export function RestaurantProfile() {
                                     <div className="w-full h-full rounded-full border-4 border-zinc-100 overflow-hidden bg-zinc-100 relative group shadow-sm">
                                         {restaurant.imageUrl ? (
                                             <>
-                                                <img 
-                                                    src={restaurant.imageUrl} 
+                                                <img
+                                                    src={restaurant.imageUrl}
                                                     alt={restaurant.name}
                                                     className="w-full h-full object-cover"
                                                 />
@@ -265,175 +242,141 @@ export function RestaurantProfile() {
 
                             {/* Bilgi Kartları */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                                {/* Adres/Konum Kartı - Full width yapıyoruz */}
+                                {/* Adres/Konum ve Harita Kartı */}
                                 <div className="bg-white rounded-lg border border-zinc-200 p-4 md:col-span-2">
-                                    <div className="flex items-start gap-3">
-                                        <div className="shrink-0 w-10 h-10 rounded-full bg-zinc-50 flex items-center justify-center">
-                                            <MapPin className="w-5 h-5 text-zinc-600" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-medium text-zinc-900 mb-3">
-                                                {t('restaurants.location')}
-                                            </h3>
-                                            {restaurant.address && Object.values(restaurant.address).some(value => value) ? (
-                                                <div className="space-y-4">
-                                                    {/* Detaylı Adres Bilgisi */}
-                                                    <div className="space-y-2">
-                                                        {restaurant.address.street && (
-                                                            <div className="flex items-baseline gap-2">
-                                                                <span className="text-zinc-500 text-sm min-w-[60px]">{t('restaurants.street')}</span>
-                                                                <span className="text-zinc-800 font-medium">{restaurant.address.street}</span>
+                                    <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+                                        {/* Sol Kolon: Konum ve Çalışma Saatleri */}
+                                        <div className="lg:w-[350px] space-y-6">
+                                            {/* Konum Bilgileri */}
+                                            <div>
+                                                <div className="flex items-start gap-3">
+                                                    <div className="shrink-0 w-10 h-10 rounded-full bg-zinc-50 flex items-center justify-center">
+                                                        <MapPin className="w-5 h-5 text-zinc-600" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h3 className="font-medium text-zinc-900 mb-3">
+                                                            {t('restaurants.location')}
+                                                        </h3>
+                                                        {restaurant.address && Object.values(restaurant.address).some(value => value) ? (
+                                                            <div className="space-y-2">
+                                                                {restaurant.address.street && (
+                                                                    <div className="flex items-baseline gap-2">
+                                                                        <span className="text-zinc-500 text-sm min-w-[60px]">
+                                                                            {t('restaurants.street')}
+                                                                        </span>
+                                                                        <span className="text-zinc-800 font-medium">
+                                                                            {restaurant.address.street}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                                {(restaurant.address.city || restaurant.address.postalCode) && (
+                                                                    <div className="flex items-baseline gap-2">
+                                                                        <span className="text-zinc-500 text-sm min-w-[60px]">
+                                                                            {t('restaurants.city')}
+                                                                        </span>
+                                                                        <span className="text-zinc-800 font-medium">
+                                                                            {[restaurant.address.postalCode, restaurant.address.city]
+                                                                                .filter(Boolean)
+                                                                                .join(' ')}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                                {restaurant.address.country && (
+                                                                    <div className="flex items-baseline gap-2">
+                                                                        <span className="text-zinc-500 text-sm min-w-[60px]">
+                                                                            {t('restaurants.country')}
+                                                                        </span>
+                                                                        <span className="text-zinc-800 font-medium">
+                                                                            {restaurant.address.country}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                        )}
-                                                        {(restaurant.address.city || restaurant.address.postalCode) && (
-                                                            <div className="flex items-baseline gap-2">
-                                                                <span className="text-zinc-500 text-sm min-w-[60px]">{t('restaurants.city')}</span>
-                                                                <span className="text-zinc-800 font-medium">
-                                                                    {[restaurant.address.postalCode, restaurant.address.city]
-                                                                        .filter(Boolean)
-                                                                        .join(' ')}
-                                                                </span>
-                                                            </div>
-                                                        )}
-                                                        {restaurant.address.country && (
-                                                            <div className="flex items-baseline gap-2">
-                                                                <span className="text-zinc-500 text-sm min-w-[60px]">{t('restaurants.country')}</span>
-                                                                <span className="text-zinc-800 font-medium">{restaurant.address.country}</span>
-                                                            </div>
+                                                        ) : (
+                                                            <p className="text-zinc-400 italic text-sm mt-1">
+                                                                {t('restaurants.noLocation')}
+                                                            </p>
                                                         )}
                                                     </div>
-
-                                                    {/* Haritada Aç Linki */}
-                                                    {coordinates && (
-                                                        <a
-                                                            href={createLocationUrl(coordinates)}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="inline-flex items-center px-3 py-1.5 text-sm text-zinc-600 
-                                                                     hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-md
-                                                                     transition-colors duration-200 group"
-                                                        >
-                                                            <MapPin className="w-4 h-4 mr-1.5" />
-                                                            <span>{t('common.openInMaps')}</span>
-                                                            <svg 
-                                                                className="w-3.5 h-3.5 ml-1 transition-transform duration-200 group-hover:translate-x-0.5" 
-                                                                fill="none" 
-                                                                stroke="currentColor" 
-                                                                viewBox="0 0 24 24"
-                                                            >
-                                                                <path 
-                                                                    strokeLinecap="round" 
-                                                                    strokeLinejoin="round" 
-                                                                    strokeWidth={2} 
-                                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
-                                                                />
-                                                            </svg>
-                                                        </a>
-                                                    )}
                                                 </div>
-                                            ) : (
-                                                <p className="text-zinc-400 italic text-sm mt-1">
-                                                    {t('restaurants.noLocation')}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Harita */}
-                                    {coordinates && coordinates[0] !== 0 && coordinates[1] !== 0 && (
-                                        <div className="mt-4 h-[300px] w-full">
-                                            <div className="w-full h-full rounded-lg overflow-hidden border border-zinc-200">
-                                                <MapContainer
-                                                    center={coordinates}
-                                                    zoom={15}
-                                                    className="w-full h-full"
-                                                    zoomControl={false}
-                                                    dragging={true}
-                                                    scrollWheelZoom={false}
-                                                    doubleClickZoom={true}
-                                                    style={{ width: '100%', height: '100%', zIndex: 1 }}
-                                                >
-                                                    <TileLayer
-                                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                                    />
-                                                    <Marker 
-                                                        position={coordinates} 
-                                                        icon={createCustomIcon('#18181B')}
-                                                    >
-                                                        <Popup>
-                                                            <div className="text-zinc-900 font-medium">
-                                                                {restaurant?.name}
-                                                            </div>
-                                                            {restaurant?.address && (
-                                                                <div className="text-zinc-600 text-sm mt-1">
-                                                                    {formatAddress(restaurant.address, t)}
-                                                                </div>
-                                                            )}
-                                                        </Popup>
-                                                    </Marker>
-                                                    <ZoomControl position="topright" />
-                                                </MapContainer>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
 
-                                {/* Çalışma Saatleri Kartı */}
-                                <div className="bg-white rounded-lg border border-zinc-200 p-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className="shrink-0 w-10 h-10 rounded-full bg-zinc-50 flex items-center justify-center">
-                                            <Clock className="w-5 h-5 text-zinc-600" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-medium text-zinc-900">
-                                                {t('restaurants.hours')}
-                                            </h3>
-                                            <div className="mt-1 space-y-1">
-                                                {parseOpeningHours(restaurant.openingHours) ? (
-                                                    Object.entries(parseOpeningHours(restaurant.openingHours)!).map(([day, schedule]) => (
-                                                        <div key={day} className="text-sm">
-                                                            <span className="inline-block w-24 text-zinc-700 capitalize">
-                                                                {t(`common.days.${day}`)}
-                                                            </span>
-                                                            {schedule.isOpen ? (
-                                                                <span className="text-zinc-600">
-                                                                    {schedule.openTime} - {schedule.closeTime}
-                                                                </span>
+                                            {/* Çalışma Saatleri */}
+                                            <div className="pt-6 border-t border-zinc-100">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="shrink-0 w-10 h-10 rounded-full bg-zinc-50 flex items-center justify-center">
+                                                        <Clock className="w-5 h-5 text-zinc-600" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h3 className="font-medium text-zinc-900 mb-3">
+                                                            {t('restaurants.hours')}
+                                                        </h3>
+                                                        <div className="space-y-2">
+                                                            {parseOpeningHours(restaurant.openingHours) ? (
+                                                                Object.entries(parseOpeningHours(restaurant.openingHours)!).map(([day, schedule]) => (
+                                                                    <div key={day} className="flex items-center justify-between text-sm">
+                                                                        <span className="text-zinc-600 w-[100px] capitalize">
+                                                                            {t(`common.days.${day}`)}
+                                                                        </span>
+                                                                        <span className={`${schedule.isOpen ? 'text-zinc-800' : 'text-zinc-400 italic'}`}>
+                                                                            {schedule.isOpen 
+                                                                                ? `${schedule.openTime} - ${schedule.closeTime}`
+                                                                                : t('restaurants.closed')}
+                                                                        </span>
+                                                                    </div>
+                                                                ))
                                                             ) : (
-                                                                <span className="text-zinc-400 italic">
-                                                                    {t('restaurants.closed')}
-                                                                </span>
+                                                                <p className="text-zinc-400 italic text-sm">
+                                                                    {t('restaurants.noHours')}
+                                                                </p>
                                                             )}
                                                         </div>
-                                                    ))
-                                                ) : (
-                                                    <p className="text-zinc-400 italic text-sm">
-                                                        {t('restaurants.noHours')}
-                                                    </p>
-                                                )}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                {/* Diller Kartı */}
-                                <div className="bg-white rounded-lg border border-zinc-200 p-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className="shrink-0 w-10 h-10 rounded-full bg-zinc-50 flex items-center justify-center">
-                                            <Globe className="w-5 h-5 text-zinc-600" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-medium text-zinc-900">
-                                                {t('restaurants.languages')}
-                                            </h3>
-                                            <p className="text-zinc-600 mt-1">
-                                                {restaurant.menus.map(menu => {
-                                                    const lang = SUPPORTED_LANGUAGES.find(l => l.code === menu.language);
-                                                    return lang?.name;
-                                                }).filter(Boolean).join(', ')}
-                                            </p>
-                                        </div>
+                                        {/* Separator */}
+                                        <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-zinc-200 to-transparent self-stretch mx-2" />
+
+                                        {/* Harita */}
+                                        {coordinates && coordinates[0] !== 0 && coordinates[1] !== 0 && (
+                                            <div className="flex-1">
+                                                <div className="w-full h-[250px] md:h-[400px] rounded-lg overflow-hidden border border-zinc-200">
+                                                    <MapContainer
+                                                        center={coordinates}
+                                                        zoom={15}
+                                                        className="w-full h-full"
+                                                        zoomControl={false}
+                                                        dragging={true}
+                                                        scrollWheelZoom={false}
+                                                        doubleClickZoom={true}
+                                                        style={{ width: '100%', height: '100%', zIndex: 1 }}
+                                                    >
+                                                        <TileLayer
+                                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                        />
+                                                        <Marker
+                                                            position={coordinates}
+                                                            icon={createCustomIcon('#18181B')}
+                                                        >
+                                                            <Popup>
+                                                                <div className="text-zinc-900 font-medium">
+                                                                    {restaurant?.name}
+                                                                </div>
+                                                                {restaurant?.address && (
+                                                                    <div className="text-zinc-600 text-sm mt-1">
+                                                                        {formatAddress(restaurant.address, t)}
+                                                                    </div>
+                                                                )}
+                                                            </Popup>
+                                                        </Marker>
+                                                        <ZoomControl position="topright" />
+                                                    </MapContainer>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -444,41 +387,79 @@ export function RestaurantProfile() {
 
             {/* Menüler Bölümü */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <h2 className="text-xl font-semibold text-zinc-900 mb-6">
-                    {t('restaurants.availableMenus')}
-                </h2>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {restaurant.menus.map((menu) => {
-                        const lang = SUPPORTED_LANGUAGES.find(l => l.code === menu.language);
-                        return (
-                            <div 
-                                key={menu.id}
-                                onClick={() => {
-                                    window.open(`/menu/${menu.id}`, '_blank', 'noopener,noreferrer');
-                                }}
-                                className="group cursor-pointer bg-white rounded-lg border border-zinc-200 p-4 
-                                         transition-all duration-200 hover:shadow-md hover:border-zinc-300"
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <div>
-                                        <span className="text-sm font-medium text-zinc-500">
-                                            {lang?.flag} {lang?.name}
-                                        </span>
-                                        <h3 className="text-lg font-medium text-zinc-900 mt-1">
-                                            {menu.name}
-                                        </h3>
-                                    </div>
-                                    <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-zinc-600 
-                                                          transition-colors duration-200" />
+                <div className="bg-white rounded-lg border border-zinc-200 p-4">
+                    <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+                        {/* Sol Kolon: Menü Başlığı ve Açıklama */}
+                        <div className="lg:w-[350px]">
+                            <div className="flex items-start gap-3">
+                                <div className="shrink-0 w-10 h-10 rounded-full bg-zinc-50 flex items-center justify-center">
+                                    <MenuIcon className="w-5 h-5 text-zinc-600" />
                                 </div>
-                                {menu.description && (
-                                    <p className="text-zinc-600 text-sm line-clamp-2">{menu.description}</p>
-                                )}
+                                <div className="flex-1">
+                                    <h3 className="font-medium text-zinc-900 mb-3">
+                                        {t('restaurants.availableMenus')}
+                                    </h3>
+                                    <p className="text-sm text-zinc-500">
+                                        {t('restaurants.menuDescription')}
+                                    </p>
+                                </div>
                             </div>
-                        );
-                    })}
+                        </div>
+
+                        {/* Separator */}
+                        <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-zinc-200 to-transparent self-stretch mx-2" />
+
+                        {/* Sağ Kolon: Menü Kartları */}
+                        <div className="flex-1">
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                {restaurant.menus.map((menu) => {
+                                    const lang = SUPPORTED_LANGUAGES.find(l => l.code === menu.language);
+                                    return (
+                                        <div
+                                            key={menu.id}
+                                            onClick={() => {
+                                                window.open(`/menu/${menu.id}`, '_blank', 'noopener,noreferrer');
+                                            }}
+                                            className="group cursor-pointer bg-zinc-50 rounded-lg p-4 
+                                                     transition-all duration-200 hover:bg-zinc-100"
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-zinc-500">
+                                                        {lang?.flag} {lang?.name}
+                                                    </span>
+                                                    <h4 className="text-base font-medium text-zinc-900 mt-1">
+                                                        {menu.name}
+                                                    </h4>
+                                                    {menu.description && (
+                                                        <p className="text-sm text-zinc-600 mt-1 line-clamp-2">
+                                                            {menu.description}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div className="shrink-0 w-8 h-8 rounded-full bg-white flex items-center justify-center 
+                                                  group-hover:bg-zinc-200 transition-colors">
+                                                    <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-zinc-600" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* Rezervasyon Bölümü */}
+            {restaurant && (
+                <div className="pt-0">
+                    <RestaurantReservation
+                        restaurantId={restaurant.restaurantId}
+                        schedule={parseOpeningHours(restaurant.openingHours) || {}}
+                    />
+                </div>
+            )}
         </div>
     );
 } 

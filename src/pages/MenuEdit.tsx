@@ -1,14 +1,14 @@
 import React, { useState, useEffect, startTransition, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Plus, ArrowLeft, Trash2, Edit2, Save, QrCode, GripVertical, Eye, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, ArrowLeft, Trash2, QrCode, GripVertical, Eye, ChevronDown, ChevronRight } from 'lucide-react';
 import type { MenuItem, MenuSection, Menu } from '../types/restaurant';
 import { QRCodeModal } from '../components/QRCodeModal';
-import { useAuth } from '../hooks/useAuth';
 import { restaurantService } from '../services/restaurantService';
 import { DragDropContext, Draggable, DropResult } from '@hello-pangea/dnd';
 import { v4 as uuidv4 } from 'uuid';
 import { CurrencySelect } from '../components/CurrencySelect';
-import { CURRENCIES, type CurrencyCode } from '../constants/currencies';
+import { CURRENCIES, type CurrencyCode } from '@shared/constants/currencies';
+
 import { StrictModeDroppable } from '../components/StrictModeDroppable';
 import { useTranslation } from 'react-i18next';
 
@@ -97,8 +97,7 @@ const ItemForm = ({
   // Validation error states
   const [nameError, setNameError] = useState<string | null>(null);
   const [descriptionError, setDescriptionError] = useState<string | null>(null);
-  const [priceError, setPriceError] = useState<string | null>(null);
-  const [imageUrlError, setImageUrlError] = useState<string | null>(null);
+  const [priceError, _setPriceError] = useState<string | null>(null);
 
   const handleImageUrlChange = async (url: string) => {
     onUpdate({ imageUrl: url });
@@ -290,10 +289,9 @@ function MenuEdit() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [_isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const { t } = useTranslation();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [previousMenu, setPreviousMenu] = useState<string>(''); // Menu'nun önceki halini tutmak için
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
@@ -458,45 +456,6 @@ function MenuEdit() {
     setHasChanges(true);
   };
 
-  const handleSave = async () => {
-    if (!menu || isSaving) return;
-
-    // Tüm ürünlerin name alanını kontrol et
-    const hasInvalidItems = menu.sections.some(section => 
-      section.items.some(item => !item.name?.trim())
-    );
-
-    if (hasInvalidItems) {
-      setError(t('validation.allItemNameRequired'));
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      setError(null);
-
-      // Validate menu data
-      const validatedData = {
-        ...menu,
-        sections: menu.sections.map((section: MenuSection) => ({
-          ...section,
-          items: section.items.map((item: MenuItem) => ({
-            ...item,
-            name: item.name.trim(), // Boşlukları temizle
-            price: Number(item.price)
-          }))
-        }))
-      };
-
-      await restaurantService.updateMenu(menuId!, validatedData);
-      setMenu(validatedData);
-    } catch (err) {
-      console.error('Failed to save changes:', err);
-      setError('Failed to save changes');
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   // Menu state'ini güncelleyen ve değişiklikleri kaydeden yardımcı fonksiyon
   const updateMenu = useCallback((updatedMenu: Menu) => {

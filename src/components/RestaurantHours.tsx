@@ -1,19 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import { Clock } from 'lucide-react';
+import { IDaySchedule, IWeekSchedule } from '../types/schedule';
 
-interface DaySchedule {
-    isOpen: boolean;
-    openTime: string;
-    closeTime: string;
-}
-
-interface WeekSchedule {
-    [key: string]: DaySchedule;
-}
 
 interface RestaurantHoursProps {
-    schedule: WeekSchedule;
-    onScheduleChange: (day: string, field: keyof DaySchedule, value: string | boolean) => void;
+    schedule: IWeekSchedule;
+    onScheduleChange: (day: string, field: keyof IDaySchedule, value: string | boolean) => void;
     errors?: Record<string, string>;
 }
 

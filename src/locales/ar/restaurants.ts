@@ -51,5 +51,6 @@ export default {
   selectCountry: 'اختر البلد',
   selectCity: 'اختر المدينة',
   descriptionHint: 'وصف مختصر لمطعمك',
-  mapInteractionHint: 'انقر واسحب لتحريك الخريطة، استخدم أدوات التكبير للتكبير/التصغير'
+  mapInteractionHint: 'انقر واسحب لتحريك الخريطة، استخدم أدوات التكبير للتكبير/التصغير',
+  menuDescription: 'عرض وإدارة قوائم مطعمك بلغات مختلفة.'
 } as const;

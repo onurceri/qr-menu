@@ -1,5 +1,4 @@
-import React from 'react';
-import { CURRENCIES, CurrencyCode } from '../constants/currencies';
+import { CURRENCIES, CurrencyCode } from '@shared/constants/currencies';
 import { ChevronDown } from 'lucide-react';
 
 interface CurrencySelectProps {

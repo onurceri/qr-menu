@@ -51,5 +51,6 @@ export default {
   selectCountry: 'Sélectionner un pays',
   selectCity: 'Sélectionner une ville',
   descriptionHint: 'Une brève description de votre restaurant',
-  mapInteractionHint: 'Cliquez et faites glisser pour déplacer la carte, utilisez les commandes de zoom pour zoomer/dézoomer'
+  mapInteractionHint: 'Cliquez et faites glisser pour déplacer la carte, utilisez les commandes de zoom pour zoomer/dézoomer',
+  menuDescription: 'Consultez et gérez les menus de votre restaurant en différentes langues.'
 } as const;

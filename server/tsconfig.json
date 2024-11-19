@@ -4,7 +4,7 @@
         "module": "ESNext",
         "moduleResolution": "Node",
         "outDir": "../dist",
-        "rootDir": "./",
+        "rootDirs": [".", "../shared"],
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
@@ -13,10 +13,14 @@
         "allowJs": true,
         "declaration": true,
         "sourceMap": true,
-        "baseUrl": "."
+        "baseUrl": ".",
+        "paths": {
+            "@shared/*": ["../shared/*"]
+        }
     },
     "include": [
-        "./**/*"
+        ".",
+        "../shared"
     ],
     "exclude": [
         "node_modules",
