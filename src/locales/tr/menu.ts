@@ -13,6 +13,8 @@ export default {
   itemDescription: 'Ürün Açıklaması',
   imageUrl: 'Resim URL',
   price: 'Fiyat',
+  sections: 'Menü Bölümleri',
+  noSections: 'Bölüm bulunamadı',
 
   // Validation Messages
   validation: {
@@ -30,6 +32,7 @@ export default {
     invalidUrlFormat: 'Geçersiz URL formatı',
     invalidUrlProtocol: 'Geçersiz URL protokolü',
     sectionTitleRequired: 'Bölüm başlığı gereklidir',
-    sectionTitleTooLong: 'Bölüm başlığı 100 karakterden kısa olmalıdır'
+    sectionTitleTooLong: 'Bölüm başlığı 100 karakterden kısa olmalıdır',
+    invalidPostalCode: 'Geçersiz posta kodu'
   }
 } as const;

@@ -13,6 +13,8 @@ export default {
   itemDescription: 'Description de l\'Article',
   imageUrl: 'URL de l\'Image',
   price: 'Prix',
+  sections: 'Sections du Menu',
+  noSections: 'Aucune section trouvée',
 
   // Validation Messages
   validation: {
@@ -30,6 +32,7 @@ export default {
     invalidUrlFormat: 'Format d\'URL invalide',
     invalidUrlProtocol: 'Protocole d\'URL invalide',
     sectionTitleRequired: 'Le titre de la section est requis',
-    sectionTitleTooLong: 'Le titre de la section doit faire moins de 100 caractères'
+    sectionTitleTooLong: 'Le titre de la section doit faire moins de 100 caractères',
+    invalidPostalCode: 'Code postal invalide'
   }
 } as const;

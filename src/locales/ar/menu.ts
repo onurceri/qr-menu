@@ -13,6 +13,8 @@ export default {
   itemDescription: 'وصف العنصر',
   imageUrl: 'رابط الصورة',
   price: 'السعر',
+  sections: 'أقسام القائمة',
+  noSections: 'لم يتم العثور على أقسام',
 
   // Validation Messages
   validation: {
@@ -30,6 +32,7 @@ export default {
     invalidUrlFormat: 'تنسيق الرابط غير صالح',
     invalidUrlProtocol: 'بروتوكول الرابط غير صالح',
     sectionTitleRequired: 'عنوان القسم مطلوب',
-    sectionTitleTooLong: 'يجب أن يكون عنوان القسم أقل من 100 حرف'
+    sectionTitleTooLong: 'يجب أن يكون عنوان القسم أقل من 100 حرف',
+    invalidPostalCode: 'الرمز البريدي غير صالح'
   }
 } as const;
