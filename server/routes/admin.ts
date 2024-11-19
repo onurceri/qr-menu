@@ -1,4 +1,4 @@
-import express, { Response, Router } from 'express';
+import express, { Response, Router, Request } from 'express';
 import { Restaurant } from '../models/Restaurant.js';
 import { adminAuthMiddleware, AuthRequest } from '../middleware/adminAuth.js';
 import OpenAI from 'openai';
@@ -257,26 +257,23 @@ interface ExtendedAuthRequest extends AuthRequest {
   files?: fileUpload.FileArray;
 }
 
+// Custom RequestHandler type
+type CustomRequestHandler = (
+  req: ExtendedAuthRequest,
+  res: Response,
+  next: express.NextFunction
+) => Promise<void | Response>;
+
 // Menu OCR endpoint
-router.post('/extract-menu', async (req: ExtendedAuthRequest, res: Response) => {
+const extractMenuHandler: CustomRequestHandler = async (req, res) => {
   try {
-    console.log('Request body:', req.body);
-    console.log('Request files:', req.files);
-    
     const { restaurantId, language } = req.body;
     
-    if (!req.files) {
-      return res.status(400).json({ 
-        error: 'No files were uploaded',
-        body: req.body
-      });
-    }
-
-    if (!req.files.images) {
+    if (!req.files || !req.files.images) {
+      console.log('Files received:', req.files);
       return res.status(400).json({ 
         error: 'Menu images are required',
-        filesReceived: req.files,
-        body: req.body
+        filesReceived: req.files 
       });
     }
 
@@ -373,30 +370,23 @@ router.post('/extract-menu', async (req: ExtendedAuthRequest, res: Response) => 
     let newMenu;
 
     if (existingMenuIndex !== -1) {
-      // Mevcut menü varsa, yeni verileri mevcut menü ile birleştir
       const existingMenu = restaurant.menus[existingMenuIndex];
-      
-      // Tüm yeni menu datalarını birleştir
       const mergedSections = [...existingMenu.sections];
       
       for (const menuData of allMenuData) {
         for (const newSection of menuData.sections) {
-          // Aynı başlığa sahip section'ı bul
           const existingSectionIndex = mergedSections.findIndex(
             s => s.title.toLowerCase() === newSection.title.toLowerCase()
           );
 
           if (existingSectionIndex !== -1) {
-            // Section varsa, yeni itemları ekle
             const existingSection = mergedSections[existingSectionIndex];
             for (const newItem of newSection.items) {
-              // Aynı isimli item var mı kontrol et
               const existingItemIndex = existingSection.items.findIndex(
-                i => i.name.toLowerCase() === newItem.name.toLowerCase()
+                (i: { name: string }) => i.name.toLowerCase() === newItem.name.toLowerCase()
               );
 
               if (existingItemIndex === -1) {
-                // Item yoksa ekle
                 existingSection.items.push({
                   id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                   name: newItem.name,
@@ -407,11 +397,10 @@ router.post('/extract-menu', async (req: ExtendedAuthRequest, res: Response) => 
               }
             }
           } else {
-            // Section yoksa yeni section olarak ekle
             mergedSections.push({
               id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               title: newSection.title,
-              items: newSection.items.map(item => ({
+              items: newSection.items.map((item: { name: string; description?: string; price?: number }) => ({
                 id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 name: item.name,
                 description: item.description || '',
@@ -423,13 +412,11 @@ router.post('/extract-menu', async (req: ExtendedAuthRequest, res: Response) => 
         }
       }
 
-      // Mevcut menüyü güncelle
       newMenu = {
         ...existingMenu,
         sections: mergedSections
       };
     } else {
-      // Mevcut menü yoksa, tüm menu datalarını birleştirerek yeni menü oluştur
       const mergedSections = [];
       
       for (const menuData of allMenuData) {
@@ -442,7 +429,7 @@ router.post('/extract-menu', async (req: ExtendedAuthRequest, res: Response) => 
             mergedSections.push({
               id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               title: section.title,
-              items: section.items.map(item => ({
+              items: section.items.map((item: { name: string; description?: string; price?: number }) => ({
                 id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 name: item.name,
                 description: item.description || '',
@@ -451,10 +438,9 @@ router.post('/extract-menu', async (req: ExtendedAuthRequest, res: Response) => 
               }))
             });
           } else {
-            // Section varsa, yeni itemları ekle
             for (const item of section.items) {
               const existingItemIndex = mergedSections[existingSectionIndex].items.findIndex(
-                i => i.name.toLowerCase() === item.name.toLowerCase()
+                (i: { name: string }) => i.name.toLowerCase() === item.name.toLowerCase()
               );
 
               if (existingItemIndex === -1) {
@@ -499,6 +485,9 @@ router.post('/extract-menu', async (req: ExtendedAuthRequest, res: Response) => 
     console.error('Menu extraction failed:', error);
     res.status(500).json({ error: 'Failed to extract menu' });
   }
-});
+};
+
+// Route tanımlaması
+router.post('/extract-menu', extractMenuHandler as express.RequestHandler);
 
 export default router; 
