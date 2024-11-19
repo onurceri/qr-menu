@@ -18,6 +18,23 @@ interface RestaurantAddressProps {
 export function RestaurantAddress({ address, onAddressChange }: RestaurantAddressProps) {
     const { t } = useTranslation();
 
+    const handleCountrySearch = async (query: string) => {
+        const results = await locationService.searchCountries(query);
+        return results.map(country => ({
+            name: country.name,
+            value: country.code
+        }));
+    };
+
+    const handleCitySearch = async (query: string) => {
+        if (!address.country) return [];
+        const results = await locationService.getCities(address.country, query);
+        return results.map(city => ({
+            name: city.name,
+            value: city.name
+        }));
+    };
+
     return (
         <div className="border-t border-zinc-200 pt-6">
             <h2 className="text-lg font-medium text-zinc-900 mb-4 flex items-center">
@@ -38,9 +55,10 @@ export function RestaurantAddress({ address, onAddressChange }: RestaurantAddres
                                 city: '' // Reset city when country changes
                             });
                         }}
-                        onSearch={locationService.searchCountries}
+                        onSearch={handleCountrySearch}
                         placeholder={t('restaurants.selectCountry')}
                         label={t('restaurants.country')}
+                        minSearchLength={2}
                     />
                 </div>
                 <div>
@@ -53,10 +71,10 @@ export function RestaurantAddress({ address, onAddressChange }: RestaurantAddres
                             ...address,
                             city: value
                         })}
-                        onSearch={(query) => locationService.getCities(address.country, query)}
+                        onSearch={handleCitySearch}
                         placeholder={t('restaurants.selectCity')}
                         label={t('restaurants.city')}
-                        minSearchLength={3}
+                        minSearchLength={2}
                     />
                 </div>
                 <div>
