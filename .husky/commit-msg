@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Conventional Commits checking
+message="$(cat $1)"
+pattern="^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(\(.+\))?: .+"
+
+if ! echo "$message" | grep -E "$pattern" > /dev/null; then
+  echo "❌ Invalid commit message format."
+  echo "Must follow Conventional Commits specification: https://www.conventionalcommits.org"
+  echo "Example formats:"
+  echo "  feat: add new feature"
+  echo "  fix: resolve bug issue"
+  echo "  docs: update README"
+  echo "  style: format code"
+  echo "  refactor: restructure component"
+  echo "  perf: improve performance"
+  echo "  test: add unit tests"
+  echo "  chore: update dependencies"
+  exit 1
+fi
