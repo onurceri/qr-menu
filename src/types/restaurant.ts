@@ -29,6 +29,7 @@ export interface Menu {
 
 export interface Restaurant {
   restaurantId: string;
+  userId: string;
   name: string;
   description?: string;
   imageUrl?: string;

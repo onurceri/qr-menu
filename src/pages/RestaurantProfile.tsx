@@ -42,13 +42,16 @@ if (!document.getElementById('marker-style')) {
     document.head.appendChild(styleSheet);
 }
 
-// Address formatter helper function'ı güncelleyelim
-function formatAddress(address: { 
-    street: string; 
-    city: string; 
-    country: string; 
-    postalCode: string; 
-}): string {
+// Address formatter helper function
+const formatAddress = (
+    address: { 
+        street: string; 
+        city: string; 
+        country: string; 
+        postalCode: string; 
+    },
+    t: (key: string) => string
+): string => {
     const parts = [];
     
     if (address.street) parts.push(address.street);
@@ -59,7 +62,7 @@ function formatAddress(address: {
     if (address.country) parts.push(address.country);
 
     return parts.join(', ') || t('restaurants.noLocation');
-}
+};
 
 // Schedule tiplerini ekleyelim
 interface DaySchedule {
@@ -114,7 +117,7 @@ export function RestaurantProfile() {
                     setCoordinates([data.location.coordinates[1], data.location.coordinates[0]]);
                 } else if (data.address?.street && data.address?.city && data.address?.country) {
                     // Sadece tam adres bilgisi varsa geocoding yap
-                    const address = formatAddress(data.address);
+                    const address = formatAddress(data.address, t);
                     const coords = await restaurantService.geocodeAddress(address);
                     if (coords) {
                         setCoordinates([coords[1], coords[0]]);
@@ -282,7 +285,7 @@ export function RestaurantProfile() {
                                                         className="text-zinc-600 hover:text-zinc-900 transition-colors duration-200 
                                                                  flex items-center gap-1 group mt-1"
                                                     >
-                                                        <span>{formatAddress(restaurant.address)}</span>
+                                                        <span>{formatAddress(restaurant.address, t)}</span>
                                                         <svg 
                                                             className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
                                                             fill="none" 
@@ -298,7 +301,7 @@ export function RestaurantProfile() {
                                                         </svg>
                                                     </a>
                                                 ) : (
-                                                    <p className="text-zinc-600 mt-1">{formatAddress(restaurant.address)}</p>
+                                                    <p className="text-zinc-600 mt-1">{formatAddress(restaurant.address, t)}</p>
                                                 )
                                             ) : (
                                                 <p className="text-zinc-400 italic text-sm mt-1">{t('restaurants.noLocation')}</p>
@@ -395,7 +398,7 @@ export function RestaurantProfile() {
                                                 </div>
                                                 {restaurant?.address && (
                                                     <div className="text-zinc-600 text-sm mt-1">
-                                                        {formatAddress(restaurant.address)}
+                                                        {formatAddress(restaurant.address, t)}
                                                     </div>
                                                 )}
                                             </Popup>
