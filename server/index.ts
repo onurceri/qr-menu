@@ -7,7 +7,6 @@ import helmet from 'helmet';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { rateLimit } from 'express-rate-limit';
-import fileUpload from 'express-fileupload';
 
 // Import routes
 import restaurantRouter from './routes/restaurant.js';
@@ -151,11 +150,6 @@ mongoose.connect(process.env.MONGODB_URI!, {
   console.error('❌ MongoDB connection error:', err);
   console.error('Connection string:', process.env.MONGODB_URI?.replace(/\/\/.*@/, '//<credentials>@'));
 });
-
-app.use(fileUpload({
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-  abortOnLimit: true
-}));
 
 app.use('/api/restaurant', restaurantRouter);
 app.use('/api/user', userRouter);

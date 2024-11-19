@@ -2,7 +2,7 @@ import express, { Response, Router, Request } from 'express';
 import { Restaurant } from '../models/Restaurant.js';
 import { adminAuthMiddleware, AuthRequest } from '../middleware/adminAuth.js';
 import OpenAI from 'openai';
-import fileUpload from 'express-fileupload';
+import multer from 'multer';
 
 const router: Router = express.Router();
 
@@ -252,9 +252,24 @@ router.post('/generate-images/:menuId', async (req: AuthRequest, res: Response) 
   }
 });
 
+// Configure multer for handling file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.match(/^image\/(jpeg|png|jpg)$/)) {
+      cb(new Error('Only JPG, JPEG and PNG files are allowed'));
+      return;
+    }
+    cb(null, true);
+  }
+});
+
 // AuthRequest interface'ini güncelle
 interface ExtendedAuthRequest extends AuthRequest {
-  files?: fileUpload.FileArray;
+  files: Express.Multer.File[];
 }
 
 // Custom RequestHandler type
@@ -269,7 +284,7 @@ const extractMenuHandler: CustomRequestHandler = async (req, res) => {
   try {
     const { restaurantId, language } = req.body;
     
-    if (!req.files || !req.files.images) {
+    if (!req.files || req.files.length === 0) {
       console.log('Files received:', req.files);
       return res.status(400).json({ 
         error: 'Menu images are required',
@@ -277,25 +292,20 @@ const extractMenuHandler: CustomRequestHandler = async (req, res) => {
       });
     }
 
-    // Birden fazla fotoğraf için array oluştur
-    const menuImages = Array.isArray(req.files.images) 
-      ? req.files.images 
-      : [req.files.images];
-
-    console.log('Number of images received:', menuImages.length); // Debug için
+    console.log('Number of images received:', req.files.length); // Debug için
 
     // Tüm fotoğraflardan menu datası çıkar
     const allMenuData = [];
-    for (const menuImage of menuImages) {
+    for (const menuImage of req.files) {
       // Dosya tipini kontrol et
       if (!menuImage.mimetype.match(/^image\/(jpeg|png|jpg)$/)) {
         return res.status(400).json({ 
-          error: `Invalid file type for ${menuImage.name}. Only JPEG, PNG and JPG are allowed` 
+          error: `Invalid file type for ${menuImage.originalname}. Only JPEG, PNG and JPG are allowed` 
         });
       }
 
       // Base64'e çevir
-      const base64Image = menuImage.data.toString('base64');
+      const base64Image = menuImage.buffer.toString('base64');
 
       // OpenAI'ye gönder
       const response = await openai.chat.completions.create({
@@ -487,7 +497,7 @@ const extractMenuHandler: CustomRequestHandler = async (req, res) => {
   }
 };
 
-// Route tanımlaması
-router.post('/extract-menu', extractMenuHandler as express.RequestHandler);
+// Route tanımlaması - multer middleware'i ekle
+router.post('/extract-menu', upload.array('images'), extractMenuHandler as express.RequestHandler);
 
 export default router; 

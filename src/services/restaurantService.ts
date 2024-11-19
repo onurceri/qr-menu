@@ -205,7 +205,7 @@ export const restaurantService = {
     async uploadImage(file: File, restaurantId: string): Promise<string> {
         try {
             const formData = new FormData();
-            formData.append('image', file);
+            formData.append('image', file, file.name);
             formData.append('restaurantId', restaurantId);
 
             const token = await getAuthToken();
@@ -219,12 +219,15 @@ export const restaurantService = {
                 body: formData
             });
 
-            if (!response.ok) throw new Error('Failed to upload image');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.error || 'Failed to upload image');
+            }
             const data = await response.json();
             return data.url;
         } catch (error) {
             logError('uploadImage error:', error);
-            throw new Error('Failed to upload image');
+            throw error;
         }
     },
 
