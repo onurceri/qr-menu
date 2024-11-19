@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { contentSecurityPolicy } from './shared/config/security';
 
 export default defineConfig({
     plugins: [react()],
@@ -12,6 +13,11 @@ export default defineConfig({
     },
     server: {
         port: 5173,
-        host: true
+        host: true,
+        headers: {
+            'Content-Security-Policy': Object.entries(contentSecurityPolicy.directives)
+                .map(([key, values]) => `${key} ${values.join(' ')}`)
+                .join('; ')
+        }
     }
 });
