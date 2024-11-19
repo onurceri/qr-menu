@@ -4,7 +4,7 @@ import { restaurantService } from '../services/restaurantService';
 import type { Restaurant } from '../types/restaurant';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { MapPin, Clock, ChevronRight, Trash2, ChevronDown, ChevronUp, Info, MenuIcon } from 'lucide-react';
+import { MapPin, Clock, ChevronRight, Trash2, ChevronDown, ChevronUp, MenuIcon } from 'lucide-react';
 import { SUPPORTED_LANGUAGES } from '../constants/languages';
 import { MapContainer, TileLayer, Marker, Popup, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';

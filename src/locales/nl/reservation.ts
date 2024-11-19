@@ -23,5 +23,15 @@ export default {
     delete: 'Reservering Annuleren',
     confirmDelete: 'Weet u zeker dat u deze reservering wilt annuleren?',
     deleteSuccess: 'Reservering succesvol geannuleerd',
-    deleteError: 'Fout bij het annuleren van de reservering'
-};
+    deleteError: 'Fout bij het annuleren van de reservering',
+    makeReservation: 'Reservering Maken',
+    selectTime: 'Tijd Selecteren',
+    chooseTime: 'Kies Tijd',
+    guests: 'Aantal Gasten',
+    confirm: 'Bevestigen',
+    description: 'Kies uw gewenste datum en tijd om eenvoudig een reservering te maken.',
+    policy: 'Reserveringsbeleid',
+    policyItem1: 'Reserveringen moeten minimaal 2 uur van tevoren worden gemaakt.',
+    policyItem2: 'Annuleringen moeten minimaal 1 uur voor de reserveringstijd worden gedaan.',
+    policyItem3: 'Uw reservering kan worden geannuleerd als u meer dan 15 minuten te laat bent.'
+} as const;

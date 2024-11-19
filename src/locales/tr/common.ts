@@ -20,6 +20,7 @@ export default {
   confirm: 'Onayla',
   tryAgain: 'Tekrar Dene',
   required: 'Zorunlu alan',
+  requiredFields: 'Zorunlu alanlar',
   charactersRemaining: '{{count}} karakter kaldı',
   showMore: 'Daha fazla göster',
   showLess: 'Daha az göster',

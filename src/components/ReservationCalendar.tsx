@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { tr, enUS } from 'date-fns/locale';
 import { DayPicker } from 'react-day-picker';
-import { X, Calendar, Clock, Users, MessageSquare } from 'lucide-react';
+import { X } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { toast } from 'sonner';
 import { reservationService } from '../services/reservationService';
@@ -12,316 +12,274 @@ import { useAuth } from '../contexts/AuthContext';
 import 'react-day-picker/dist/style.css';
 
 interface ReservationCalendarProps {
-    restaurantId: string;
-    schedule: Record<string, { isOpen: boolean; openTime: string; closeTime: string; }>;
-    className?: string;
+  restaurantId: string;
+  schedule: Record<string, { isOpen: boolean; openTime: string; closeTime: string }>;
 }
 
-export function ReservationCalendar({ restaurantId, schedule, className = '' }: ReservationCalendarProps) {
-    const { t, i18n } = useTranslation();
-    const [selectedDate, setSelectedDate] = useState<Date>();
-    const [selectedTime, setSelectedTime] = useState<string>();
-    const [guests, setGuests] = useState(2);
-    const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [formData, setFormData] = useState({
-        customerName: '',
-        customerEmail: '',
-        customerPhone: '',
-        specialRequests: ''
+export function ReservationCalendar({ restaurantId, schedule }: ReservationCalendarProps) {
+  const { t, i18n } = useTranslation();
+  const { user } = useAuth();
+  const locale = i18n.language === 'tr' ? tr : enUS;
+
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedTime, setSelectedTime] = useState<string>();
+  const [guests, setGuests] = useState(2);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    customerName: '',
+    customerEmail: '',
+    customerPhone: '',
+    specialRequests: '',
+  });
+
+  const handleDateSelect = async (date?: Date) => {
+    if (!date) return;
+    setSelectedDate(date);
+    setSelectedTime(undefined);
+    setIsLoading(true);
+    setIsDialogOpen(true);
+
+    try {
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      const availability = await reservationService.getAvailableSlots(
+        restaurantId,
+        formattedDate,
+        i18n.language,
+      );
+      setTimeSlots(availability?.timeSlots || []);
+      if (!availability?.timeSlots?.length) {
+        toast.error(t('reservation.noSlots'));
+      }
+    } catch {
+      toast.error(t('reservation.error'));
+      setTimeSlots([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDate || !selectedTime || !user) return;
+    setIsLoading(true);
+
+    try {
+      const token = await user.getIdToken();
+      const reservation: ReservationRequest = {
+        restaurantId,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        time: selectedTime,
+        numberOfGuests: guests,
+        ...formData,
+      };
+
+      await reservationService.createReservation(reservation, token);
+      setIsDialogOpen(false);
+      toast.success(t('reservation.success'));
+      resetForm();
+    } catch {
+      toast.error(t('reservation.error'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setSelectedDate(undefined);
+    setSelectedTime(undefined);
+    setTimeSlots([]);
+    setFormData({
+      customerName: '',
+      customerEmail: '',
+      customerPhone: '',
+      specialRequests: '',
     });
-    const { user } = useAuth();
-    const locale = i18n.language === 'tr' ? tr : enUS;
+  };
 
-    // Generate time slots based on restaurant schedule
-    const generateTimeSlots = async (date: Date) => {
-        if (!user) return;
-        
-        const dayName = format(date, 'EEEE', { locale }).toLowerCase();
-        const daySchedule = schedule[dayName];
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
 
-        if (!daySchedule?.isOpen) {
-            setTimeSlots([]);
-            toast.error(t('reservation.closed'));
-            return;
-        }
+  const modifiers = {
+    disabled: [
+      { before: new Date() },
+      (date: Date) => {
+        const dayName = format(date, 'EEEE', { locale: enUS }).toLowerCase();
+        return !schedule[dayName]?.isOpen;
+      },
+    ],
+  };
 
-        try {
-            const token = await user.getIdToken();
-            const formattedDate = format(date, 'yyyy-MM-dd');
-            const availabilityData = await reservationService.getAvailableSlots(
-                restaurantId, 
-                formattedDate,
-                token
-            );
-            
-            if (!availabilityData?.timeSlots?.length) {
-                setTimeSlots([]);
-                toast.error(t('reservation.noSlots'));
-                return;
-            }
+  return (
+    <div className="w-full">
+      <div className="w-full overflow-x-auto">
+        <DayPicker
+          mode="single"
+          selected={selectedDate}
+          onSelect={handleDateSelect}
+          locale={locale}
+          modifiers={modifiers}
+          fromMonth={new Date()}
+          toMonth={new Date(new Date().setMonth(new Date().getMonth() + 2))}
+          className="!font-sans mx-auto w-full 
+                         [&_.rdp-months]:w-full [&_.rdp-month]:w-full [&_.rdp-table]:w-full
+                         [&_.rdp-cell]:p-0 [&_.rdp-button]:w-full [&_.rdp-button]:h-12
+                         [&_.rdp-day_not-selected:hover]:bg-zinc-50
+                         [&_.rdp-day_selected]:bg-zinc-900 [&_.rdp-day_selected]:text-white
+                         [&_.rdp-day_selected:hover]:bg-zinc-800
+                         [&_.rdp-day_disabled]:opacity-25
+                         [&_.rdp-head_cell]:text-zinc-500 [&_.rdp-head_cell]:font-normal
+                         [&_.rdp-button]:text-sm [&_.rdp-button]:font-medium"
+        />
+      </div>
 
-            setTimeSlots(availabilityData.timeSlots);
-        } catch (error) {
-            console.error('Error fetching time slots:', error);
-            setTimeSlots([]);
-            toast.error(t('reservation.error'));
-        }
-    };
+      <Dialog.Root open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-50" />
+          <Dialog.Content className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="w-full h-full sm:h-auto sm:max-w-lg bg-white sm:rounded-xl shadow-xl flex flex-col">
+              {/* Header - Fixed at top */}
+              <div className="flex items-center justify-between p-4 border-b border-zinc-200">
+                <Dialog.Title className="text-lg font-medium text-zinc-900">
+                  {t('reservation.makeReservation')}
+                </Dialog.Title>
+                <Dialog.Close className="rounded-lg p-1.5 hover:bg-zinc-100">
+                  <X className="w-5 h-5 text-zinc-500" />
+                </Dialog.Close>
+              </div>
 
-    const handleDateSelect = (date: Date | undefined) => {
-        if (!date) return;
-        setSelectedDate(date);
-        generateTimeSlots(date);
-    };
+              {/* Form - Scrollable content */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <form id="reservationForm" onSubmit={handleSubmit} className="space-y-6">
+                  <p className="text-sm text-zinc-500">
+                    {t('common.requiredFields')} <span className="text-red-500">*</span>
+                  </p>
 
-    const handleTimeSelect = (time: string) => {
-        setSelectedTime(time);
-        setIsDialogOpen(true);
-    };
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-zinc-900">
+                        {t('reservation.selectTime')} <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={selectedTime || ''}
+                        onChange={e => setSelectedTime(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:ring-2 focus:ring-zinc-900/10"
+                      >
+                        <option value="" disabled>
+                          {t('reservation.chooseTime')}
+                        </option>
+                        {timeSlots.map(slot => (
+                          <option key={slot.time} value={slot.time}>
+                            {slot.time}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedDate || !selectedTime || !user) return;
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-zinc-900">
+                        {t('reservation.guests')} <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex items-center space-x-4">
+                        <button
+                          type="button"
+                          onClick={() => setGuests(prev => Math.max(1, prev - 1))}
+                          className="p-2 rounded-lg hover:bg-zinc-100"
+                        >
+                          -
+                        </button>
+                        <span className="text-lg font-medium w-8 text-center">{guests}</span>
+                        <button
+                          type="button"
+                          onClick={() => setGuests(prev => Math.min(10, prev + 1))}
+                          className="p-2 rounded-lg hover:bg-zinc-100"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
-        try {
-            const token = await user.getIdToken();
-            const reservation: ReservationRequest = {
-                restaurantId,
-                date: format(selectedDate, 'yyyy-MM-dd'),
-                time: selectedTime,
-                numberOfGuests: guests,
-                ...formData,
-                status: 'pending'
-            };
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label htmlFor="customerName" className="block text-sm font-medium text-zinc-900">
+                        {t('reservation.name')} <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="customerName"
+                        name="customerName"
+                        required
+                        value={formData.customerName}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:ring-2 focus:ring-zinc-900/10"
+                      />
+                    </div>
 
-            await reservationService.createReservation(reservation, token);
-            setIsDialogOpen(false);
-            toast.success(t('reservation.success'));
-            // Refresh available slots after successful reservation
-            generateTimeSlots(selectedDate);
-        } catch (error) {
-            console.error('Error submitting reservation:', error);
-            toast.error(t('reservation.error'));
-        }
-    };
+                    <div className="space-y-2">
+                      <label htmlFor="customerEmail" className="block text-sm font-medium text-zinc-900">
+                        {t('reservation.email')} <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        id="customerEmail"
+                        name="customerEmail"
+                        required
+                        value={formData.customerEmail}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:ring-2 focus:ring-zinc-900/10"
+                      />
+                    </div>
 
-    return (
-        <div className={`${className}`}>
-            {/* Takvim ve Saat Seçimi */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                {/* Takvim Bölümü */}
-                <div className="w-full">
-                    <DayPicker
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={handleDateSelect}
-                        disabled={{ before: new Date() }}
-                        locale={locale}
-                        className="!font-sans bg-white p-1 xs:p-2 sm:p-3 rounded-lg border border-zinc-200/70 w-full max-w-full overflow-x-auto"
-                        classNames={{
-                            months: "w-full min-w-[280px]",
-                            month: "w-full",
-                            caption: "flex justify-center pt-1 relative items-center",
-                            caption_label: "text-xs sm:text-sm font-medium text-zinc-900",
-                            nav: "flex items-center",
-                            nav_button: "inline-flex items-center justify-center rounded-md text-zinc-600 hover:bg-zinc-50 p-0.5 sm:p-1",
-                            nav_button_previous: "absolute left-0.5 sm:left-1",
-                            nav_button_next: "absolute right-0.5 sm:right-1",
-                            table: "w-full border-collapse",
-                            head_row: "flex w-full",
-                            head_cell: "text-zinc-500 rounded-md w-6 sm:w-7 md:w-9 font-normal text-[0.7rem] sm:text-[0.8rem]",
-                            row: "flex w-full mt-0.5 sm:mt-1 md:mt-2",
-                            cell: "text-center text-xs sm:text-sm relative p-0 rounded-md focus-within:relative focus-within:z-20",
-                            day: "h-6 w-6 sm:h-7 sm:w-7 md:h-9 md:w-9 p-0 font-normal aria-selected:opacity-100 rounded-md",
-                            day_selected: "bg-zinc-900 text-white hover:bg-zinc-800",
-                            day_today: "bg-zinc-50 text-zinc-900",
-                            day_outside: "text-zinc-400 opacity-50",
-                            day_disabled: "text-zinc-400 opacity-50 hover:bg-transparent",
-                            day_range_middle: "aria-selected:bg-zinc-100",
-                            day_hidden: "invisible",
-                        }}
+                    <div className="space-y-2">
+                      <label htmlFor="customerPhone" className="block text-sm font-medium text-zinc-900">
+                        {t('reservation.phone')} <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="tel"
+                        id="customerPhone"
+                        name="customerPhone"
+                        required
+                        value={formData.customerPhone}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:ring-2 focus:ring-zinc-900/10"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="specialRequests" className="block text-sm font-medium text-zinc-900">
+                      {t('reservation.specialRequests')}
+                    </label>
+                    <textarea
+                      id="specialRequests"
+                      name="specialRequests"
+                      rows={3}
+                      value={formData.specialRequests}
+                      onChange={handleFormChange}
+                      className="w-full px-3 py-2 rounded-lg border border-zinc-200 focus:ring-2 focus:ring-zinc-900/10 resize-none"
                     />
-                </div>
+                  </div>
+                </form>
+              </div>
 
-                {/* Saat Seçimi Bölümü */}
-                <div className="w-full bg-white rounded-lg border border-zinc-200/70">
-                    <div className="p-2 sm:p-4 border-b border-zinc-200/70">
-                        <h3 className="font-medium text-zinc-900 text-sm sm:text-base">
-                            {t('reservation.availableSlots')}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-zinc-500 mt-0.5 sm:mt-1">
-                            {selectedDate 
-                                ? format(selectedDate, 'PPP', { locale })
-                                : t('reservation.selectDateFirst')}
-                        </p>
-                    </div>
-                    <div className="p-2 sm:p-4">
-                        <div className="grid grid-cols-3 gap-1 sm:gap-2">
-                            {timeSlots.length > 0 ? (
-                                timeSlots.map((slot) => (
-                                    <button
-                                        key={slot.time}
-                                        onClick={() => handleTimeSelect(slot.time)}
-                                        disabled={!slot.available}
-                                        className={`
-                                            relative p-1.5 sm:p-2 rounded-md text-xs sm:text-sm font-medium
-                                            transition-all duration-200
-                                            ${slot.available 
-                                                ? 'bg-zinc-50 hover:bg-zinc-100 text-zinc-900' 
-                                                : 'bg-zinc-50/50 text-zinc-400 cursor-not-allowed'}
-                                        `}
-                                    >
-                                        {slot.time}
-                                    </button>
-                                ))
-                            ) : (
-                                <div className="col-span-3 py-6 sm:py-8 text-center text-zinc-500 text-xs sm:text-sm">
-                                    {selectedDate 
-                                        ? t('reservation.noSlots')
-                                        : t('reservation.selectDateFirst')}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
+              {/* Footer - Fixed at bottom */}
+              <div className="p-4 border-t border-zinc-200">
+                <button
+                  type="submit"
+                  form="reservationForm"
+                  disabled={!selectedTime || isLoading}
+                  className="w-full py-2.5 rounded-lg bg-zinc-900 text-white font-medium hover:bg-zinc-800 disabled:opacity-50"
+                >
+                  {isLoading ? t('common.loading') : t('reservation.confirm')}
+                </button>
+              </div>
             </div>
-
-            {/* Rezervasyon Detayları Modal */}
-            <Dialog.Root open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <Dialog.Portal>
-                    <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-                    <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                        w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
-                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-100">
-                            <Dialog.Title className="text-lg font-semibold text-zinc-900">
-                                {t('reservation.details')}
-                            </Dialog.Title>
-                            <Dialog.Close className="w-8 h-8 flex items-center justify-center rounded-full 
-                                                  text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 transition-all">
-                                <X size={20} />
-                            </Dialog.Close>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Seçim Özeti */}
-                            <div className="bg-zinc-50 rounded-xl p-4 space-y-3">
-                                <div className="flex items-center gap-3 text-sm text-zinc-600">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>{selectedDate && format(selectedDate, 'PPP', { locale })}</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-sm text-zinc-600">
-                                    <Clock className="w-4 h-4" />
-                                    <span>{selectedTime}</span>
-                                </div>
-                            </div>
-
-                            {/* Form Alanları */}
-                            <div className="space-y-4">
-                                {/* Misafir Sayısı */}
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium text-zinc-700 mb-2">
-                                        <Users className="w-4 h-4" />
-                                        {t('reservation.numberOfGuests')}
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max="20"
-                                            value={guests}
-                                            onChange={(e) => setGuests(Number(e.target.value))}
-                                            className="w-full p-2.5 pr-12 border rounded-lg bg-white
-                                                     focus:ring-2 focus:ring-zinc-200 outline-none transition-all"
-                                        />
-                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-zinc-400">
-                                            {t('common.people')}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* İletişim Bilgileri */}
-                                <div className="space-y-4">
-                                    {/* Ad Soyad */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                            {t('reservation.name')}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.customerName}
-                                            onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                                            className="w-full p-2.5 border rounded-lg bg-white
-                                                     focus:ring-2 focus:ring-zinc-200 outline-none transition-all"
-                                            placeholder={t('reservation.namePlaceholder')}
-                                        />
-                                    </div>
-
-                                    {/* E-posta */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                            {t('reservation.email')}
-                                        </label>
-                                        <input
-                                            type="email"
-                                            required
-                                            value={formData.customerEmail}
-                                            onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                                            className="w-full p-2.5 border rounded-lg bg-white
-                                                     focus:ring-2 focus:ring-zinc-200 outline-none transition-all"
-                                            placeholder={t('reservation.emailPlaceholder')}
-                                        />
-                                    </div>
-
-                                    {/* Telefon */}
-                                    <div>
-                                        <label className="block text-sm font-medium text-zinc-700 mb-2">
-                                            {t('reservation.phone')}
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            required
-                                            value={formData.customerPhone}
-                                            onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
-                                            className="w-full p-2.5 border rounded-lg bg-white
-                                                     focus:ring-2 focus:ring-zinc-200 outline-none transition-all"
-                                            placeholder={t('reservation.phonePlaceholder')}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Özel İstekler */}
-                                <div>
-                                    <label className="flex items-center gap-2 text-sm font-medium text-zinc-700 mb-2">
-                                        <MessageSquare className="w-4 h-4" />
-                                        {t('reservation.specialRequests')}
-                                    </label>
-                                    <textarea
-                                        value={formData.specialRequests}
-                                        onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
-                                        className="w-full p-2.5 border rounded-lg bg-white resize-none
-                                                 focus:ring-2 focus:ring-zinc-200 outline-none transition-all"
-                                        rows={3}
-                                        placeholder={t('reservation.specialRequestsPlaceholder')}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Gönder Butonu */}
-                            <button
-                                type="submit"
-                                className="w-full bg-zinc-900 text-white py-3 px-4 rounded-lg 
-                                         hover:bg-zinc-800 transition-colors duration-200 font-medium
-                                         focus:outline-none focus:ring-2 focus:ring-zinc-900 
-                                         focus:ring-offset-2"
-                            >
-                                {t('reservation.submit')}
-                            </button>
-                        </form>
-                    </Dialog.Content>
-                </Dialog.Portal>
-            </Dialog.Root>
-        </div>
-    );
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </div>
+  );
 }

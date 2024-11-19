@@ -20,6 +20,7 @@ export default {
   confirm: 'Confirmer',
   tryAgain: 'Réessayer',
   required: 'Champ obligatoire',
+  requiredFields: 'Champs obligatoires',
   charactersRemaining: '{{count}} caractères restants',
   showMore: 'Voir plus',
   showLess: 'Voir moins',

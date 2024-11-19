@@ -12,7 +12,7 @@ export interface ReservationRequest {
     customerEmail: string;
     customerPhone: string;
     specialRequests?: string;
-    status: 'pending' | 'confirmed' | 'cancelled';
+    status?: 'pending' | 'confirmed' | 'cancelled | rejected';
 }
 
 export interface AvailabilityResponse {

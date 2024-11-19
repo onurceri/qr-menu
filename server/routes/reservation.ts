@@ -5,44 +5,20 @@ import { Restaurant } from '../models/Restaurant.js';
 import { parseOpeningHours } from '../utils/dateUtils.js';
 import { format } from 'date-fns';
 import * as dateFnsLocales from 'date-fns/locale';
-import { SUPPORTED_LANGUAGES } from '../../shared/constants/languages.js';
 
 const router: Router = express.Router();
 
-
-// Saat formatı için locale ayarları
-const getTimeFormatLocale = (language: string): string => {
-    // Her dil için özel saat formatı ayarları
-    const timeFormatMap: { [key: string]: string } = {
-        tr: 'tr-TR',
-        en: 'en-US',
-        fr: 'fr-FR',
-        nl: 'nl-NL',
-        ar: 'ar-SA',
-        // Diğer diller için formatlar buraya eklenebilir
-    };
-
-    return timeFormatMap[language] || 'en-US';
-};
-
-// Müsait saatleri getir
+// Müsait saatleri getir - Public route olmalı
 router.get('/:restaurantId/availability', 
-    async (req: AuthRequest<{ restaurantId: string }>, res: Response) => {
+    async (req, res: Response) => {
         try {
             const { restaurantId } = req.params;
-            const { date, language } = req.query;
+            const { date, language = 'tr' } = req.query;
 
             if (!date || typeof date !== 'string') {
                 res.status(400).json({ error: 'Date parameter is required' });
                 return;
             }
-
-            // Dil kontrolü ve varsayılan dil belirleme
-            const userLanguage = typeof language === 'string' ? language : '';
-            const defaultLanguage = SUPPORTED_LANGUAGES[0]?.code || 'en';
-            const selectedLanguage = SUPPORTED_LANGUAGES.some(lang => lang.code === userLanguage)
-                ? userLanguage
-                : defaultLanguage;
 
             // Restoranı bul ve çalışma saatlerini kontrol et
             const restaurant = await Restaurant.findOne({ restaurantId });
@@ -57,7 +33,7 @@ router.get('/:restaurantId/availability',
                 return;
             }
 
-            // Gün için çalışma saatlerini al - her zaman İngilizce gün adını kullan
+            // Gün için çalışma saatlerini al
             const dateObj = new Date(date);
             const dayName = format(dateObj, 'EEEE', { locale: dateFnsLocales.enUS }).toLowerCase();
             const daySchedule = schedule[dayName];
@@ -67,13 +43,23 @@ router.get('/:restaurantId/availability',
                 return;
             }
 
-            // Müsait saatleri oluştur
-            const timeSlots = await generateTimeSlots(
-                dateObj,
-                daySchedule,
+            // Sadece dolu olan saatleri getir
+            const bookedSlots = await Reservation.find({
                 restaurantId,
                 date,
-                selectedLanguage
+                status: { $ne: 'cancelled' }
+            }).select('time').lean();
+
+            // Dolu saatleri Set'e dönüştür
+            const bookedTimes = new Set(bookedSlots.map(slot => slot.time));
+            console.log('Booked times:', [...bookedTimes]); // Debug için
+
+            // Tüm zaman dilimlerini oluştur
+            const timeSlots = generateTimeSlots(
+                dateObj,
+                daySchedule,
+                bookedTimes,
+                typeof language === 'string' ? language : 'tr'
             );
 
             res.json({ timeSlots });
@@ -85,13 +71,12 @@ router.get('/:restaurantId/availability',
 );
 
 // Yardımcı fonksiyon - zaman dilimlerini oluştur
-async function generateTimeSlots(
+function generateTimeSlots(
     dateObj: Date,
     daySchedule: { openTime: string; closeTime: string },
-    restaurantId: string,
-    date: string,
+    bookedTimes: Set<string>,
     language: string
-) {
+): { time: string; available: boolean }[] {
     const [startHour, startMinute] = daySchedule.openTime.split(':');
     const [endHour, endMinute] = daySchedule.closeTime.split(':');
     
@@ -109,28 +94,45 @@ async function generateTimeSlots(
     const timeFormatOptions: Intl.DateTimeFormatOptions = {
         hour: '2-digit',
         minute: '2-digit',
-        hour12: false // 24 saat formatı
+        hour12: false
     };
+
+    // Şimdiki zamanı al
+    const now = new Date();
+    const isToday = dateObj.toDateString() === now.toDateString();
 
     while (currentTime < endTime) {
         const timeString = currentTime.toLocaleTimeString(locale, timeFormatOptions);
 
-        const existingReservation = await Reservation.findOne({
-            restaurantId,
-            date,
-            time: timeString,
-            status: { $ne: 'cancelled' }
-        });
+        // Eğer bugünse ve saat geçmişse, slot'u unavailable yap
+        const isAvailable = isToday 
+            ? (currentTime > now && !bookedTimes.has(timeString))
+            : !bookedTimes.has(timeString);
 
         timeSlots.push({
             time: timeString,
-            available: !existingReservation
+            available: isAvailable
         });
 
         currentTime.setMinutes(currentTime.getMinutes() + 30);
     }
 
+    console.log('Generated time slots:', timeSlots); // Debug için
+
     return timeSlots;
+}
+
+// Saat formatı için locale ayarları
+function getTimeFormatLocale(language: string): string {
+    const timeFormatMap: { [key: string]: string } = {
+        tr: 'tr-TR',
+        en: 'en-US',
+        fr: 'fr-FR',
+        nl: 'nl-NL',
+        ar: 'ar-SA',
+    };
+
+    return timeFormatMap[language] || 'en-US';
 }
 
 // Yeni rezervasyon oluştur
@@ -177,7 +179,6 @@ router.post('/',
             // Yeni rezervasyon oluştur
             const reservation = new Reservation({
                 restaurantId,
-                userId: req.user?.uid || null,
                 date,
                 time,
                 numberOfGuests,

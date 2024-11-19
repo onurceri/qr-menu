@@ -1,38 +1,55 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from 'mongoose';
 
-export interface IReservation extends Document {
-    restaurantId: string;
-    date: string;
-    time: string;
-    numberOfGuests: number;
-    customerName: string;
-    customerEmail: string;
-    customerPhone: string;
-    specialRequests?: string;
-    status: 'pending' | 'confirmed' | 'cancelled | rejected';
-    createdAt: Date;
-    updatedAt: Date;
-}
-
-const ReservationSchema = new Schema<IReservation>({
-    restaurantId: { type: String, required: true, index: true },
-    date: { type: String, required: true },
-    time: { type: String, required: true },
-    numberOfGuests: { type: Number, required: true, min: 1, max: 20 },
-    customerName: { type: String, required: true },
-    customerEmail: { type: String, required: true },
-    customerPhone: { type: String, required: true },
-    specialRequests: { type: String },
-    status: { 
-        type: String, 
-        enum: ['pending', 'confirmed', 'cancelled', 'rejected'], 
-        default: 'pending' 
+const reservationSchema = new mongoose.Schema({
+    restaurantId: {
+        type: String,
+        required: true,
+        index: true
+    },
+    date: {
+        type: String,
+        required: true
+    },
+    time: {
+        type: String,
+        required: true
+    },
+    numberOfGuests: {
+        type: Number,
+        required: true,
+        min: 1
+    },
+    customerName: {
+        type: String,
+        required: true
+    },
+    customerEmail: {
+        type: String,
+        required: true
+    },
+    customerPhone: {
+        type: String,
+        required: true
+    },
+    specialRequests: String,
+    status: {
+        type: String,
+        enum: ['pending', 'confirmed', 'cancelled', 'rejected'],
+        default: 'pending'
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
     }
 }, {
     timestamps: true
 });
 
-// Composite index for checking availability
-ReservationSchema.index({ restaurantId: 1, date: 1, time: 1 });
+// Compound index for availability checks
+reservationSchema.index({ restaurantId: 1, date: 1, time: 1 });
 
-export const Reservation = mongoose.model<IReservation>('Reservation', ReservationSchema); 
+export const Reservation = mongoose.model('Reservation', reservationSchema); 

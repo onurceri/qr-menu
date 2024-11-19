@@ -1,10 +1,10 @@
-interface DaySchedule {
+export interface DaySchedule {
     isOpen: boolean;
     openTime: string;
     closeTime: string;
 }
 
-interface WeekSchedule {
+export interface WeekSchedule {
     [key: string]: DaySchedule;
 }
 

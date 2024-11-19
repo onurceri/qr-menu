@@ -15,6 +15,7 @@ import menuRoutes from './routes/menu.js';
 import imageRoutes from './routes/image.js';
 import adminRouter from './routes/admin.js';
 import locationRouter from './routes/location.js';
+import reservationRouter from './routes/reservation.js';
 
 // Rate limiter configurations
 const authLimiter = rateLimit({
@@ -187,6 +188,7 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/image', imageRoutes);
 app.use('/api/admin', adminRouter);
 app.use('/api/location', locationRouter);
+app.use('/api/reservations', reservationRouter);
 
 // Serve static files from the 'dist' directory with CSP headers
 const staticMiddleware = express.static(path.join(__dirname, '../../dist'));

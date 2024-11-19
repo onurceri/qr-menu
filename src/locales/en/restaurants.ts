@@ -37,7 +37,6 @@ export default {
   hours: 'Opening Hours',
   languages: 'Available Languages',
   availableMenus: 'Available Menus',
-  fetchError: 'Failed to fetch restaurant details',
   notFound: 'Restaurant not found',
   uploadingImage: 'Uploading image...',
   imageValidationError: 'Image validation error: {{error}}',
@@ -47,10 +46,11 @@ export default {
   closeTime: 'Closing Time',
   closed: 'Closed',
   noHours: 'No opening hours set',
-  noLocation: 'Location not available',
   selectCountry: 'Select a country',
   selectCity: 'Select a city',
   descriptionHint: 'A brief description of your restaurant',
   mapInteractionHint: 'Click and drag to move the map, use zoom controls to zoom in/out',
-  menuDescription: 'View and manage your restaurant menus in different languages.'
+  menuDescription: 'View and manage your restaurant menus in different languages.',
+  noLocation: 'No location information available',
+  fetchError: 'Error loading restaurant details',
 } as const;

@@ -23,5 +23,15 @@ export default {
     delete: 'Annuler la Réservation',
     confirmDelete: 'Êtes-vous sûr de vouloir annuler cette réservation ?',
     deleteSuccess: 'Réservation annulée avec succès',
-    deleteError: 'Erreur lors de l\'annulation de la réservation'
-};
+    deleteError: 'Erreur lors de l\'annulation de la réservation',
+    makeReservation: 'Faire une Réservation',
+    selectTime: 'Sélectionner l\'Heure',
+    chooseTime: 'Choisir l\'Heure',
+    guests: 'Nombre de Convives',
+    confirm: 'Confirmer',
+    description: 'Choisissez votre date et heure préférées pour faire une réservation facilement.',
+    policy: 'Politique de Réservation',
+    policyItem1: 'Les réservations doivent être effectuées au moins 2 heures à l\'avance.',
+    policyItem2: 'Les annulations doivent être effectuées au moins 1 heure avant l\'heure de réservation.',
+    policyItem3: 'Votre réservation peut être annulée si vous avez plus de 15 minutes de retard.',
+} as const;

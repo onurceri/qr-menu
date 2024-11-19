@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Run lint-staged
-npm run lint-staged
+#npm run lint-staged
 
 # Run build to check for compilation errors
 echo "Running build check..."

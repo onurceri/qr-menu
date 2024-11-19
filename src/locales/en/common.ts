@@ -20,6 +20,7 @@ export default {
   confirm: 'Confirm',
   tryAgain: 'Try Again',
   required: 'Required field',
+  requiredFields: 'Required fields',
   charactersRemaining: '{{count}} characters remaining',
   showMore: 'Show more',
   showLess: 'Show less',

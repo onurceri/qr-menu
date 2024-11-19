@@ -23,5 +23,15 @@ export default {
     delete: 'Cancel Reservation',
     confirmDelete: 'Are you sure you want to cancel this reservation?',
     deleteSuccess: 'Reservation cancelled successfully',
-    deleteError: 'Error cancelling reservation'
-};
+    deleteError: 'Error cancelling reservation',
+    makeReservation: 'Make a Reservation',
+    selectTime: 'Select Time',
+    chooseTime: 'Choose Time',
+    guests: 'Number of Guests',
+    confirm: 'Confirm',
+    description: 'Choose your preferred date and time to make a reservation easily.',
+    policy: 'Reservation Policy',
+    policyItem1: 'Reservations must be made at least 2 hours in advance.',
+    policyItem2: 'Cancellations must be made at least 1 hour before the reservation time.',
+    policyItem3: 'Your reservation may be cancelled if you are more than 15 minutes late.',
+} as const;

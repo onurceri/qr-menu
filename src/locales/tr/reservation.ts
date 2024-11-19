@@ -25,10 +25,14 @@ export default {
     deleteSuccess: 'Rezervasyon başarıyla iptal edildi',
     deleteError: 'Rezervasyon iptal edilirken bir hata oluştu',
     makeReservation: 'Rezervasyon Yap',
+    selectTime: 'Saat Seç',
+    chooseTime: 'Saat Seçin',
+    guests: 'Misafir Sayısı',
+    confirm: 'Onayla',
     chooseDateTime: 'Tarih ve saat seçerek rezervasyonunuzu oluşturun',
     description: 'Size en uygun tarih ve saati seçerek kolayca rezervasyon yapabilirsiniz.',
     policy: 'Rezervasyon Politikası',
     policyItem1: 'Rezervasyonlar en az 2 saat önceden yapılmalıdır.',
     policyItem2: 'İptal işlemleri rezervasyon saatinden en az 1 saat önce yapılmalıdır.',
     policyItem3: '15 dakikadan fazla gecikme durumunda rezervasyonunuz iptal edilebilir.',
-};
+} as const;

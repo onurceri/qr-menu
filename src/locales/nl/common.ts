@@ -20,6 +20,7 @@ export default {
   confirm: 'Bevestigen',
   tryAgain: 'Opnieuw proberen',
   required: 'Verplicht veld',
+  requiredFields: 'Verplichte velden',
   charactersRemaining: 'Nog {{count}} tekens',
   showMore: 'Toon meer',
   showLess: 'Toon minder',

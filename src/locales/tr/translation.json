@@ -1,0 +1,10 @@
+{
+  "restaurant": {
+    "contact": "İletişim Bilgileri",
+    "socialMedia": "Sosyal Medya"
+  },
+  "common": {
+    "weekdays": "Hafta içi",
+    "weekend": "Hafta sonu"
+  }
+} 

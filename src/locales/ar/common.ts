@@ -20,6 +20,7 @@ export default {
   confirm: 'تأكيد',
   tryAgain: 'حاول مرة أخرى',
   required: 'حقل مطلوب',
+  requiredFields: 'حقول مطلوبة',
   charactersRemaining: 'متبقي {{count}} حروف',
   showMore: 'عرض المزيد',
   showLess: 'عرض أقل',
