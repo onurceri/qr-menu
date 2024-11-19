@@ -41,6 +41,31 @@ export default defineConfig({
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
+            // Pages - Split by route
+            if (id.includes('/src/pages/')) {
+              const pageName = id.split('/pages/')[1].split('.')[0].toLowerCase();
+              return `page-${pageName}`;
+            }
+
+            // Data chunks - Split large data files
+            if (id.includes('/src/data/')) {
+              return 'data-chunks';
+            }
+
+            // Components - Group by feature
+            if (id.includes('/src/components/')) {
+              if (id.includes('/restaurant/')) {
+                return 'components-restaurant';
+              }
+              if (id.includes('/admin/')) {
+                return 'components-admin';
+              }
+              if (id.includes('/common/')) {
+                return 'components-common';
+              }
+              return 'components-shared';
+            }
+
             // Core React - Split into smaller chunks
             if (id.includes('react/') || id.includes('react-dom/client')) {
               return 'core-react-base';
@@ -118,18 +143,6 @@ export default defineConfig({
           if (id.includes('/features/')) {
             const feature = id.split('/features/')[1].split('/')[0];
             return `feature-${feature}`;
-          }
-
-          if (id.includes('/pages/')) {
-            const page = id.split('/pages/')[1].split('/')[0];
-            // Split RestaurantEdit into smaller chunks
-            if (page === 'RestaurantEdit') {
-              if (id.includes('form')) return 'page-restaurant-edit-form';
-              if (id.includes('menu')) return 'page-restaurant-edit-menu';
-              if (id.includes('settings')) return 'page-restaurant-edit-settings';
-              return 'page-restaurant-edit-core';
-            }
-            return `page-${page}`;
           }
 
           if (id.includes('/components/')) {
