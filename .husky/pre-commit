@@ -1,4 +1,13 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
+#!/bin/sh
 
+# Run lint-staged
 npm run lint-staged
+
+# Run build to check for compilation errors
+echo "Running build check..."
+if ! npm run build; then
+  echo " Build failed. Please fix the errors before committing."
+  exit 1
+fi
+
+echo " Build successful!"
