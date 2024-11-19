@@ -22,8 +22,8 @@ interface City {
 }
 
 const COUNTRIES_API_URL = 'https://restcountries.com/v3.1';
-const OPENWEATHER_API_URL = 'http://api.openweathermap.org/geo/1.0';
-const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+const API_URL = import.meta.env.VITE_API_URL;
+const LOCATION_API_URL = `${API_URL}/api/location`;
 
 // Önbellekleme için basit bir cache mekanizması
 const cache = new Map<string, { data: any; timestamp: number }>();
@@ -38,22 +38,36 @@ export const locationService = {
             return cached.data;
         }
 
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error('API request failed');
-        }
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        const data = await response.json();
-        cache.set(cacheKey, { data, timestamp: Date.now() });
-        
-        return data;
+            if (!response.ok) {
+                if (response.status === 404) {
+                    return [];
+                }
+                throw new Error(`API request failed with status ${response.status}`);
+            }
+
+            const data = await response.json();
+            cache.set(cacheKey, { data, timestamp: Date.now() });
+            
+            return data;
+        } catch (error) {
+            console.error(`Failed to fetch from ${url}:`, error);
+            throw error;
+        }
     },
 
     async searchLocations(query: string): Promise<Location[]> {
         if (!query || query.length < 2) return [];
 
         try {
-            const url = `${OPENWEATHER_API_URL}/direct?q=${encodeURIComponent(query)}&limit=10&appid=${OPENWEATHER_API_KEY}`;
+            const url = `${LOCATION_API_URL}/geocode?q=${encodeURIComponent(query)}`;
             const data = await this.fetchWithCache(url);
 
             return data.map((item: any) => ({
@@ -73,41 +87,33 @@ export const locationService = {
         if (!query || query.length < 1) return [];
         
         try {
-            // REST Countries API'den ülke ara
             const url = `${COUNTRIES_API_URL}/name/${encodeURIComponent(query)}`;
             const data = await this.fetchWithCache(url);
-
             return data.map((country: any) => ({
                 name: country.translations.tur?.common || country.name.common,
                 code: country.cca2,
                 flag: country.flags.svg
             }));
         } catch (error) {
-            // Eğer hata 404 ise (sonuç bulunamadı), boş array dön
-            if (error instanceof Error && error.message.includes('404')) {
-                return [];
-            }
             console.error('Error searching countries:', error);
             return [];
         }
     },
 
     async getCities(countryCode: string, query: string = ''): Promise<City[]> {
-        if (!countryCode) return [];
+        if (!query || query.length < 2) return [];
 
         try {
-            const url = `${OPENWEATHER_API_URL}/direct?q=${encodeURIComponent(query)},${countryCode}&limit=10&appid=${OPENWEATHER_API_KEY}`;
+            const url = `${LOCATION_API_URL}/geocode?q=${encodeURIComponent(query)},${countryCode}`;
             const data = await this.fetchWithCache(url);
 
-            return data
-                .filter((item: any) => item.country === countryCode)
-                .map((item: any) => ({
-                    name: item.name,
-                    state: item.state,
-                    country: item.country,
-                    lat: item.lat,
-                    lon: item.lon
-                }));
+            return data.map((item: any) => ({
+                name: item.name,
+                state: item.state,
+                country: item.country,
+                lat: item.lat,
+                lon: item.lon
+            }));
         } catch (error) {
             console.error('Error getting cities:', error);
             return [];

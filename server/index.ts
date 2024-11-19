@@ -14,6 +14,7 @@ import userRouter from './routes/user.js';
 import menuRoutes from './routes/menu.js';
 import imageRoutes from './routes/image.js';
 import adminRouter from './routes/admin.js';
+import locationRouter from './routes/location.js';
 
 // Rate limiter configurations
 const authLimiter = rateLimit({
@@ -65,7 +66,7 @@ const PORT = process.env.PORT || 5001;
 app.set('trust proxy', 1);
 
 // Güvenlik middleware'leri
-app.use(helmet({
+const cspMiddleware = helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: {
     directives: {
@@ -76,22 +77,47 @@ app.use(helmet({
         "'unsafe-eval'",
         "https://*.firebaseio.com",
         "https://*.firebase.com",
+        "https://*.googleapis.com",
+        "https://unpkg.com"
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://unpkg.com",
+        "https://*.openstreetmap.org"
+      ],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "blob:",
+        "https://*.tile.openstreetmap.org",
+        "https://*.openstreetmap.org",
+        "https://*.cloudinary.com",
+        "https://lh3.googleusercontent.com",
         "https://*.googleapis.com"
       ],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:", "http:"],
       connectSrc: [
         "'self'",
-        "https:",
-        "http:",
-        "http://localhost:5001",
+        "http://localhost:*",
+        "https://*.cloudinary.com",
+        "https://*.googleapis.com",
+        "https://*.google.com",
+        "https://qr-menu-dibl.onrender.com",
         "https://*.firebaseio.com",
         "https://*.firebase.com",
-        "https://*.googleapis.com",
-        "https://identitytoolkit.googleapis.com",
-        "wss://*.firebaseio.com"
+        "wss://*.firebaseio.com",
+        "https://restcountries.com",
+        "https://nominatim.openstreetmap.org",
+        "https://api.openweathermap.org",
+        "https://*.openweathermap.org",
+        "https://*.tile.openstreetmap.org",
+        "https://api.openweathermap.com"
       ],
-      fontSrc: ["'self'", "data:", "https:", "http:"],
+      fontSrc: [
+        "'self'",
+        "data:",
+        "https://unpkg.com"
+      ],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: [
@@ -99,9 +125,15 @@ app.use(helmet({
         "https://*.firebaseapp.com",
         "https://*.firebase.com"
       ],
-    },
-  },
-}));
+      workerSrc: ["'self'", "blob:"],
+      childSrc: ["'self'", "blob:"],
+      manifestSrc: ["'self'"]
+    }
+  }
+});
+
+// Apply security middleware to all routes
+app.use(cspMiddleware);
 
 // CORS ayarları için allowed origins
 const getAllowedOrigins = () => {
@@ -154,9 +186,15 @@ app.use('/api/user', userRouter);
 app.use('/api/menu', menuRoutes);
 app.use('/api/image', imageRoutes);
 app.use('/api/admin', adminRouter);
+app.use('/api/location', locationRouter);
 
-// Serve static files from the 'dist' directory
-app.use(express.static(path.join(__dirname, '../../dist')));
+// Serve static files from the 'dist' directory with CSP headers
+const staticMiddleware = express.static(path.join(__dirname, '../../dist'));
+app.use((req, res, next) => {
+  cspMiddleware(req, res, () => {
+    staticMiddleware(req, res, next);
+  });
+});
 
 // Healthcheck endpoint'i - en üstte olmalı
 app.get('/api/health', (_req, res) => {
@@ -177,9 +215,11 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   });
 });
 
-// Serve index.html for all routes (SPA fallback)
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, '../../dist/index.html'));
+// Serve index.html for all routes (SPA fallback) with CSP headers
+app.get('*', (req, res) => {
+  cspMiddleware(req, res, () => {
+    res.sendFile(path.join(__dirname, '../../dist/index.html'));
+  });
 });
 
 app.listen(PORT, () => {
