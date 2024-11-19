@@ -5,7 +5,7 @@ import { MenuSection } from '../components/MenuSection';
 import { useParams } from 'react-router-dom';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { HiOutlineMenu, HiX } from 'react-icons/hi';
+import { Menu as MenuIcon, X } from 'lucide-react';
 
 function MenuView() {
   const { menuId } = useParams<{ menuId: string }>();
@@ -116,9 +116,9 @@ function MenuView() {
                      hover:bg-zinc-50 transition-colors duration-200 lg:hidden"
         >
           {isSidebarOpen ? (
-            <HiX className="w-5 h-5 text-zinc-700" />
+            <X className="w-5 h-5 text-zinc-700" />
           ) : (
-            <HiOutlineMenu className="w-5 h-5 text-zinc-700" />
+            <MenuIcon className="w-5 h-5 text-zinc-700" />
           )}
         </button>
 
