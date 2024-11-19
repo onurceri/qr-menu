@@ -21,11 +21,12 @@ export default {
   tryAgain: 'Tekrar Dene',
   required: 'Zorunlu alan',
   charactersRemaining: '{{count}} karakter kaldı',
-  showMore: 'Devamını gör',
+  showMore: 'Daha fazla göster',
   showLess: 'Daha az göster',
   creating: 'Oluşturuluyor...',
   closeMenu: 'Menüyü kapat',
   openMenu: 'Menüyü aç',
+  openInMaps: 'Haritada Aç',
 
   // Days
   days: {

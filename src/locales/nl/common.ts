@@ -21,11 +21,12 @@ export default {
   tryAgain: 'Opnieuw proberen',
   required: 'Verplicht veld',
   charactersRemaining: 'Nog {{count}} tekens',
-  showMore: 'Meer tonen',
-  showLess: 'Minder tonen',
+  showMore: 'Toon meer',
+  showLess: 'Toon minder',
   creating: 'Maken...',
   closeMenu: 'Menu sluiten',
   openMenu: 'Menu openen',
+  openInMaps: 'Open in Kaarten',
 
   // Days
   days: {

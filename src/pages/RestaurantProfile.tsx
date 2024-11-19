@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { restaurantService } from '../services/restaurantService';
 import type { Restaurant } from '../types/restaurant';
@@ -97,7 +97,6 @@ export function RestaurantProfile() {
     const [error, setError] = useState<string | null>(null);
     const { t } = useTranslation();
     const { user } = useAuth();
-    const navigate = useNavigate();
     const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
@@ -266,48 +265,118 @@ export function RestaurantProfile() {
 
                             {/* Bilgi Kartları */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-                                {/* Adres/Konum Kartı */}
-                                <div className="bg-white rounded-lg border border-zinc-200 p-4">
+                                {/* Adres/Konum Kartı - Full width yapıyoruz */}
+                                <div className="bg-white rounded-lg border border-zinc-200 p-4 md:col-span-2">
                                     <div className="flex items-start gap-3">
                                         <div className="shrink-0 w-10 h-10 rounded-full bg-zinc-50 flex items-center justify-center">
                                             <MapPin className="w-5 h-5 text-zinc-600" />
                                         </div>
-                                        <div>
-                                            <h3 className="font-medium text-zinc-900">
+                                        <div className="flex-1">
+                                            <h3 className="font-medium text-zinc-900 mb-3">
                                                 {t('restaurants.location')}
                                             </h3>
                                             {restaurant.address && Object.values(restaurant.address).some(value => value) ? (
-                                                coordinates ? (
-                                                    <a
-                                                        href={createLocationUrl(coordinates)}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-zinc-600 hover:text-zinc-900 transition-colors duration-200 
-                                                                 flex items-center gap-1 group mt-1"
-                                                    >
-                                                        <span>{formatAddress(restaurant.address, t)}</span>
-                                                        <svg 
-                                                            className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
-                                                            fill="none" 
-                                                            stroke="currentColor" 
-                                                            viewBox="0 0 24 24"
+                                                <div className="space-y-4">
+                                                    {/* Detaylı Adres Bilgisi */}
+                                                    <div className="space-y-2">
+                                                        {restaurant.address.street && (
+                                                            <div className="flex items-baseline gap-2">
+                                                                <span className="text-zinc-500 text-sm min-w-[60px]">{t('restaurants.street')}</span>
+                                                                <span className="text-zinc-800 font-medium">{restaurant.address.street}</span>
+                                                            </div>
+                                                        )}
+                                                        {(restaurant.address.city || restaurant.address.postalCode) && (
+                                                            <div className="flex items-baseline gap-2">
+                                                                <span className="text-zinc-500 text-sm min-w-[60px]">{t('restaurants.city')}</span>
+                                                                <span className="text-zinc-800 font-medium">
+                                                                    {[restaurant.address.postalCode, restaurant.address.city]
+                                                                        .filter(Boolean)
+                                                                        .join(' ')}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                        {restaurant.address.country && (
+                                                            <div className="flex items-baseline gap-2">
+                                                                <span className="text-zinc-500 text-sm min-w-[60px]">{t('restaurants.country')}</span>
+                                                                <span className="text-zinc-800 font-medium">{restaurant.address.country}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Haritada Aç Linki */}
+                                                    {coordinates && (
+                                                        <a
+                                                            href={createLocationUrl(coordinates)}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center px-3 py-1.5 text-sm text-zinc-600 
+                                                                     hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-md
+                                                                     transition-colors duration-200 group"
                                                         >
-                                                            <path 
-                                                                strokeLinecap="round" 
-                                                                strokeLinejoin="round" 
-                                                                strokeWidth={2} 
-                                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
-                                                            />
-                                                        </svg>
-                                                    </a>
-                                                ) : (
-                                                    <p className="text-zinc-600 mt-1">{formatAddress(restaurant.address, t)}</p>
-                                                )
+                                                            <MapPin className="w-4 h-4 mr-1.5" />
+                                                            <span>{t('common.openInMaps')}</span>
+                                                            <svg 
+                                                                className="w-3.5 h-3.5 ml-1 transition-transform duration-200 group-hover:translate-x-0.5" 
+                                                                fill="none" 
+                                                                stroke="currentColor" 
+                                                                viewBox="0 0 24 24"
+                                                            >
+                                                                <path 
+                                                                    strokeLinecap="round" 
+                                                                    strokeLinejoin="round" 
+                                                                    strokeWidth={2} 
+                                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
+                                                                />
+                                                            </svg>
+                                                        </a>
+                                                    )}
+                                                </div>
                                             ) : (
-                                                <p className="text-zinc-400 italic text-sm mt-1">{t('restaurants.noLocation')}</p>
+                                                <p className="text-zinc-400 italic text-sm mt-1">
+                                                    {t('restaurants.noLocation')}
+                                                </p>
                                             )}
                                         </div>
                                     </div>
+                                    
+                                    {/* Harita */}
+                                    {coordinates && coordinates[0] !== 0 && coordinates[1] !== 0 && (
+                                        <div className="mt-4 h-[300px] w-full">
+                                            <div className="w-full h-full rounded-lg overflow-hidden border border-zinc-200">
+                                                <MapContainer
+                                                    center={coordinates}
+                                                    zoom={15}
+                                                    className="w-full h-full"
+                                                    zoomControl={false}
+                                                    dragging={true}
+                                                    scrollWheelZoom={false}
+                                                    doubleClickZoom={true}
+                                                    style={{ width: '100%', height: '100%', zIndex: 1 }}
+                                                >
+                                                    <TileLayer
+                                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                                    />
+                                                    <Marker 
+                                                        position={coordinates} 
+                                                        icon={createCustomIcon('#18181B')}
+                                                    >
+                                                        <Popup>
+                                                            <div className="text-zinc-900 font-medium">
+                                                                {restaurant?.name}
+                                                            </div>
+                                                            {restaurant?.address && (
+                                                                <div className="text-zinc-600 text-sm mt-1">
+                                                                    {formatAddress(restaurant.address, t)}
+                                                                </div>
+                                                            )}
+                                                        </Popup>
+                                                    </Marker>
+                                                    <ZoomControl position="topright" />
+                                                </MapContainer>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Çalışma Saatleri Kartı */}
@@ -369,45 +438,6 @@ export function RestaurantProfile() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Sağ Kolon: Harita */}
-                        {coordinates && coordinates[0] !== 0 && coordinates[1] !== 0 && (
-                            <div className="lg:w-[400px] h-[300px] lg:h-[500px] sticky top-8">
-                                <div className="w-full h-full rounded-lg overflow-hidden border border-zinc-200">
-                                    <MapContainer
-                                        center={coordinates}
-                                        zoom={15}
-                                        className="w-full h-full"
-                                        zoomControl={false}
-                                        dragging={true}
-                                        scrollWheelZoom={false}
-                                        doubleClickZoom={true}
-                                        style={{ width: '100%', height: '100%', zIndex: 1 }}
-                                    >
-                                        <TileLayer
-                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                        />
-                                        <Marker 
-                                            position={coordinates} 
-                                            icon={createCustomIcon('#18181B')}
-                                        >
-                                            <Popup>
-                                                <div className="text-zinc-900 font-medium">
-                                                    {restaurant?.name}
-                                                </div>
-                                                {restaurant?.address && (
-                                                    <div className="text-zinc-600 text-sm mt-1">
-                                                        {formatAddress(restaurant.address, t)}
-                                                    </div>
-                                                )}
-                                            </Popup>
-                                        </Marker>
-                                        <ZoomControl position="topright" />
-                                    </MapContainer>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>

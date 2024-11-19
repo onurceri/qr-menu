@@ -26,6 +26,7 @@ export default {
   creating: 'Creating...',
   closeMenu: 'Close menu',
   openMenu: 'Open menu',
+  openInMaps: 'Open in Maps',
 
   // Days
   days: {

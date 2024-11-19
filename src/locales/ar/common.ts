@@ -26,6 +26,7 @@ export default {
   creating: 'جاري الإنشاء...',
   closeMenu: 'إغلاق القائمة',
   openMenu: 'فتح القائمة',
+  openInMaps: 'فتح في الخرائط',
 
   // Days
   days: {
