@@ -3,11 +3,14 @@ export default {
   addNew: 'Nieuw Restaurant Toevoegen',
   noRestaurants: 'Nog Geen Restaurants',
   noRestaurantsDesc: 'U heeft nog geen restaurants toegevoegd. Maak uw eerste restaurant aan met het formulier hierboven om te beginnen.',
-  tip: '💡 Tip: Na het aanmaken van een restaurant kunt u menusecties en items toevoegen om uw aanbod te presenteren.',
+  tip: '💡 Tip: Na het maken van een restaurant kunt u menusecties en items toevoegen om uw aanbod te presenteren.',
   name: 'Restaurantnaam',
   description: 'Restaurantbeschrijving (optioneel)',
-  creating: 'Aanmaken...',
+  creating: 'Maken...',
   add: 'Restaurant Toevoegen',
+  view: 'Bekijken',
+  edit: 'Bewerken',
+  delete: 'Verwijderen',
   deleting: 'Verwijderen...',
   menus: "Menu's",
   addMenu: 'Menu Toevoegen',
@@ -18,6 +21,7 @@ export default {
   profile: 'Restaurantprofiel',
   uploadImage: 'Afbeelding Uploaden',
   imageRequirements: 'Maximaal 5MB, JPG of PNG formaat',
+  imageDeleteError: 'Fout bij verwijderen afbeelding',
   address: 'Adres',
   street: 'Straat',
   city: 'Stad',
@@ -48,4 +52,4 @@ export default {
   selectCity: 'Selecteer een stad',
   descriptionHint: 'Een korte beschrijving van uw restaurant',
   mapInteractionHint: 'Klik en sleep om de kaart te verplaatsen, gebruik zoomknoppen om in/uit te zoomen'
-}
+} as const;

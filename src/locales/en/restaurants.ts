@@ -21,6 +21,7 @@ export default {
   profile: 'Restaurant Profile',
   uploadImage: 'Upload Image',
   imageRequirements: 'Maximum 5MB, JPG or PNG format',
+  imageDeleteError: 'Failed to delete image',
   address: 'Address',
   street: 'Street',
   city: 'City',
@@ -51,4 +52,4 @@ export default {
   selectCity: 'Select a city',
   descriptionHint: 'A brief description of your restaurant',
   mapInteractionHint: 'Click and drag to move the map, use zoom controls to zoom in/out'
-}
+} as const;

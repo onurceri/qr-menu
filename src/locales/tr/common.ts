@@ -23,5 +23,28 @@ export default {
   charactersRemaining: '{{count}} karakter kaldı',
   showMore: 'Devamını gör',
   showLess: 'Daha az göster',
-  creating: 'Oluşturuluyor...'
-}
+  creating: 'Oluşturuluyor...',
+  closeMenu: 'Menüyü kapat',
+  openMenu: 'Menüyü aç',
+
+  // Days
+  days: {
+    monday: 'Pazartesi',
+    tuesday: 'Salı',
+    wednesday: 'Çarşamba',
+    thursday: 'Perşembe',
+    friday: 'Cuma',
+    saturday: 'Cumartesi',
+    sunday: 'Pazar'
+  },
+
+  // Time
+  time: {
+    open: 'Açık',
+    closed: 'Kapalı',
+    openingHours: 'Çalışma Saatleri',
+    from: 'Başlangıç',
+    to: 'Bitiş',
+    allDay: 'Tüm Gün'
+  }
+} as const;

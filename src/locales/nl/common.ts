@@ -23,5 +23,28 @@ export default {
   charactersRemaining: 'Nog {{count}} tekens',
   showMore: 'Meer tonen',
   showLess: 'Minder tonen',
-  creating: 'Aanmaken...'
-}
+  creating: 'Maken...',
+  closeMenu: 'Menu sluiten',
+  openMenu: 'Menu openen',
+
+  // Days
+  days: {
+    monday: 'Maandag',
+    tuesday: 'Dinsdag',
+    wednesday: 'Woensdag',
+    thursday: 'Donderdag',
+    friday: 'Vrijdag',
+    saturday: 'Zaterdag',
+    sunday: 'Zondag'
+  },
+
+  // Time
+  time: {
+    open: 'Open',
+    closed: 'Gesloten',
+    openingHours: 'Openingstijden',
+    from: 'Van',
+    to: 'Tot',
+    allDay: 'Hele dag'
+  }
+} as const;

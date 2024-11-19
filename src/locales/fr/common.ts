@@ -23,5 +23,28 @@ export default {
   charactersRemaining: '{{count}} caractères restants',
   showMore: 'Voir plus',
   showLess: 'Voir moins',
-  creating: 'Création...'
-}
+  creating: 'Création...',
+  closeMenu: 'Fermer le menu',
+  openMenu: 'Ouvrir le menu',
+
+  // Days
+  days: {
+    monday: 'Lundi',
+    tuesday: 'Mardi',
+    wednesday: 'Mercredi',
+    thursday: 'Jeudi',
+    friday: 'Vendredi',
+    saturday: 'Samedi',
+    sunday: 'Dimanche'
+  },
+
+  // Time
+  time: {
+    open: 'Ouvert',
+    closed: 'Fermé',
+    openingHours: 'Heures d\'ouverture',
+    from: 'De',
+    to: 'À',
+    allDay: 'Toute la journée'
+  }
+} as const;

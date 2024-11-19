@@ -23,5 +23,28 @@ export default {
   charactersRemaining: 'متبقي {{count}} حروف',
   showMore: 'عرض المزيد',
   showLess: 'عرض أقل',
-  creating: 'جاري الإنشاء...'
-}
+  creating: 'جاري الإنشاء...',
+  closeMenu: 'إغلاق القائمة',
+  openMenu: 'فتح القائمة',
+
+  // Days
+  days: {
+    monday: 'الإثنين',
+    tuesday: 'الثلاثاء',
+    wednesday: 'الأربعاء',
+    thursday: 'الخميس',
+    friday: 'الجمعة',
+    saturday: 'السبت',
+    sunday: 'الأحد'
+  },
+
+  // Time
+  time: {
+    open: 'مفتوح',
+    closed: 'مغلق',
+    openingHours: 'ساعات العمل',
+    from: 'من',
+    to: 'إلى',
+    allDay: 'طوال اليوم'
+  }
+} as const;
