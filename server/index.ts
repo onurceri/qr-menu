@@ -61,9 +61,6 @@ checkRequiredEnvVars();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Serve static files from the dist directory
-app.use(express.static(path.join(__dirname, '../../../dist')));
-
 // Proxy ayarı - Vercel için gerekli
 app.set('trust proxy', 1);
 
@@ -87,6 +84,7 @@ app.use(helmet({
         "'self'",
         "https:",
         "http:",
+        "http://localhost:5001",
         "https://*.firebaseio.com",
         "https://*.firebase.com",
         "https://*.googleapis.com",
@@ -157,6 +155,9 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/image', imageRoutes);
 app.use('/api/admin', adminRouter);
 
+// Serve static files from the 'dist' directory
+app.use(express.static(path.join(__dirname, '../../dist')));
+
 // Healthcheck endpoint'i - en üstte olmalı
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ 
@@ -178,7 +179,7 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
 
 // Serve index.html for all routes (SPA fallback)
 app.get('*', (_req, res) => {
-  res.sendFile(path.join(__dirname, '../../../dist/index.html'));
+  res.sendFile(path.join(__dirname, '../../dist/index.html'));
 });
 
 app.listen(PORT, () => {

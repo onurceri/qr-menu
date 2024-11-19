@@ -1,14 +1,8 @@
-import type { Restaurant, MenuSection, MenuItem, Menu } from '../types/restaurant';
+import type { Restaurant, Menu } from '../types/restaurant';
 import { getAuth } from 'firebase/auth';
 
-const API_URL = '/api';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
-const normalizeId = (id: string | number, prefix: string): string => {
-    if (prefix === 'menu') return String(id);
-    
-    const stringId = String(id);
-    return stringId.startsWith(prefix) ? stringId : `${prefix}-${stringId}`;
-};
 
 const getAuthToken = async (): Promise<string | null> => {
     const auth = getAuth();
@@ -46,7 +40,7 @@ interface CreateMenuRequest {
 export const restaurantService = {
     async getRestaurant(restaurantId: string): Promise<Restaurant> {
         try {
-            const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
+            const response = await fetch(`${API_URL}/api/restaurant/${restaurantId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -69,7 +63,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
+            const response = await fetch(`${API_URL}/api/restaurant/${restaurantId}`, {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -98,7 +92,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/user/${userId}/restaurants`, {
+            const response = await fetch(`${API_URL}/api/user/${userId}/restaurants`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -127,7 +121,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/restaurant`, {
+            const response = await fetch(`${API_URL}/api/restaurant`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -149,7 +143,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/restaurant/${restaurantId}`, {
+            const response = await fetch(`${API_URL}/api/restaurant/${restaurantId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -166,7 +160,7 @@ export const restaurantService = {
 
     async getMenu(menuId: string): Promise<Menu | null> {
         try {
-            const response = await fetch(`${API_URL}/menu/${menuId}`);
+            const response = await fetch(`${API_URL}/api/menu/${menuId}`);
             
             if (!response.ok) {
                 throw new Error('Failed to fetch menu');
@@ -184,7 +178,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/menu/${menuId}`, {
+            const response = await fetch(`${API_URL}/api/menu/${menuId}`, {
                 method: 'PUT',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -211,7 +205,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/image/upload`, {
+            const response = await fetch(`${API_URL}/api/image/upload`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -257,7 +251,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/image/${restaurantId}}`, {
+            const response = await fetch(`${API_URL}/api/image/${restaurantId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -277,7 +271,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/menu/${restaurantId}`, {
+            const response = await fetch(`${API_URL}/api/menu/${restaurantId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -304,7 +298,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/${menuId}/restaurant/${restaurantId}`, {
+            const response = await fetch(`${API_URL}/api/${menuId}/restaurant/${restaurantId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
