@@ -11,6 +11,7 @@ import LandingPage from './pages/LandingPage';
 import { GlobalHeader } from './components/GlobalHeader';
 import { RestaurantProfile } from './pages/RestaurantProfile';
 import { RestaurantEdit } from './pages/RestaurantEdit';
+import { Profile } from './pages/Profile';
 
 export function AppRouter() {
   return (
@@ -37,6 +38,11 @@ export function AppRouter() {
               <Route path="/restaurant/:restaurantId/edit" element={
                 <ProtectedRoute>
                   <RestaurantEdit />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

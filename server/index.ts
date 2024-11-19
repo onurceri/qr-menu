@@ -13,6 +13,7 @@ import restaurantRouter from './routes/restaurant.js';
 import userRouter from './routes/user.js';
 import menuRoutes from './routes/menu.js';
 import imageRoutes from './routes/image.js';
+import adminRouter from './routes/admin.js';
 
 // Rate limiter configurations
 const authLimiter = rateLimit({
@@ -154,6 +155,7 @@ app.use('/api/restaurant', restaurantRouter);
 app.use('/api/user', userRouter);
 app.use('/api/menu', menuRoutes);
 app.use('/api/image', imageRoutes);
+app.use('/api/admin', adminRouter);
 
 // Healthcheck endpoint'i - en üstte olmalı
 app.get('/api/health', (req, res) => {

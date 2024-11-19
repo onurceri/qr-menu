@@ -12,10 +12,6 @@ import { CURRENCIES, type CurrencyCode } from '../constants/currencies';
 import { StrictModeDroppable } from '../components/StrictModeDroppable';
 import { useTranslation } from 'react-i18next';
 
-// MenuItem interface'ine price'ı string olarak tutan geçici bir alan ekleyelim
-interface EditingMenuItem extends MenuItem {
-  tempPrice?: string;
-}
 
 // Image URL'in gerçekten çalışıp çalışmadığını kontrol eden fonksiyon
 const checkImageExists = (url: string): Promise<boolean> => {
@@ -756,8 +752,8 @@ function MenuEdit() {
                         }`}
                       >
                         {/* Section header */}
-                        <div className="p-4 border-b border-zinc-200 flex flex-wrap sm:flex-nowrap items-center gap-2 bg-zinc-50 rounded-t-lg">
-                          <div className="flex items-center flex-1 min-w-0">
+                        <div className="p-4 border-b border-zinc-200 flex flex-wrap sm:flex-nowrap items-start sm:items-center gap-2 bg-zinc-50 rounded-t-lg">
+                          <div className="flex items-center flex-1 min-w-0 w-full">
                             <div {...provided.dragHandleProps} className="p-2 hover:bg-zinc-100 rounded cursor-grab active:cursor-grabbing">
                               <GripVertical className="h-5 w-5 text-zinc-400" />
                             </div>
@@ -771,13 +767,14 @@ function MenuEdit() {
                                 <ChevronRight className="h-5 w-5 text-zinc-500" />
                               )}
                             </button>
-                            <div className="relative">
+                            <div className="relative flex-1 min-w-0">
                               <input
                                 type="text"
                                 value={section.title}
                                 onChange={(e) => handleSectionTitleChange(section.id, e.target.value)}
-                                className={`flex-1 text-lg font-semibold bg-transparent border-none focus:ring-0 
-                                  focus:border-none min-w-0 ${sectionErrors[section.id] ? 'text-red-500' : ''}`}
+                                className={`w-full text-base sm:text-lg font-semibold bg-transparent border-none 
+                                  focus:ring-0 focus:border-none truncate
+                                  ${sectionErrors[section.id] ? 'text-red-500' : ''}`}
                                 placeholder={t('menu.sectionName')}
                               />
                               {sectionErrors[section.id] && (
@@ -787,7 +784,7 @@ function MenuEdit() {
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2 ml-auto">
+                          <div className="flex items-center gap-2 ml-auto w-full sm:w-auto justify-end">
                             <span className="text-sm text-zinc-500 whitespace-nowrap">
                               {section.items.length} {section.items.length === 1 ? 'item' : 'items'}
                             </span>
