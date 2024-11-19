@@ -24,7 +24,7 @@
     },
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "types": []
+    "types": ["json-schema", "@babel/generator", "@babel/template", "connect", "estree", "geojson"]
   },
   "include": ["src", "shared"],
   "references": [{ "path": "./tsconfig.node.json" }]
