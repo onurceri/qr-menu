@@ -38,7 +38,7 @@ export function RestaurantHours({ schedule, onScheduleChange, errors = {} }: Res
                             <div className="flex items-center justify-between sm:w-auto">
                                 <div className="w-28">
                                     <span className="text-sm font-medium text-zinc-700 capitalize">
-                                        {t(`days.${day}`)}
+                                        {t(`common.days.${day}`)}
                                     </span>
                                 </div>
                                 <label className="flex items-center sm:ml-4">

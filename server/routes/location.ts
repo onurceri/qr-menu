@@ -37,6 +37,7 @@ const handleGeocode: RequestHandler<{}, any, any, GeocodeQuery> = async (req, re
 };
 
 const handleNominatimSearch: RequestHandler<{}, any, any, GeocodeQuery> = async (req, res) => {
+    // Nominatim search
     try {
         const { q } = req.query;
         if (!q) {
@@ -44,31 +45,17 @@ const handleNominatimSearch: RequestHandler<{}, any, any, GeocodeQuery> = async 
             return;
         }
 
-        const apiKey = process.env.OPENWEATHER_API_KEY;
-        if (!apiKey) {
-            throw new Error('OpenWeather API key is not configured');
-        }
+        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(String(q))}&format=jsonv2&addressdetails=1&limit=10`;
 
-        const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(String(q))}&limit=5&appid=${apiKey}`;
-        
         const response = await fetch(url);
-        
         if (!response.ok) {
-            throw new Error(`OpenWeather API responded with status ${response.status}`);
+            throw new Error(`Nominatim API responded with status ${response.status}`);
         }
 
         const data = await response.json();
-        // Transform OpenWeather format to match Nominatim format
-        const transformedData = data.map((item: any) => ({
-            lat: item.lat,
-            lon: item.lon,
-            display_name: `${item.name}, ${item.state || ''} ${item.country}`.trim(),
-            type: 'city'
-        }));
-        
-        res.json(transformedData);
+        res.json(data);
     } catch (error) {
-        console.error('Error in location search:', error);
+        console.error('Error in nominatim proxy:', error);
         res.status(500).json({ error: 'Failed to fetch location data' });
     }
 };

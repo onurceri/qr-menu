@@ -139,7 +139,7 @@ export function RestaurantProfile() {
             const updatedData = {
                 name: restaurant.name,
                 description: restaurant.description || '',
-                address: restaurant.address || {
+                address: {
                     street: '',
                     city: '',
                     country: '',
@@ -322,7 +322,7 @@ export function RestaurantProfile() {
                                                     Object.entries(parseOpeningHours(restaurant.openingHours)!).map(([day, schedule]) => (
                                                         <div key={day} className="text-sm">
                                                             <span className="inline-block w-24 text-zinc-700 capitalize">
-                                                                {t(`days.${day}`)}:
+                                                                {t(`common.days.${day}`)}
                                                             </span>
                                                             {schedule.isOpen ? (
                                                                 <span className="text-zinc-600">
