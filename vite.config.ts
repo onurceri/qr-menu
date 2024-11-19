@@ -16,7 +16,7 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks(id) {
-                    // React ve ilgili paketler (i18n dahil)
+                    // React ve React'a bağımlı paketler
                     if (id.includes('node_modules/react/') ||
                         id.includes('node_modules/react-dom/') ||
                         id.includes('node_modules/react-router-dom/') ||
@@ -24,16 +24,13 @@ export default defineConfig({
                         id.includes('node_modules/@tanstack/react-router/') ||
                         id.includes('node_modules/i18next/') ||
                         id.includes('node_modules/react-i18next/') ||
-                        id.includes('node_modules/i18next-browser-languagedetector/')) {
-                        return 'vendor-react';
-                    }
-
-                    // UI bileşenleri
-                    if (id.includes('node_modules/react-hot-toast/') ||
+                        id.includes('node_modules/i18next-browser-languagedetector/') ||
+                        id.includes('node_modules/react-leaflet/') ||
+                        id.includes('node_modules/react-hot-toast/') ||
                         id.includes('node_modules/sonner/') ||
                         id.includes('node_modules/lucide-react/') ||
                         id.includes('node_modules/@radix-ui/')) {
-                        return 'vendor-ui';
+                        return 'vendor-react';
                     }
 
                     // Firebase
@@ -41,15 +38,15 @@ export default defineConfig({
                         return 'vendor-firebase';
                     }
 
-                    // Harita
-                    if (id.includes('node_modules/leaflet/') ||
-                        id.includes('node_modules/react-leaflet/')) {
+                    // Leaflet (sadece core leaflet)
+                    if (id.includes('node_modules/leaflet/')) {
                         return 'vendor-map';
                     }
                 },
                 assetFileNames: 'assets/[name]-[hash][extname]',
                 chunkFileNames: 'assets/[name]-[hash].js',
-                entryFileNames: 'assets/[name]-[hash].js'
+                entryFileNames: 'assets/[name]-[hash].js',
+                inlineDynamicImports: false
             }
         },
         sourcemap: false,
@@ -60,6 +57,24 @@ export default defineConfig({
                 drop_debugger: true
             }
         }
+    },
+    optimizeDeps: {
+        include: [
+            'react',
+            'react-dom',
+            'react-router-dom',
+            '@tanstack/react-query',
+            '@tanstack/react-router',
+            'i18next',
+            'react-i18next',
+            'i18next-browser-languagedetector',
+            'react-leaflet',
+            'leaflet',
+            'firebase/app',
+            'firebase/auth',
+            'firebase/firestore',
+            'firebase/storage'
+        ]
     },
     server: {
         port: 5173,
