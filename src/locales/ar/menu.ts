@@ -4,8 +4,6 @@ export default {
   viewMenu: 'عرض القائمة',
   qrCode: 'رمز QR',
   currency: 'العملة',
-  expandAll: 'توسيع الكل',
-  collapseAll: 'طي الكل',
   newSection: 'قسم جديد',
   newItem: 'عنصر جديد',
   sectionName: 'اسم القسم',

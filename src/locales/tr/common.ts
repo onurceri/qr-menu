@@ -22,12 +22,14 @@ export default {
   required: 'Zorunlu alan',
   requiredFields: 'Zorunlu alanlar',
   charactersRemaining: '{{count}} karakter kaldı',
-  showMore: 'Daha fazla göster',
+  showMore: 'Devamını göster',
   showLess: 'Daha az göster',
   creating: 'Oluşturuluyor...',
   closeMenu: 'Menüyü kapat',
   openMenu: 'Menüyü aç',
   openInMaps: 'Haritada Aç',
+  expandAll: 'Tümünü Genişlet',
+  collapseAll: 'Tümünü Daralt',
 
   // Days
   days: {

@@ -28,6 +28,8 @@ export default {
   closeMenu: 'Close menu',
   openMenu: 'Open menu',
   openInMaps: 'Open in Maps',
+  expandAll: 'Expand All',
+  collapseAll: 'Collapse All',
 
   // Days
   days: {

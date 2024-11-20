@@ -4,8 +4,6 @@ export default {
   viewMenu: 'Menüyü Görüntüle',
   qrCode: 'QR Kod',
   currency: 'Para Birimi',
-  expandAll: 'Tümünü Genişlet',
-  collapseAll: 'Tümünü Daralt',
   newSection: 'Yeni Bölüm',
   newItem: 'Yeni Ürün',
   sectionName: 'Bölüm Adı',

@@ -3,6 +3,7 @@ import restaurants from './restaurants';
 import profile from './profile';
 import menu from './menu';
 import reservation from './reservation';
+import validation from './validation';
 
 export default {
   translation: {
@@ -10,6 +11,7 @@ export default {
     restaurants,
     profile,
     menu,
-    reservation
+    reservation,
+    validation
   }
 };

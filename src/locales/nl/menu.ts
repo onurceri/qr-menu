@@ -4,8 +4,6 @@ export default {
   viewMenu: 'Menu Bekijken',
   qrCode: 'QR Code',
   currency: 'Valuta',
-  expandAll: 'Alles Uitvouwen',
-  collapseAll: 'Alles Invouwen',
   newSection: 'Nieuwe Sectie',
   newItem: 'Nieuw Item',
   sectionName: 'Sectienaam',

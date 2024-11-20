@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { restaurantService } from '../services/restaurantService';
 import type { Restaurant } from '../types/restaurant';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, Edit2, Trash2, Plus, Globe, PlusCircle } from 'lucide-react';
+import { Eye, Edit2, Trash2, Plus, Globe, PlusCircle, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../constants/languages';
 import { v4 as uuidv4 } from 'uuid';
@@ -170,6 +170,8 @@ const RestaurantList = () => {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [formError, setFormError] = useState<string | null>(null);
     const [loadingLanguage, setLoadingLanguage] = useState<string | null>(null);
+    const [expandedRestaurants, setExpandedRestaurants] = useState<Set<string>>(new Set());
+    const [allExpanded, setAllExpanded] = useState(false);
 
     const validateInput = {
         restaurantName: (value: string) => {
@@ -369,6 +371,66 @@ const RestaurantList = () => {
         />
     );
 
+    const handleExpandAll = (expand: boolean) => {
+        if (expand) {
+            setExpandedRestaurants(new Set(restaurants.map(r => r.restaurantId)));
+            setAllExpanded(true);
+        } else {
+            setExpandedRestaurants(new Set());
+            setAllExpanded(false);
+        }
+    };
+
+    const toggleRestaurant = (restaurantId: string) => {
+        const newExpanded = new Set(expandedRestaurants);
+        if (newExpanded.has(restaurantId)) {
+            newExpanded.delete(restaurantId);
+        } else {
+            newExpanded.add(restaurantId);
+        }
+        setExpandedRestaurants(newExpanded);
+        setAllExpanded(newExpanded.size === restaurants.length);
+    };
+
+    // Add this new component for truncated description
+    interface TruncatedDescriptionProps {
+        description: string;
+        maxLength?: number;
+    }
+
+    const TruncatedDescription: React.FC<TruncatedDescriptionProps> = ({ description, maxLength = 150 }) => {
+        const [isExpanded, setIsExpanded] = useState(false);
+        const shouldTruncate = description.length > maxLength;
+        
+        const truncatedText = shouldTruncate && !isExpanded 
+            ? `${description.slice(0, maxLength)}...` 
+            : description;
+
+        return (
+            <div className="mt-1 text-zinc-600">
+                <p className="inline">{truncatedText}</p>
+                {shouldTruncate && (
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="ml-1 text-zinc-800 hover:text-zinc-600 text-sm font-medium inline-flex items-center"
+                    >
+                        {isExpanded ? (
+                            <>
+                                {t('common.showLess')}
+                                <ChevronUp className="w-4 h-4 ml-1" />
+                            </>
+                        ) : (
+                            <>
+                                {t('common.showMore')}
+                                <ChevronDown className="w-4 h-4 ml-1" />
+                            </>
+                        )}
+                    </button>
+                )}
+            </div>
+        );
+    };
+
     if (loading) {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -407,7 +469,7 @@ const RestaurantList = () => {
                     <h1 className="text-2xl font-bold text-zinc-900">{t('restaurants.title')}</h1>
                 </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200">
+                <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-zinc-200">
                     <h2 className="text-lg font-semibold text-zinc-900 mb-4">{t('restaurants.addNew')}</h2>
                     {renderRestaurantForm()}
                 </div>
@@ -430,6 +492,27 @@ const RestaurantList = () => {
                 {renderRestaurantForm()}
             </div>
 
+            {restaurants.length > 0 && (
+                <div className="flex justify-end gap-2 mb-4">
+                    <button
+                        onClick={() => handleExpandAll(true)}
+                        className="btn-secondary-sm h-10 flex items-center justify-center space-x-2"
+                        disabled={allExpanded}
+                    >
+                        <ChevronDown className="h-4 w-4" />
+                        <span>{t('common.expandAll')}</span>
+                    </button>
+                    <button
+                        onClick={() => handleExpandAll(false)}
+                        className="btn-secondary-sm h-10 flex items-center justify-center space-x-2"
+                        disabled={!allExpanded && expandedRestaurants.size === 0}
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                        <span>{t('common.collapseAll')}</span>
+                    </button>
+                </div>
+            )}
+
             {restaurants.length === 0 ? (
                 <div className="bg-white p-8 rounded-lg shadow-sm border border-zinc-200 text-center">
                     <div className="max-w-md mx-auto">
@@ -449,170 +532,200 @@ const RestaurantList = () => {
             ) : (
                 <div className="space-y-4">
                     {restaurants.map((restaurant) => (
-                        <div key={restaurant.restaurantId} className="bg-white p-6 rounded-lg shadow-sm border border-zinc-200">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <h2 className="text-xl font-semibold text-zinc-900">{restaurant.name}</h2>
-                                        <div className="flex items-center gap-1">
+                        <div key={restaurant.restaurantId} 
+                            className="bg-white rounded-lg shadow-sm border border-zinc-200 overflow-hidden">
+                            {/* Restaurant Header - Sadece başlık ve butonlar */}
+                            <div className="p-6">
+                                <div className="flex flex-col gap-4">
+                                    {/* Title and Toggle Row - Mobil için yeniden düzenlendi */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                        <div className="flex items-center gap-3 min-w-0"> {/* min-w-0 text overflow için önemli */}
+                                            <button
+                                                onClick={() => toggleRestaurant(restaurant.restaurantId)}
+                                                className="p-2 hover:bg-zinc-100 rounded-full transition-colors flex-shrink-0"
+                                            >
+                                                {expandedRestaurants.has(restaurant.restaurantId) ? (
+                                                    <ChevronDown className="w-5 h-5 text-zinc-600" />
+                                                ) : (
+                                                    <ChevronRight className="w-5 h-5 text-zinc-600" />
+                                                )}
+                                            </button>
+                                            <h2 className="text-xl font-semibold text-zinc-900 truncate">
+                                                {restaurant.name}
+                                            </h2>
+                                        </div>
+                                        
+                                        {/* Mobile Action Bar - iOS style */}
+                                        <div className="sm:hidden flex items-center justify-around w-full mt-3 pt-3 border-t border-zinc-100">
                                             <button
                                                 onClick={() => navigate(`/restaurant/${restaurant.restaurantId}`)}
-                                                className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                                                className="flex flex-col items-center gap-1 p-2"
                                                 title={t('restaurants.view')}
                                             >
-                                                <Eye className="w-5 h-5 text-zinc-600" />
+                                                <Eye className="w-6 h-6 text-zinc-600" />
+                                                <span className="text-xs text-zinc-600">
+                                                    {t('restaurants.view')}
+                                                </span>
                                             </button>
                                             <button
                                                 onClick={() => navigate(`/restaurant/${restaurant.restaurantId}/edit`)}
-                                                className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                                                className="flex flex-col items-center gap-1 p-2"
+                                                title={t('restaurants.edit')}
+                                            >
+                                                <Edit2 className="w-6 h-6 text-zinc-600" />
+                                                <span className="text-xs text-zinc-600">
+                                                    {t('restaurants.edit')}
+                                                </span>
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteRestaurant(restaurant.restaurantId)}
+                                                disabled={isDeletingRestaurant === restaurant.restaurantId}
+                                                className="flex flex-col items-center gap-1 p-2"
+                                                title={t('restaurants.delete')}
+                                            >
+                                                {isDeletingRestaurant === restaurant.restaurantId ? (
+                                                    <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                                                ) : (
+                                                    <>
+                                                        <Trash2 className="w-6 h-6 text-red-600" />
+                                                        <span className="text-xs text-red-600">
+                                                            {t('restaurants.delete')}
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+
+                                        {/* Desktop Action Bar */}
+                                        <div className="hidden sm:flex items-center gap-1 bg-zinc-50 rounded-lg p-1 border border-zinc-100 ml-auto">
+                                            <button
+                                                onClick={() => navigate(`/restaurant/${restaurant.restaurantId}`)}
+                                                className="p-2 hover:bg-white rounded-md transition-colors flex items-center gap-2"
+                                                title={t('restaurants.view')}
+                                            >
+                                                <Eye className="w-5 h-5 text-zinc-600" />
+                                                <span className="text-sm text-zinc-600">
+                                                    {t('restaurants.view')}
+                                                </span>
+                                            </button>
+                                            <button
+                                                onClick={() => navigate(`/restaurant/${restaurant.restaurantId}/edit`)}
+                                                className="p-2 hover:bg-white rounded-md transition-colors flex items-center gap-2"
                                                 title={t('restaurants.edit')}
                                             >
                                                 <Edit2 className="w-5 h-5 text-zinc-600" />
+                                                <span className="text-sm text-zinc-600">
+                                                    {t('restaurants.edit')}
+                                                </span>
+                                            </button>
+                                            <div className="w-px h-6 bg-zinc-200 mx-1" />
+                                            <button 
+                                                onClick={() => handleDeleteRestaurant(restaurant.restaurantId)}
+                                                disabled={isDeletingRestaurant === restaurant.restaurantId}
+                                                className="p-2 hover:bg-red-50 rounded-md transition-colors flex items-center gap-2"
+                                                title={t('restaurants.delete')}
+                                            >
+                                                {isDeletingRestaurant === restaurant.restaurantId ? (
+                                                    <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                                                ) : (
+                                                    <>
+                                                        <Trash2 className="w-5 h-5 text-red-600" />
+                                                        <span className="text-sm text-red-600">
+                                                            {t('restaurants.delete')}
+                                                        </span>
+                                                    </>
+                                                )}
                                             </button>
                                         </div>
                                     </div>
-                                    {restaurant.description && (
-                                        <p className="mt-1 text-zinc-600">{restaurant.description}</p>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <button 
-                                        onClick={() => handleDeleteRestaurant(restaurant.restaurantId)}
-                                        disabled={isDeletingRestaurant === restaurant.restaurantId}
-                                        className="p-2 hover:bg-red-100 rounded-full transition-colors"
-                                        title={t('restaurants.delete')}
-                                    >
-                                        {isDeletingRestaurant === restaurant.restaurantId ? (
-                                            <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                                        ) : (
-                                            <Trash2 className="w-5 h-5 text-red-600" />
-                                        )}
-                                    </button>
                                 </div>
                             </div>
 
-                            {/* Menü Listesi */}
-                            <div className="mt-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h3 className="text-lg font-medium text-zinc-800">
-                                        <Globe className="inline-block w-5 h-5 mr-2" />
-                                        {t('restaurants.menus')}
-                                    </h3>
-                                    {!hasAllSupportedLanguageMenus(restaurant) && (
-                                        <button
-                                            onClick={() => setIsAddingMenu(restaurant.restaurantId)}
-                                            className="btn-secondary-sm"
-                                        >
-                                            <PlusCircle className="w-4 h-4 mr-1" />
-                                            {t('restaurants.addMenu')}
-                                        </button>
+                            {/* Collapsible Content - Description ve menüler */}
+                            {expandedRestaurants.has(restaurant.restaurantId) && (
+                                <div className="border-t border-zinc-200">
+                                    {/* Description Section */}
+                                    {restaurant.description && (
+                                        <div className="px-6 py-4 bg-zinc-50 border-b border-zinc-200">
+                                            <TruncatedDescription description={restaurant.description} />
+                                        </div>
                                     )}
-                                </div>
+                                    
+                                    {/* Menus Section */}
+                                    <div className="p-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-lg font-medium text-zinc-800">
+                                                <Globe className="inline-block w-5 h-5 mr-2" />
+                                                {t('restaurants.menus')}
+                                            </h3>
+                                            {!hasAllSupportedLanguageMenus(restaurant) && (
+                                                <button
+                                                    onClick={() => setIsAddingMenu(restaurant.restaurantId)}
+                                                    className="btn-secondary-sm"
+                                                >
+                                                    <PlusCircle className="w-4 h-4 mr-1" />
+                                                    {t('restaurants.addMenu')}
+                                                </button>
+                                            )}
+                                        </div>
 
-                                {/* Menü Ekleme Dropdown'ı */}
-                                {isAddingMenu === restaurant.restaurantId && (
-                                    <div 
-                                        ref={dropdownRef}
-                                        className="mt-2 p-4 bg-zinc-50 rounded-lg border border-zinc-200"
-                                    >
-                                        <h4 className="text-sm font-medium text-zinc-700 mb-2">
-                                            {t('restaurants.selectLanguage')}
-                                        </h4>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                            {SUPPORTED_LANGUAGES.map((lang: SupportedLanguage) => {
-                                                const hasMenu = restaurant.menus.some(
-                                                    menu => menu.language === lang.code
-                                                );
-                                                const isLoading = loadingLanguage === lang.code;
-                                                
-                                                return (
-                                                    <button
-                                                        key={lang.code}
-                                                        onClick={() => {
-                                                            handleLanguageSelect(restaurant.restaurantId, lang.code);
-                                                        }}
-                                                        disabled={hasMenu || isLoading}
-                                                        className={`flex items-center justify-center p-2 rounded w-full
-                                                            ${hasMenu 
-                                                                ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' 
-                                                                : isLoading
-                                                                ? 'bg-zinc-50 cursor-not-allowed'
-                                                                : 'bg-white hover:bg-zinc-50 text-zinc-700'
-                                                            }`}
-                                                    >
-                                                        {isLoading ? (
-                                                            <div className="flex items-center space-x-2">
-                                                                <div className="w-4 h-4 border-2 border-zinc-600 border-t-transparent rounded-full animate-spin" />
-                                                                <span className="text-zinc-600">{t('common.creating')}</span>
+                                        {/* Menü Listesi */}
+                                        <div className="space-y-2 mt-4">
+                                            {restaurant.menus.length === 0 ? (
+                                                <p className="text-zinc-500 text-sm">
+                                                    {t('restaurants.noMenus')}
+                                                </p>
+                                            ) : (
+                                                restaurant.menus.map(menu => {
+                                                    const language = SUPPORTED_LANGUAGES.find(
+                                                        (lang: SupportedLanguage) => lang.code === menu.language
+                                                    );
+                                                    return (
+                                                        <div key={menu.id} 
+                                                            className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg"
+                                                        >
+                                                            <div className="flex items-center">
+                                                                <span className="mr-2">{language?.flag}</span>
+                                                                <span className="text-zinc-700">
+                                                                    {t('restaurants.menuInLanguage', { language: language?.name })}
+                                                                </span>
                                                             </div>
-                                                        ) : (
-                                                            <>
-                                                                <span className="mr-2">{lang.flag}</span>
-                                                                <span>{lang.name}</span>
-                                                            </>
-                                                        )}
-                                                    </button>
-                                                );
-                                            })}
+                                                            <div className="flex gap-2">
+                                                                <button 
+                                                                    onClick={() => navigate(`/menu/${menu.id}`)}
+                                                                    className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                                                                    title={t('common.view')}
+                                                                >
+                                                                    <Eye className="w-5 h-5 text-zinc-600" />
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => navigate(`/edit/menu/${menu.id}`)}
+                                                                    className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
+                                                                    title={t('common.edit')}
+                                                                >
+                                                                    <Edit2 className="w-5 h-5 text-zinc-600" />
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleDeleteMenu(restaurant.restaurantId, menu.id)}
+                                                                    disabled={isDeletingMenu === menu.id}
+                                                                    className="p-2 hover:bg-red-100 rounded-full transition-colors"
+                                                                    title={t('common.delete')}
+                                                                >
+                                                                    {isDeletingMenu === menu.id ? (
+                                                                        <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                                                                    ) : (
+                                                                        <Trash2 className="w-5 h-5 text-red-600" />
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
                                         </div>
                                     </div>
-                                )}
-
-                                {/* Mevcut Menüler */}
-                                <div className="space-y-2 mt-4">
-                                    {restaurant.menus.length === 0 ? (
-                                        <p className="text-zinc-500 text-sm">
-                                            {t('restaurants.noMenus')}
-                                        </p>
-                                    ) : (
-                                        restaurant.menus.map(menu => {
-                                            const language = SUPPORTED_LANGUAGES.find(
-                                                (lang: SupportedLanguage) => lang.code === menu.language
-                                            );
-                                            return (
-                                                <div key={menu.id} 
-                                                    className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg"
-                                                >
-                                                    <div className="flex items-center">
-                                                        <span className="mr-2">{language?.flag}</span>
-                                                        <span className="text-zinc-700">
-                                                            {t('restaurants.menuInLanguage', { language: language?.name })}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                        <button 
-                                                            onClick={() => navigate(`/menu/${menu.id}`)}
-                                                            className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
-                                                            title={t('common.view')}
-                                                        >
-                                                            <Eye className="w-5 h-5 text-zinc-600" />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => navigate(`/edit/menu/${menu.id}`)}
-                                                            className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
-                                                            title={t('common.edit')}
-                                                        >
-                                                            <Edit2 className="w-5 h-5 text-zinc-600" />
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => handleDeleteMenu(restaurant.restaurantId, menu.id)}
-                                                            disabled={isDeletingMenu === menu.id}
-                                                            className="p-2 hover:bg-red-100 rounded-full transition-colors"
-                                                            title={t('common.delete')}
-                                                        >
-                                                            {isDeletingMenu === menu.id ? (
-                                                                <div className="w-5 h-5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                                                            ) : (
-                                                                <Trash2 className="w-5 h-5 text-red-600" />
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
                                 </div>
-                            </div>
+                            )}
                         </div>
                     ))}
                 </div>

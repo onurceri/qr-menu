@@ -4,8 +4,6 @@ export default {
   viewMenu: 'View Menu',
   qrCode: 'QR Code',
   currency: 'Currency',
-  expandAll: 'Expand All',
-  collapseAll: 'Collapse All',
   newSection: 'New Section',
   newItem: 'New Item',
   sectionName: 'Section Name',
