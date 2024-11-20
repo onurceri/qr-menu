@@ -2,6 +2,7 @@ import type { Restaurant, Menu } from '../types/restaurant';
 import { getAuth } from 'firebase/auth';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
+const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
 
 const getAuthToken = async (): Promise<string | null> => {
     const auth = getAuth();
@@ -36,10 +37,35 @@ interface CreateMenuRequest {
     currency: 'TRY';
 }
 
+declare global {
+    interface Window {
+        google: any;
+    }
+}
+
+// Google Maps API'nin yüklenmesini bekleyen yardımcı fonksiyon
+export const waitForGoogleMaps = (): Promise<void> => {
+    return new Promise((resolve) => {
+        if (window.google && window.google.maps && window.google.maps.marker && window.google.maps.places) {
+            resolve();
+            return;
+        }
+
+        const checkGoogleMaps = setInterval(() => {
+            if (window.google && window.google.maps && window.google.maps.marker && window.google.maps.places) {
+                clearInterval(checkGoogleMaps);
+                resolve();
+            }
+        }, 100);
+    });
+};
+
 export const restaurantService = {
     async getRestaurant(restaurantId: string): Promise<Restaurant> {
         try {
             const token = await getAuthToken();
+            console.log('Fetching restaurant with ID:', restaurantId);
+            
             const response = await fetch(`${API_URL}/api/restaurants/${restaurantId}`, {
                 method: 'GET',
                 headers: {
@@ -49,11 +75,20 @@ export const restaurantService = {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to fetch restaurant');
+                const errorText = await response.text();
+                console.error('Failed to fetch restaurant:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorText
+                });
+                throw new Error(`Failed to fetch restaurant: ${response.status} ${response.statusText}`);
             }
 
-            return response.json();
+            const data = await response.json();
+            console.log('Restaurant data fetched successfully:', restaurantId);
+            return data;
         } catch (error) {
+            console.error('Error in getRestaurant:', error);
             logError('Error fetching restaurant:', error);
             throw error;
         }
@@ -213,7 +248,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/api/image/upload`, {
+            const response = await fetch(`${API_URL}/api/images/upload`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -235,19 +270,26 @@ export const restaurantService = {
 
     async geocodeAddress(address: string): Promise<[number, number] | null> {
         try {
-            const response = await fetch(
-                `${API_URL}/api/location/nominatim?q=${encodeURIComponent(address)}`
-            );
+            console.log('Geocoding address with Google Maps:', address);
+            await waitForGoogleMaps();
 
-            if (!response.ok) throw new Error('Geocoding failed');
-
-            const data = await response.json();
-            if (data && data[0]) {
-                return [parseFloat(data[0].lon), parseFloat(data[0].lat)];
-            }
-            return null;
+            const geocoder = new google.maps.Geocoder();
+            
+            return new Promise((resolve) => {
+                geocoder.geocode({ address }, (results, status) => {
+                    if (status === 'OK' && results && results[0]) {
+                        const location = results[0].geometry.location;
+                        const coordinates: [number, number] = [location.lat(), location.lng()];
+                        console.log('Google geocoding result:', coordinates);
+                        resolve(coordinates);
+                    } else {
+                        console.error('Geocoding failed:', status);
+                        resolve(null);
+                    }
+                });
+            });
         } catch (error) {
-            logError('geocodeAddress error:', error);
+            console.error('geocodeAddress error:', error);
             return null;
         }
     },
@@ -257,7 +299,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/api/image/${restaurantId}`, {
+            const response = await fetch(`${API_URL}/api/images/${restaurantId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -331,5 +373,134 @@ export const restaurantService = {
             console.error('getRestaurantByMenuId error:', error);
             return null;
         }
+    },
+
+    async searchPlaces(query: string): Promise<Array<{
+        description: string;
+        placeId: string;
+    }>> {
+        await waitForGoogleMaps();
+        return new Promise((resolve, reject) => {
+            const service = new window.google.maps.places.AutocompleteService();
+            service.getPlacePredictions(
+                { input: query },
+                (predictions: any[], status: string) => {
+                    if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+                        resolve(predictions.map(prediction => ({
+                            description: prediction.description,
+                            placeId: prediction.place_id
+                        })));
+                    } else {
+                        resolve([]);
+                    }
+                }
+            );
+        });
+    },
+
+    async getPlaceDetails(placeId: string): Promise<{
+        coordinates: [number, number];
+        address: {
+            street: string;
+            city: string;
+            country: string;
+            postalCode: string;
+        };
+    } | null> {
+        await waitForGoogleMaps();
+        return new Promise((resolve, reject) => {
+            // We need a map or div element to create PlacesService
+            const tempDiv = document.createElement('div');
+            const service = new window.google.maps.places.PlacesService(tempDiv);
+            
+            service.getDetails(
+                {
+                    placeId: placeId,
+                    fields: ['geometry', 'address_components']
+                },
+                (place: any, status: string) => {
+                    if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+                        const address = {
+                            street: '',
+                            city: '',
+                            country: '',
+                            postalCode: ''
+                        };
+
+                        place.address_components.forEach((component: any) => {
+                            const types = component.types;
+                            if (types.includes('street_number') || types.includes('route')) {
+                                address.street += component.long_name + ' ';
+                            } else if (types.includes('locality')) {
+                                address.city = component.long_name;
+                            } else if (types.includes('country')) {
+                                address.country = component.long_name;
+                            } else if (types.includes('postal_code')) {
+                                address.postalCode = component.long_name;
+                            }
+                        });
+
+                        address.street = address.street.trim();
+
+                        resolve({
+                            coordinates: [
+                                place.geometry.location.lng(),
+                                place.geometry.location.lat()
+                            ],
+                            address
+                        });
+                    } else {
+                        resolve(null);
+                    }
+                }
+            );
+        });
+    },
+
+    async reverseGeocode(coordinates: [number, number]): Promise<{
+        street: string;
+        city: string;
+        country: string;
+        postalCode: string;
+    } | null> {
+        await waitForGoogleMaps();
+        return new Promise((resolve, reject) => {
+            const geocoder = new window.google.maps.Geocoder();
+            const [lng, lat] = coordinates;
+            
+            geocoder.geocode(
+                {
+                    location: { lat, lng }
+                },
+                (results: any[], status: string) => {
+                    if (status === window.google.maps.GeocoderStatus.OK && results[0]) {
+                        const address = {
+                            street: '',
+                            city: '',
+                            country: '',
+                            postalCode: ''
+                        };
+
+                        results[0].address_components.forEach((component: any) => {
+                            const types = component.types;
+                            if (types.includes('street_number') || types.includes('route')) {
+                                address.street += component.long_name + ' ';
+                            } else if (types.includes('locality')) {
+                                address.city = component.long_name;
+                            } else if (types.includes('country')) {
+                                address.country = component.long_name;
+                            } else if (types.includes('postal_code')) {
+                                address.postalCode = component.long_name;
+                            }
+                        });
+
+                        address.street = address.street.trim();
+                        resolve(address);
+                    } else {
+                        resolve(null);
+                    }
+                }
+            );
+        });
     },
 };

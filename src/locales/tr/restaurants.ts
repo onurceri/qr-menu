@@ -52,5 +52,7 @@ export default {
   selectCity: 'Şehir seçin',
   descriptionHint: 'Restoranınızın kısa bir açıklaması',
   mapInteractionHint: 'Haritayı hareket ettirmek için tıklayıp sürükleyin, yakınlaştırmak için zoom kontrollerini kullanın',
-  menuDescription: 'Restoranınızın farklı dillerdeki menülerini görüntüleyin ve yönetin.'
+  menuDescription: 'Restoranınızın farklı dillerdeki menülerini görüntüleyin ve yönetin.',
+  openingHours: 'Çalışma Saatleri',
+  getDirections: 'Yol Tarifi Al'
 } as const;

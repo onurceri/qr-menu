@@ -6,26 +6,36 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Configure Cloudinary
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    throw new Error('Missing Cloudinary configuration');
+}
+
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-    signatureAlgorithm: 'sha256'
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 export async function uploadImage(file: Express.Multer.File, restaurantId: string): Promise<string> {
     try {
-        const uploadResult = await new Promise<UploadApiResponse>((resolve, reject) => {
-            const uploadOptions = {
-                folder: 'restaurants',
-                public_id: `${restaurantId}`,
-                resource_type: 'image' as const
-            };
+        const uploadOptions = {
+            folder: 'restaurants',
+            public_id: `${restaurantId}`,
+            resource_type: 'image' as const
+        };
 
+        const uploadResult = await new Promise<UploadApiResponse>((resolve, reject) => {
             cloudinary.uploader.upload_stream(
                 uploadOptions,
                 (error, uploadResult) => {
-                    if (error) return reject(error);
+                    if (error) {
+                        console.error('Cloudinary Upload Error Details:', {
+                            error: error.message,
+                            httpCode: error.http_code,
+                            timestamp: new Date().toISOString()
+                        });
+                        return reject(error);
+                    }
                     if (!uploadResult) return reject(new Error('Upload failed'));
                     return resolve(uploadResult);
                 }

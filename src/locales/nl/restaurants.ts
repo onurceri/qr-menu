@@ -3,7 +3,7 @@ export default {
   addNew: 'Nieuw Restaurant Toevoegen',
   noRestaurants: 'Nog Geen Restaurants',
   noRestaurantsDesc: 'U heeft nog geen restaurants toegevoegd. Maak uw eerste restaurant aan met het formulier hierboven om te beginnen.',
-  tip: '💡 Tip: Na het maken van een restaurant kunt u menusecties en items toevoegen om uw aanbod te presenteren.',
+  tip: ' Tip: Na het maken van een restaurant kunt u menusecties en items toevoegen om uw aanbod te presenteren.',
   name: 'Restaurantnaam',
   description: 'Restaurantbeschrijving (optioneel)',
   creating: 'Maken...',
@@ -47,10 +47,12 @@ export default {
   closeTime: 'Sluitingstijd',
   closed: 'Gesloten',
   noHours: 'Geen openingstijden ingesteld',
-  noLocation: 'Locatie niet beschikbaar',
-  selectCountry: 'Selecteer een land',
-  selectCity: 'Selecteer een stad',
+  noLocation: 'Geen locatie beschikbaar',
+  selectCountry: 'Selecteer land',
+  selectCity: 'Selecteer stad',
   descriptionHint: 'Een korte beschrijving van uw restaurant',
-  mapInteractionHint: 'Klik en sleep om de kaart te verplaatsen, gebruik zoomknoppen om in/uit te zoomen',
-  menuDescription: "Bekijk en beheer de menu's van uw restaurant in verschillende talen."
+  mapInteractionHint: 'Klik en sleep om de kaart te verplaatsen, gebruik zoomknoppen',
+  menuDescription: 'Bekijk en beheer uw restaurantmenu\'s in verschillende talen.',
+  openingHours: 'Openingstijden',
+  getDirections: 'Route Plannen'
 } as const;

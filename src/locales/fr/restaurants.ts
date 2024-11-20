@@ -46,11 +46,13 @@ export default {
   openTime: "Heure d'Ouverture",
   closeTime: 'Heure de Fermeture',
   closed: 'Fermé',
-  noHours: "Aucun horaire défini",
-  noLocation: 'Aucune information de localisation disponible',
-  selectCountry: 'Sélectionner un pays',
-  selectCity: 'Sélectionner une ville',
+  noHours: 'Pas d\'horaires définis',
+  noLocation: 'Aucun emplacement disponible',
+  selectCountry: 'Sélectionner le pays',
+  selectCity: 'Sélectionner la ville',
   descriptionHint: 'Une brève description de votre restaurant',
-  mapInteractionHint: 'Cliquez et faites glisser pour déplacer la carte, utilisez les commandes de zoom pour zoomer/dézoomer',
-  menuDescription: 'Consultez et gérez les menus de votre restaurant en différentes langues.'
+  mapInteractionHint: 'Cliquez et faites glisser pour déplacer la carte, utilisez les contrôles de zoom',
+  menuDescription: 'Consultez et gérez les menus de votre restaurant en différentes langues.',
+  openingHours: 'Heures d\'Ouverture',
+  getDirections: 'Obtenir l\'Itinéraire'
 } as const;

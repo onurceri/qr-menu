@@ -6,7 +6,18 @@ import path from 'path';
 process.env.NODE_ENV = 'development';
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [
+        react(),
+        {
+            name: 'html-transform',
+            transformIndexHtml(html) {
+                return html.replace(
+                    /%VITE_GOOGLE_PLACES_API_KEY%/g,
+                    process.env.VITE_GOOGLE_PLACES_API_KEY || ''
+                );
+            },
+        },
+    ],
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
