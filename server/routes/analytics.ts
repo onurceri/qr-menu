@@ -56,7 +56,7 @@ router.post('/track', async (req: Request, res: Response): Promise<void> => {
 });
 
 // Debug endpoint - sadece development ortamında kullanılabilir
-router.get('/debug/events', async (req: Request, res: Response): Promise<void> => {
+router.get('/debug/events', async (_req: Request, res: Response): Promise<void> => {
     if (process.env.NODE_ENV === 'production') {
         res.status(403).json({ error: 'Not available in production' });
         return;
@@ -120,9 +120,9 @@ const verifyOwner = async (
 };
 
 // Stats endpoint - owner only
-router.get('/stats/:restaurantId', authMiddleware, verifyOwner, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/stats/:restaurantId', authMiddleware, verifyOwner, async ({ params }: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { restaurantId } = req.params;
+        const { restaurantId } = params;
         const stats = await redisClient.get(`analytics:stats:${restaurantId}`);
         
         if (!stats) {

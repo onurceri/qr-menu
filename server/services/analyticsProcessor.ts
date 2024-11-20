@@ -78,7 +78,6 @@ class AnalyticsProcessor {
 
             const now = new Date();
             const currentMonth = now.getMonth();
-            const currentWeek = this.getWeekNumber(now);
 
             // Event'lere göre istatistikleri güncelle
             events.forEach(event => {
