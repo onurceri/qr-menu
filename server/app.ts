@@ -10,6 +10,7 @@ import imageRoutes from './routes/image.js';
 import locationRoutes from './routes/location.js';
 import reservationRoutes from './routes/reservation.js';
 import adminRoutes from './routes/admin.js';
+import analyticsRoutes from './routes/analytics.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -45,6 +46,7 @@ app.use('/api/images', imageRoutes);
 app.use('/api/location', locationRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Error handling
 app.use(errorHandler);

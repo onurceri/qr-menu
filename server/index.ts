@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { rateLimit } from 'express-rate-limit';
+import { analyticsProcessor } from './services/analyticsProcessor.js';
 
 // Import routes
 import restaurantRouter from './routes/restaurant.js';
@@ -16,6 +17,7 @@ import imageRoutes from './routes/image.js';
 import adminRouter from './routes/admin.js';
 import locationRouter from './routes/location.js';
 import reservationRouter from './routes/reservation.js';
+import analyticsRouter from './routes/analytics.js';
 
 // Rate limiter configurations
 const authLimiter = rateLimit({
@@ -182,21 +184,31 @@ mongoose.connect(process.env.MONGODB_URI!, {
   console.error('Connection string:', process.env.MONGODB_URI?.replace(/\/\/.*@/, '//<credentials>@'));
 });
 
-app.use('/api/restaurant', restaurantRouter);
-app.use('/api/user', userRouter);
-app.use('/api/menu', menuRoutes);
-app.use('/api/image', imageRoutes);
+app.use('/api/restaurants', restaurantRouter);
+app.use('/api/users', userRouter);
+app.use('/api/menus', menuRoutes);
+app.use('/api/images', imageRoutes);
 app.use('/api/admin', adminRouter);
 app.use('/api/location', locationRouter);
 app.use('/api/reservations', reservationRouter);
+app.use('/api/analytics', analyticsRouter);
 
 // Serve static files from the 'dist' directory with CSP headers
-const staticMiddleware = express.static(path.join(__dirname, '../../dist'));
-app.use((req, res, next) => {
-  cspMiddleware(req, res, () => {
-    staticMiddleware(req, res, next);
+if (process.env.NODE_ENV === 'production') {
+  const staticMiddleware = express.static(path.join(__dirname, '../../dist'));
+  app.use((req, res, next) => {
+    cspMiddleware(req, res, () => {
+      staticMiddleware(req, res, next);
+    });
   });
-});
+
+  // Handle client-side routing
+  app.get('*', (req, res) => {
+    cspMiddleware(req, res, () => {
+      res.sendFile(path.join(__dirname, '../../dist/index.html'));
+    });
+  });
+}
 
 // Healthcheck endpoint'i - en üstte olmalı
 app.get('/api/health', (_req, res) => {
@@ -217,15 +229,11 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   });
 });
 
-// Serve index.html for all routes (SPA fallback) with CSP headers
-app.get('*', (req, res) => {
-  cspMiddleware(req, res, () => {
-    res.sendFile(path.join(__dirname, '../../dist/index.html'));
-  });
-});
+// Start analytics processor
+analyticsProcessor.startProcessing();
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server is running on port ${PORT}`);
 });
 
 export default app;

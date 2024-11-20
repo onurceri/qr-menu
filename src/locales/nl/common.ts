@@ -28,8 +28,13 @@ export default {
   closeMenu: 'Menu sluiten',
   openMenu: 'Menu openen',
   openInMaps: 'Open in Kaarten',
-  expandAll: 'Alles Uitvouwen',
-  collapseAll: 'Alles Invouwen',
+  expandAll: 'Alles uitvouwen',
+  collapseAll: 'Alles invouwen',
+  button: {
+    submit: 'Verstuur',
+    reset: 'Resetten',
+    cancel: 'Annuleren'
+  },
 
   // Days
   days: {

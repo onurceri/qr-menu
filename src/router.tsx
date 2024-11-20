@@ -1,8 +1,7 @@
-// src/router.ts
+// src/router.tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MenuView from './pages/MenuView';
 import NotFound from './components/NotFound';
-import { LoginPage } from './components/LoginPage';
 import MenuEdit from './pages/MenuEdit';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
@@ -12,6 +11,7 @@ import { GlobalHeader } from './components/GlobalHeader';
 import { RestaurantProfile } from './pages/RestaurantProfile';
 import { RestaurantEdit } from './pages/RestaurantEdit';
 import { Profile } from './pages/Profile';
+import { RestaurantAnalytics } from './pages/RestaurantAnalytics';
 
 export function AppRouter() {
   return (
@@ -38,6 +38,11 @@ export function AppRouter() {
               <Route path="/restaurant/:restaurantId/edit" element={
                 <ProtectedRoute>
                   <RestaurantEdit />
+                </ProtectedRoute>
+              } />
+              <Route path="/restaurant/:restaurantId/analytics" element={
+                <ProtectedRoute>
+                  <RestaurantAnalytics />
                 </ProtectedRoute>
               } />
               <Route path="/profile" element={

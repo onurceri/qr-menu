@@ -1,6 +1,7 @@
 import { restaurantService } from '../services/restaurantService';
+import { analyticsService } from '../services/analyticsService';
 import { useEffect, useState, startTransition } from 'react';
-import type { Menu, MenuSection as MenuSectionType } from '../types/restaurant';
+import type { Menu, MenuSection as MenuSectionType, Restaurant } from '../types/restaurant';
 import { MenuSection } from '../components/MenuSection';
 import { useParams } from 'react-router-dom';
 import React from 'react';
@@ -10,6 +11,7 @@ import { Menu as MenuIcon, X } from 'lucide-react';
 function MenuView() {
   const { menuId } = useParams<{ menuId: string }>();
   const [menu, setMenu] = useState<Menu | null>(null);
+  const [_restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -29,6 +31,24 @@ function MenuView() {
       
       if (!data) {
         throw new Error('Menu data not found');
+      }
+
+      // Restaurant'ı da al
+      const restaurantData = await restaurantService.getRestaurantByMenuId(menuId!);
+      if (restaurantData) {
+        setRestaurant(restaurantData);
+        // Analitik tracking
+        try {
+          await analyticsService.trackPageView(restaurantData.restaurantId, 'menu');
+          // URL'de qr parametresi varsa QR taramasını kaydet
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('qr')) {
+            await analyticsService.trackQRScan(restaurantData.restaurantId);
+          }
+        } catch (analyticsError) {
+          console.error('Analytics tracking failed:', analyticsError);
+          // Analytics hatası ana işlemi etkilemesin
+        }
       }
 
       startTransition(() => {

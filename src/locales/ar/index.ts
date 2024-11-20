@@ -4,6 +4,7 @@ import profile from './profile';
 import menu from './menu';
 import reservation from './reservation';
 import validation from './validation';
+import analytics from './analytics';
 
 export default {
   translation: {
@@ -12,6 +13,7 @@ export default {
     profile,
     menu,
     reservation,
-    validation
+    validation,
+    analytics
   }
 };

@@ -64,6 +64,32 @@ router.get<{ restaurantId: string }>(
   }
 );
 
+// Public route - menu ID'ye göre restaurant'ı getir
+router.get<{ menuId: string }>(
+  '/by-menu/:menuId',
+  async (req: Request<{ menuId: string }>, res: Response): Promise<void> => {
+    try {
+      const restaurant = await Restaurant.findOne({ 'menus.id': req.params.menuId });
+      
+      if (!restaurant) {
+        console.warn(`Restaurant not found for menu - menuId: ${req.params.menuId}`);
+        res.status(404).json({ error: 'Restaurant not found' });
+        return;
+      }
+      
+      res.json(restaurant);
+    } catch (error) {
+      const mongoError = error as Error;
+      console.error('Database operation failed:', {
+        error: mongoError.message,
+        path: req.path,
+        method: req.method
+      });
+      res.status(500).json({ error: 'Failed to fetch restaurant data' });
+    }
+  }
+);
+
 // Protected routes - bundan sonraki route'lar için auth gerekli
 router.use(authMiddleware as express.RequestHandler);
 

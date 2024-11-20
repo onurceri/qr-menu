@@ -30,6 +30,21 @@ export default {
   openInMaps: 'Haritada Aç',
   expandAll: 'Tümünü Genişlet',
   collapseAll: 'Tümünü Daralt',
+  button: {
+    submit: 'Gönder',
+    reset: 'Sıfırla',
+    cancel: 'İptal',
+    save: 'Kaydet',
+    delete: 'Sil',
+    edit: 'Düzenle',
+    view: 'Görüntüle',
+    close: 'Kapat',
+    open: 'Aç',
+    yes: 'Evet',
+    no: 'Hayır',
+    ok: 'Tamam',
+    confirm: 'Onayla',
+  },
 
   // Days
   days: {
@@ -50,5 +65,9 @@ export default {
     from: 'Başlangıç',
     to: 'Bitiş',
     allDay: 'Tüm Gün'
-  }
+  },
+
+  confirmDeleteRestaurant: 'Restoranı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+  restaurantDeletedSuccess: 'Restoran başarıyla silindi.',
+  restaurantDeleteError: 'Restoran silinirken bir hata oluştu.',
 } as const;

@@ -1,7 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { restaurantService } from '../services/restaurantService';
-import type { Restaurant } from '../types/restaurant';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { MapPin, Clock, ChevronRight, Trash2, ChevronDown, ChevronUp, MenuIcon } from 'lucide-react';
@@ -11,6 +10,8 @@ import 'leaflet/dist/leaflet.css';
 import { divIcon } from 'leaflet';
 import { RestaurantReservation } from '../components/RestaurantReservation';
 import { parseOpeningHours } from '../utils/dateUtils';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '../components/Toast';
 
 // Özel marker icon oluşturma
 const createCustomIcon = (color: string = '#18181B') => {
@@ -68,7 +69,7 @@ const formatAddress = (
 
 
 export function RestaurantProfile() {
-    const { restaurantId } = useParams();
+    const { restaurantId } = useParams<{ restaurantId: string }>();
     const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -76,12 +77,15 @@ export function RestaurantProfile() {
     const { user } = useAuth();
     const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function fetchRestaurant() {
             if (!restaurantId) return;
 
             try {
+                setLoading(true);
+                setError(null);
                 const data = await restaurantService.getRestaurant(restaurantId);
                 setRestaurant(data);
 
@@ -142,6 +146,25 @@ export function RestaurantProfile() {
         } catch (error) {
             console.error('Failed to update restaurant:', error);
             setError(t('restaurants.imageDeleteError'));
+        }
+    };
+
+    const handleDeleteRestaurant = async () => {
+        if (!restaurant) return;
+
+        try {
+            const confirmed = window.confirm(t('confirmDeleteRestaurant'));
+            if (!confirmed) return;
+
+            setLoading(true);
+            await restaurantService.deleteRestaurant(restaurant.restaurantId);
+            navigate('/dashboard');
+            toast.success(t('restaurantDeletedSuccess'));
+        } catch (error) {
+            console.error('Error deleting restaurant:', error);
+            toast.error(t('restaurantDeleteError'));
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -462,4 +485,4 @@ export function RestaurantProfile() {
             )}
         </div>
     );
-} 
+}

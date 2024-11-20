@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { restaurantService } from '../services/restaurantService';
 import type { Restaurant } from '../types/restaurant';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, Edit2, Trash2, Plus, Globe, PlusCircle, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
+import { Eye, Edit2, Trash2, Plus, Globe, PlusCircle, ChevronDown, ChevronRight, ChevronUp, BarChart2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../constants/languages';
 import { v4 as uuidv4 } from 'uuid';
@@ -123,13 +123,8 @@ const RestaurantForm: React.FC<RestaurantFormProps> = ({
                 </div>
             </div>
             {/* Karakter sayısı uyarısı */}
-            <div className="mt-1 text-xs text-zinc-500 flex justify-between items-center">
+            <div className="mt-1 text-xs text-zinc-500">
                 <span>{t('restaurants.descriptionHint')}</span>
-                <span className={newRestaurantDescription.length > MAX_DESCRIPTION_LENGTH * 0.9 ? 'text-amber-600' : ''}>
-                    {t('common.charactersRemaining', { 
-                        count: MAX_DESCRIPTION_LENGTH - newRestaurantDescription.length 
-                    })}
-                </span>
             </div>
         </div>
         <button 
@@ -435,7 +430,7 @@ const RestaurantList = () => {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex items-center justify-center min-h-[60vh]">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-900"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-2 border-zinc-900"></div>
                 </div>
             </div>
         );
@@ -608,21 +603,35 @@ const RestaurantList = () => {
                                                     {t('restaurants.view')}
                                                 </span>
                                             </button>
-                                            <button
-                                                onClick={() => navigate(`/restaurant/${restaurant.restaurantId}/edit`)}
-                                                className="p-2 hover:bg-white rounded-md transition-colors flex items-center gap-2"
-                                                title={t('restaurants.edit')}
-                                            >
-                                                <Edit2 className="w-5 h-5 text-zinc-600" />
-                                                <span className="text-sm text-zinc-600">
-                                                    {t('restaurants.edit')}
-                                                </span>
-                                            </button>
+                                            {restaurant.userId === user?.uid && (
+                                                <>
+                                                    <button
+                                                        onClick={() => navigate(`/restaurant/${restaurant.restaurantId}/analytics`)}
+                                                        className="p-2 hover:bg-white rounded-md transition-colors flex items-center gap-2"
+                                                        title={t('analytics.viewAnalytics')}
+                                                    >
+                                                        <BarChart2 className="w-5 h-5 text-zinc-600" />
+                                                        <span className="text-sm text-zinc-600">
+                                                            {t('analytics.viewAnalytics')}
+                                                        </span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => navigate(`/restaurant/${restaurant.restaurantId}/edit`)}
+                                                        className="p-2 hover:bg-white rounded-md transition-colors flex items-center gap-2"
+                                                        title={t('restaurants.edit')}
+                                                    >
+                                                        <Edit2 className="w-5 h-5 text-zinc-600" />
+                                                        <span className="text-sm text-zinc-600">
+                                                            {t('restaurants.edit')}
+                                                        </span>
+                                                    </button>
+                                                </>
+                                            )}
                                             <div className="w-px h-6 bg-zinc-200 mx-1" />
                                             <button 
                                                 onClick={() => handleDeleteRestaurant(restaurant.restaurantId)}
                                                 disabled={isDeletingRestaurant === restaurant.restaurantId}
-                                                className="p-2 hover:bg-red-50 rounded-md transition-colors flex items-center gap-2"
+                                                className="p-2 hover:bg-red-100 rounded-md transition-colors flex items-center gap-2"
                                                 title={t('restaurants.delete')}
                                             >
                                                 {isDeletingRestaurant === restaurant.restaurantId ? (

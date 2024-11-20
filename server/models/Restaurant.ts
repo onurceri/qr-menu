@@ -32,6 +32,12 @@ interface IRestaurant extends Document {
     description: string;
     imageUrl: string;
     menus: IMenuBase[];
+    socialMedia?: {
+        instagram?: string;
+        facebook?: string;
+        twitter?: string;
+        website?: string;
+    };
     address: {
         street: string;
         city: string;
@@ -80,6 +86,12 @@ const RestaurantSchema = new Schema<IRestaurant>({
     description: { type: String, default: '' },
     imageUrl: { type: String, default: '' },
     menus: [MenuSubSchema],
+    socialMedia: {
+        instagram: { type: String, default: '' },
+        facebook: { type: String, default: '' },
+        twitter: { type: String, default: '' },
+        website: { type: String, default: '' }
+    },
     location: {
         type: {
             type: String,

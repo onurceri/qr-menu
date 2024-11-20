@@ -3,7 +3,6 @@ import { getAuth } from 'firebase/auth';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
-
 const getAuthToken = async (): Promise<string | null> => {
     const auth = getAuth();
     return auth.currentUser?.getIdToken() || null;
@@ -40,10 +39,12 @@ interface CreateMenuRequest {
 export const restaurantService = {
     async getRestaurant(restaurantId: string): Promise<Restaurant> {
         try {
-            const response = await fetch(`${API_URL}/api/restaurant/${restaurantId}`, {
+            const token = await getAuthToken();
+            const response = await fetch(`${API_URL}/api/restaurants/${restaurantId}`, {
                 method: 'GET',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                 },
             });
 
@@ -53,8 +54,8 @@ export const restaurantService = {
 
             return response.json();
         } catch (error) {
-            logError('getRestaurant error:', error);
-            throw new Error('Failed to fetch restaurant');
+            logError('Error fetching restaurant:', error);
+            throw error;
         }
     },
 
@@ -63,21 +64,19 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/api/restaurant/${restaurantId}`, {
+            const response = await fetch(`${API_URL}/api/restaurants/${restaurantId}`, {
                 method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify(data)
             });
-            
+
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('Update restaurant error response:', errorData);
-                throw new Error(errorData.message || 'Failed to update restaurant');
+                throw new Error('Failed to update restaurant');
             }
-            
+
             const updatedRestaurant = await response.json();
             console.log('Update successful, received:', updatedRestaurant); // Debug için log
             return updatedRestaurant;
@@ -92,7 +91,7 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/api/user/${userId}/restaurants`, {
+            const response = await fetch(`${API_URL}/api/users/${userId}/restaurants`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -121,55 +120,62 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/api/restaurant`, {
+            const response = await fetch(`${API_URL}/api/restaurants`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ userId, ...restaurantData }),
+                body: JSON.stringify({
+                    ...restaurantData,
+                    userId
+                })
             });
 
-            if (!response.ok) throw new Error('Failed to create restaurant');
+            if (!response.ok) {
+                throw new Error('Failed to create restaurant');
+            }
+
             return response;
         } catch (error) {
-            logError('createRestaurant error:', error);
-            throw new Error('Failed to create restaurant');
+            console.error('createRestaurant error:', error);
+            throw error;
         }
     },
 
-    deleteRestaurant: async (restaurantId: string): Promise<Response> => {
+    async deleteRestaurant(restaurantId: string): Promise<void> {
         try {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/api/restaurant/${restaurantId}`, {
+            const response = await fetch(`${API_URL}/api/restaurants/${restaurantId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
             });
 
-            if (!response.ok) throw new Error('Failed to delete restaurant');
-            return response;
+            if (!response.ok) {
+                throw new Error('Failed to delete restaurant');
+            }
         } catch (error) {
-            logError('deleteRestaurant error:', error);
-            throw new Error('Failed to delete restaurant');
+            console.error('deleteRestaurant error:', error);
+            throw error;
         }
     },
 
     async getMenu(menuId: string): Promise<Menu | null> {
         try {
-            const response = await fetch(`${API_URL}/api/menu/${menuId}`);
+            const response = await fetch(`${API_URL}/api/menus/${menuId}`);
             
             if (!response.ok) {
-                throw new Error('Failed to fetch menu');
+                return null;
             }
-            
+
             return await response.json();
         } catch (error) {
-            logError('getMenu error:', error);
-            throw new Error('Failed to fetch menu');
+            console.error('getMenu error:', error);
+            return null;
         }
     },
 
@@ -178,21 +184,23 @@ export const restaurantService = {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/api/menu/${menuId}`, {
+            const response = await fetch(`${API_URL}/api/menus/${menuId}`, {
                 method: 'PUT',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(data),
+                body: JSON.stringify(data)
             });
-            
-            if (!response.ok) throw new Error('Failed to update menu');
-            
+
+            if (!response.ok) {
+                throw new Error('Failed to update menu');
+            }
+
             return await response.json();
         } catch (error) {
-            logError('updateMenu error:', error);
-            throw new Error('Failed to update menu');
+            console.error('updateMenu error:', error);
+            throw error;
         }
     },
 
@@ -264,56 +272,64 @@ export const restaurantService = {
         }
     },
 
-    createMenu: async (restaurantId: string, menuData: CreateMenuRequest) => {
+    async createMenu(restaurantId: string, menuData: CreateMenuRequest) {
         try {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/api/menu/${restaurantId}`, {
+            const response = await fetch(`${API_URL}/api/restaurants/${restaurantId}/menus`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(menuData)
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('Create menu error:', errorData);
                 throw new Error('Failed to create menu');
             }
 
-            return response;
+            return await response.json();
         } catch (error) {
-            logError('createMenu error:', error);
-            throw new Error('Failed to create menu');
+            console.error('createMenu error:', error);
+            throw error;
         }
     },
 
-    deleteMenu: async (restaurantId: string, menuId: string) => {
+    async deleteMenu(restaurantId: string, menuId: string) {
         try {
             const token = await getAuthToken();
             if (!token) throw new Error('Not authenticated');
 
-            const response = await fetch(`${API_URL}/api/${menuId}/restaurant/${restaurantId}`, {
+            const response = await fetch(`${API_URL}/api/restaurants/${restaurantId}/menus/${menuId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Authorization': `Bearer ${token}`
                 }
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                console.error('Delete menu error:', errorData);
                 throw new Error('Failed to delete menu');
             }
-
-            return response;
         } catch (error) {
-            logError('deleteMenu error:', error);
-            throw new Error('Failed to delete menu');
+            console.error('deleteMenu error:', error);
+            throw error;
+        }
+    },
+
+    async getRestaurantByMenuId(menuId: string): Promise<Restaurant | null> {
+        try {
+            const response = await fetch(`${API_URL}/api/restaurants/by-menu/${menuId}`);
+            
+            if (!response.ok) {
+                return null;
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('getRestaurantByMenuId error:', error);
+            return null;
         }
     },
 };

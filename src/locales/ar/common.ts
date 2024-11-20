@@ -30,6 +30,16 @@ export default {
   openInMaps: 'فتح في الخرائط',
   expandAll: 'توسيع الكل',
   collapseAll: 'طي الكل',
+  button: {
+    submit: 'إرسال',
+    reset: 'إعادة تعيين',
+    cancel: 'إلغاء',
+    save: 'حفظ',
+    delete: 'حذف',
+    edit: 'تعديل',
+    view: 'عرض',
+    back: 'رجوع'
+  },
 
   // Days
   days: {

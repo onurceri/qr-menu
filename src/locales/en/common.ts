@@ -30,6 +30,16 @@ export default {
   openInMaps: 'Open in Maps',
   expandAll: 'Expand All',
   collapseAll: 'Collapse All',
+  button: {
+    submit: 'Submit',
+    reset: 'Reset',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    save: 'Save',
+    delete: 'Delete',
+    edit: 'Edit',
+    view: 'View'
+  },
 
   // Days
   days: {

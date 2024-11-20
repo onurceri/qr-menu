@@ -18,6 +18,7 @@ export interface MenuSection {
 
 export interface Menu {
   id: string;
+  restaurantId: string;
   language: string;
   name: string;
   description?: string;
@@ -28,19 +29,26 @@ export interface Menu {
 }
 
 export interface Restaurant {
+  id: string;
   restaurantId: string;
   userId: string;
   name: string;
-  description?: string;
-  imageUrl?: string;
-  address?: {
+  description: string;
+  imageUrl: string;
+  menus: Menu[];
+  socialMedia?: {
+    instagram?: string;
+    facebook?: string;
+    twitter?: string;
+    website?: string;
+  };
+  address: {
     street: string;
     city: string;
     country: string;
     postalCode: string;
   };
   openingHours?: string;
-  menus: Menu[];
   location?: {
     type: string;
     coordinates: number[];

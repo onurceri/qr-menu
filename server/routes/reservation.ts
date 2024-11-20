@@ -52,7 +52,6 @@ router.get('/:restaurantId/availability',
 
             // Dolu saatleri Set'e dönüştür
             const bookedTimes = new Set(bookedSlots.map(slot => slot.time));
-            console.log('Booked times:', [...bookedTimes]); // Debug için
 
             // Tüm zaman dilimlerini oluştur
             const timeSlots = generateTimeSlots(
@@ -116,8 +115,6 @@ function generateTimeSlots(
 
         currentTime.setMinutes(currentTime.getMinutes() + 30);
     }
-
-    console.log('Generated time slots:', timeSlots); // Debug için
 
     return timeSlots;
 }
