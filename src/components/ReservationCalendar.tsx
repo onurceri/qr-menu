@@ -131,7 +131,7 @@ export function ReservationCalendar({ restaurantId, schedule }: ReservationCalen
                          [&_.rdp-day_selected:hover]:bg-zinc-800
                          [&_.rdp-day_disabled]:opacity-25
                          [&_.rdp-head_cell]:text-zinc-500 [&_.rdp-head_cell]:font-normal
-                         [&_.rdp-button]:text-sm [&_.rdp-button]:font-medium"
+                         [&_.rdp-button]:text-xs [&_.rdp-button]:font-medium"
         />
       </div>
 

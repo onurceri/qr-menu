@@ -14,12 +14,28 @@ import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
-// Middleware
-app.use(cors());
-app.use(helmet());
+// Basic middleware
 app.use(compression());
 app.use(morgan('dev'));
 app.use(express.json());
+
+// CORS configuration
+app.use(cors({
+    origin: process.env.NODE_ENV === 'development' 
+        ? ['http://localhost:5173'] 
+        : [process.env.CLIENT_URL || ''],
+    credentials: true
+}));
+
+// Disable all CSP and related security policies
+app.use(
+    helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false,
+        crossOriginResourcePolicy: false,
+        crossOriginOpenerPolicy: false
+    })
+);
 
 // Routes
 app.use('/api/restaurants', restaurantRoutes);
