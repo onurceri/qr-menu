@@ -47,12 +47,24 @@ export default {
   closeTime: 'وقت الإغلاق',
   closed: 'مغلق',
   noHours: 'لم يتم تحديد ساعات العمل',
-  noLocation: 'الموقع غير متوفر',
+  noLocation: 'لا يوجد موقع متاح',
   selectCountry: 'اختر الدولة',
   selectCity: 'اختر المدينة',
   descriptionHint: 'وصف موجز لمطعمك',
   mapInteractionHint: 'انقر واسحب لتحريك الخريطة، استخدم أزرار التكبير',
   menuDescription: 'عرض وإدارة قوائم مطعمك بلغات مختلفة.',
   openingHours: 'ساعات العمل',
-  getDirections: 'احصل على الاتجاهات'
+  getDirections: 'احصل على الاتجاهات',
+  contact: {
+    title: 'معلومات الاتصال',
+    phone: 'الهاتف',
+    email: 'البريد الإلكتروني',
+    address: 'العنوان'
+  },
+  socialMedia: {
+    title: 'وسائل التواصل الاجتماعي',
+    facebook: 'فيسبوك',
+    instagram: 'انستغرام',
+    twitter: 'تويتر'
+  }
 } as const;

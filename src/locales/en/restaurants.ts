@@ -55,4 +55,16 @@ export default {
   openingHours: 'Opening Hours',
   getDirections: 'Get Directions',
   fetchError: 'Error loading restaurant details',
+  contact: {
+    title: 'Contact',
+    phone: 'Phone',
+    email: 'Email',
+    address: 'Address'
+  },
+  socialMedia: {
+    title: 'Social Media',
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    twitter: 'Twitter'
+  }
 } as const;

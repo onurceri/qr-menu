@@ -54,5 +54,17 @@ export default {
   mapInteractionHint: 'Cliquez et faites glisser pour déplacer la carte, utilisez les contrôles de zoom',
   menuDescription: 'Consultez et gérez les menus de votre restaurant en différentes langues.',
   openingHours: 'Heures d\'Ouverture',
-  getDirections: 'Obtenir l\'Itinéraire'
+  getDirections: 'Obtenir l\'Itinéraire',
+  contact: {
+    title: 'Contact',
+    phone: 'Téléphone',
+    email: 'E-mail',
+    address: 'Adresse'
+  },
+  socialMedia: {
+    title: 'Réseaux Sociaux',
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    twitter: 'Twitter'
+  }
 } as const;

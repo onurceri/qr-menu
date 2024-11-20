@@ -3,7 +3,7 @@ export default {
   addNew: 'Yeni Restoran Ekle',
   noRestaurants: 'Henüz Restoran Yok',
   noRestaurantsDesc: 'Henüz hiç restoran eklemediniz. Başlamak için yukarıdaki formu kullanarak ilk restoranınızı oluşturun.',
-  tip: '💡 İpucu: Bir restoran oluşturduktan sonra, menü bölümleri ve ürünler ekleyerek sunumunuzu zenginleştirebilirsiniz.',
+  tip: ' İpucu: Bir restoran oluşturduktan sonra, menü bölümleri ve ürünler ekleyerek sunumunuzu zenginleştirebilirsiniz.',
   name: 'Restoran Adı',
   description: 'Restoran Açıklaması (isteğe bağlı)',
   creating: 'Oluşturuluyor...',
@@ -54,5 +54,17 @@ export default {
   mapInteractionHint: 'Haritayı hareket ettirmek için tıklayıp sürükleyin, yakınlaştırmak için zoom kontrollerini kullanın',
   menuDescription: 'Restoranınızın farklı dillerdeki menülerini görüntüleyin ve yönetin.',
   openingHours: 'Çalışma Saatleri',
-  getDirections: 'Yol Tarifi Al'
+  getDirections: 'Yol Tarifi Al',
+  contact: {
+    title: 'İletişim',
+    phone: 'Telefon',
+    email: 'E-posta',
+    address: 'Adres'
+  },
+  socialMedia: {
+    title: 'Sosyal Medya',
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    twitter: 'Twitter'
+  }
 } as const;

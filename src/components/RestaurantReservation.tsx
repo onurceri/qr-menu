@@ -23,20 +23,29 @@ export function RestaurantReservation({ restaurantId, schedule }: RestaurantRese
                             </div>
                             <div className="flex-1">
                                 <h3 className="font-medium text-zinc-900 mb-3">
-                                    {t('restaurant.contact')}
+                                    {t('restaurants.contact.title')}
                                 </h3>
                                 <div className="space-y-4 text-sm text-zinc-600">
                                     <div className="flex items-start gap-2">
                                         <Phone className="w-4 h-4 mt-0.5 text-zinc-400" />
-                                        <span>+90 (212) 555 0123</span>
+                                        <div>
+                                            <div className="font-medium text-zinc-700">{t('restaurants.contact.phone')}</div>
+                                            <span>+90 (212) 555 0123</span>
+                                        </div>
                                     </div>
                                     <div className="flex items-start gap-2">
                                         <Mail className="w-4 h-4 mt-0.5 text-zinc-400" />
-                                        <span>info@restaurant.com</span>
+                                        <div>
+                                            <div className="font-medium text-zinc-700">{t('restaurants.contact.email')}</div>
+                                            <span>contact@restaurant.com</span>
+                                        </div>
                                     </div>
                                     <div className="flex items-start gap-2">
                                         <Navigation className="w-4 h-4 mt-0.5 text-zinc-400" />
-                                        <span>Örnek Mahallesi, Örnek Sokak No:1, İstanbul</span>
+                                        <div>
+                                            <div className="font-medium text-zinc-700">{t('restaurants.contact.address')}</div>
+                                            <span>Örnek Mahallesi, Örnek Sokak No:1, İstanbul</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -50,7 +59,7 @@ export function RestaurantReservation({ restaurantId, schedule }: RestaurantRese
                                 </div>
                                 <div className="flex-1">
                                     <h4 className="font-medium text-zinc-900 mb-3">
-                                        {t('restaurant.socialMedia')}
+                                        {t('restaurants.socialMedia.title')}
                                     </h4>
                                     <div className="space-y-3">
                                         <a 

@@ -54,5 +54,17 @@ export default {
   mapInteractionHint: 'Klik en sleep om de kaart te verplaatsen, gebruik zoomknoppen',
   menuDescription: 'Bekijk en beheer uw restaurantmenu\'s in verschillende talen.',
   openingHours: 'Openingstijden',
-  getDirections: 'Route Plannen'
+  getDirections: 'Route Plannen',
+  contact: {
+    title: 'Contact',
+    phone: 'Telefoon',
+    email: 'E-mail',
+    address: 'Adres'
+  },
+  socialMedia: {
+    title: 'Sociale Media',
+    facebook: 'Facebook',
+    instagram: 'Instagram',
+    twitter: 'Twitter'
+  }
 } as const;
