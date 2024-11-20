@@ -116,11 +116,11 @@ export function RestaurantProfile() {
                     zoom: 15,
                     mapId: import.meta.env.VITE_GOOGLE_MAPS_ID,
                     disableDefaultUI: true,
-                    zoomControl: true,
-                    zoomControlOptions: {
-                        position: google.maps.ControlPosition.RIGHT_TOP,
-                    },
-                    gestureHandling: "cooperative",
+                    zoomControl: false,
+                    gestureHandling: "none",
+                    draggable: false,
+                    scrollwheel: false,
+                    clickableIcons: false
                 });
 
                 new google.maps.Marker({
@@ -154,11 +154,11 @@ export function RestaurantProfile() {
                     zoom: 15,
                     mapId: import.meta.env.VITE_GOOGLE_MAPS_ID,
                     disableDefaultUI: true,
-                    zoomControl: true,
-                    zoomControlOptions: {
-                        position: google.maps.ControlPosition.RIGHT_TOP,
-                    },
-                    gestureHandling: "cooperative",
+                    zoomControl: false,
+                    gestureHandling: "none",
+                    draggable: false,
+                    scrollwheel: false,
+                    clickableIcons: false
                 });
 
                 new google.maps.Marker({
