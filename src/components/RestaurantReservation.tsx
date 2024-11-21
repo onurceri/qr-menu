@@ -12,7 +12,7 @@ export function RestaurantReservation({ restaurantId, schedule }: RestaurantRese
     const { t } = useTranslation();
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-0 pb-8">
             <div className="bg-white rounded-lg border border-zinc-200 p-4">
                 <div className="flex flex-col lg:flex-row lg:items-start gap-6">
                     {/* Sol Kolon: Restoran İletişim Bilgileri */}

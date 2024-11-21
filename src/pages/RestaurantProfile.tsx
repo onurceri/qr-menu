@@ -600,7 +600,7 @@ export function RestaurantProfile() {
 
             {/* Reservation Section */}
             {restaurant && (
-                <div className="pb-12">
+                <div className="pb-8">
                     <RestaurantReservation
                         restaurantId={restaurant.restaurantId}
                         schedule={parseOpeningHours(restaurant.openingHours) || {}}
