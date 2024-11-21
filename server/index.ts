@@ -82,7 +82,10 @@ const cspMiddleware = helmet({
         "https://*.firebase.com",
         "https://*.googleapis.com",
         "https://*.gstatic.com",
-        "https://unpkg.com"
+        "https://unpkg.com",
+        "https://maps.googleapis.com",
+        "https://maps.gstatic.com",
+        "blob:"
       ],
       styleSrc: [
         "'self'",
@@ -90,7 +93,8 @@ const cspMiddleware = helmet({
         "https://unpkg.com",
         "https://*.openstreetmap.org",
         "https://*.googleapis.com",
-        "https://*.gstatic.com"
+        "https://*.gstatic.com",
+        "https://fonts.googleapis.com"
       ],
       imgSrc: [
         "'self'",
@@ -121,7 +125,13 @@ const cspMiddleware = helmet({
         "https://api.openweathermap.org",
         "https://*.openweathermap.org",
         "https://*.tile.openstreetmap.org",
-        "https://api.openweathermap.com"
+        "https://api.openweathermap.com",
+        "https://maps.googleapis.com",
+        "https://maps.gstatic.com",
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com",
+        "data:",
+        "blob:"
       ],
       fontSrc: [
         "'self'",
@@ -138,7 +148,13 @@ const cspMiddleware = helmet({
         "https://*.firebaseapp.com",
         "https://*.firebase.com"
       ],
-      workerSrc: ["'self'", "blob:"],
+      workerSrc: [
+        "'self'",
+        "blob:",
+        "data:",
+        "https://*.gstatic.com",
+        "https://maps.googleapis.com"
+      ],
       childSrc: ["'self'", "blob:"],
       manifestSrc: ["'self'"]
     }
