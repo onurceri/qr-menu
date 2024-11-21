@@ -81,13 +81,16 @@ const cspMiddleware = helmet({
         "https://*.firebaseio.com",
         "https://*.firebase.com",
         "https://*.googleapis.com",
+        "https://*.gstatic.com",
         "https://unpkg.com"
       ],
       styleSrc: [
         "'self'",
         "'unsafe-inline'",
         "https://unpkg.com",
-        "https://*.openstreetmap.org"
+        "https://*.openstreetmap.org",
+        "https://*.googleapis.com",
+        "https://*.gstatic.com"
       ],
       imgSrc: [
         "'self'",
@@ -97,13 +100,16 @@ const cspMiddleware = helmet({
         "https://*.openstreetmap.org",
         "https://*.cloudinary.com",
         "https://lh3.googleusercontent.com",
-        "https://*.googleapis.com"
+        "https://*.googleapis.com",
+        "https://*.gstatic.com",
+        "https://maps.gstatic.com"
       ],
       connectSrc: [
         "'self'",
         "http://localhost:*",
         "https://*.cloudinary.com",
         "https://*.googleapis.com",
+        "https://*.gstatic.com",
         "https://*.google.com",
         "https://qr-menu-dibl.onrender.com",
         "https://*.firebaseio.com",
