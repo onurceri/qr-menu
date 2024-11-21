@@ -96,6 +96,7 @@ const cspMiddleware = helmet({
         "'self'",
         "data:",
         "blob:",
+        "*",
         "https://*.tile.openstreetmap.org",
         "https://*.openstreetmap.org",
         "https://*.cloudinary.com",
@@ -125,7 +126,10 @@ const cspMiddleware = helmet({
       fontSrc: [
         "'self'",
         "data:",
-        "https://unpkg.com"
+        "https://unpkg.com",
+        "https://*.gstatic.com",
+        "https://fonts.gstatic.com",
+        "https://fonts.googleapis.com"
       ],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
